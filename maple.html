@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장부</title>
+  
+  <!-- 파비콘 주소 및 타입(.jpg) 변경 완료 -->
+  <link rel="icon" href="https://i.ibb.co/JwZ0B8C4/favicon.jpg" type="image/jpeg">
+  
+  <!-- React 18 및 Babel CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+    body { margin: 0; background: #1C2A1E; }
+    
+    .ml-root {
+      --bg: #1C2A1E;
+      --paper: #EFE6D2;
+      --paper-soft: #E6DCC4;
+      --ink: #2A2016;
+      --ink-soft: #6B5E48;
+      --line: #C9BC9C;
+      --income: #3F6B45;
+      --expense: #A83F27;
+      --gold: #C79A2E;
+
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 20px 14px 60px;
+      box-sizing: border-box;
+    }
+    .ml-root * { box-sizing: border-box; }
+
+    .ml-loading { display: flex; align-items: center; justify-content: center; min-height: 300px; color: var(--gold); }
+    
+    .ml-header { max-width: 640px; margin: 0 auto 16px; }
+    .ml-header-title { display: flex; align-items: flex-start; gap: 10px; color: var(--paper); }
+    .ml-header-title h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 26px;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+    .ml-header-title span.icon { font-size: 24px; margin-top: 2px; }
+
+    .ml-tabs {
+      max-width: 640px;
+      margin: 0 auto 18px;
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid #3A4A3B;
+      overflow-x: auto;
+    }
+    .ml-tab {
+      background: none;
+      border: none;
+      color: #9FAE9A;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 9px 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .ml-tab.active { color: var(--paper); border-bottom-color: var(--gold); }
+
+    .ml-main { max-width: 640px; margin: 0 auto; }
+    .ml-page { display: flex; flex-direction: column; gap: 14px; }
+
+    .ml-panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 18px 16px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    }
+    .ml-panel h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin: 0; color: var(--ink); }
+    .ml-empty { font-size: 13px; color: var(--ink-soft); margin: 0; padding: 10px 0; }
+
+    .ml-range-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .ml-range-reset {
+      font-size: 12px; font-weight: 600; color: var(--ink-soft); background: none;
+      border: 1px solid var(--line); border-radius: 12px; padding: 4px 10px; cursor: pointer;
+    }
+    .ml-range-reset:hover { border-color: var(--gold); color: var(--ink); }
+    .ml-range-row { display: flex; align-items: center; gap: 8px; }
+    .ml-range-row input {
+      flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 10px;
+      border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; color: var(--ink);
+    }
+
+    .ml-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ml-stat-card {
+      background: var(--paper); border: 1px solid var(--line);
+      border-left: 3px solid var(--ink-soft); border-radius: 3px; padding: 12px;
+    }
+    .ml-stat-card.income { border-left-color: var(--income); }
+    .ml-stat-card.expense { border-left-color: var(--expense); }
+    .ml-stat-icon { font-size: 16px; margin-bottom: 4px; }
+    .ml-stat-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+    .ml-stat-value { font-family: 'Fraunces', serif; font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; }
+    .ml-stat-card.income .ml-stat-value { color: var(--income); }
+    .ml-stat-card.expense .ml-stat-value { color: var(--expense); }
+    .ml-stat-unit { font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; margin-left: 3px; color: var(--ink-soft); }
+
+    .ml-form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .ml-form-row label { font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+    .ml-form-row input, .ml-filter-row select {
+      font-family: 'Inter', sans-serif; font-size: 14px; padding: 9px 10px;
+      border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; color: var(--ink);
+    }
+    .ml-form-row input:focus, .ml-filter-row select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+    .ml-korean-amount { font-size: 13px; color: var(--income); font-weight: 600; margin-top: 2px; text-align: right; }
+
+    .ml-seg { display: flex; gap: 6px; }
+    .ml-seg button {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px; border: 1px solid var(--line); background: #FBF7EC; color: var(--ink-soft);
+      border-radius: 3px; font-size: 13px; font-weight: 500; cursor: pointer;
+    }
+    .ml-seg button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .ml-seg button.active.income { background: var(--income); border-color: var(--income); }
+    .ml-seg button.active.expense { background: var(--expense); border-color: var(--expense); }
+    
+    .ml-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 12px; }
+    .ml-chip { font-size: 12px; padding: 5px 10px; border-radius: 12px; border: 1px solid var(--line); background: #FBF7EC; color: var(--ink-soft); cursor: pointer; }
+    .ml-chip:hover { border-color: var(--gold); color: var(--ink); }
+
+    .ml-calc { background: #E6DCC4; border: 1px dashed var(--line); border-radius: 3px; padding: 12px; margin-bottom: 14px; }
+    .ml-calc-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+    .ml-calc-row { display: flex; align-items: center; gap: 8px; }
+    .ml-calc-row input { flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px; border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; }
+    .ml-calc-result { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--ink); }
+    .ml-calc-apply { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 3px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
+    .ml-calc-apply:disabled { opacity: 0.4; cursor: default; }
+
+    .ml-filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .ml-filter-row select { flex: 1; }
+    .ml-view-toggle { margin-bottom: 14px; }
+
+    .ml-group-header { display: flex; justify-content: space-between; padding: 8px 0 4px; border-top: 1px solid var(--line); margin-top: 10px;}
+    .ml-group-name { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+    .ml-group-badge { font-size: 10px; font-weight: 600; color: var(--ink-soft); background: #DED2B4; border-radius: 8px; padding: 1px 7px; }
+    .ml-group-total { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ml-group-total.income { color: var(--income); }
+    .ml-group-total.expense { color: var(--expense); }
+
+    .ml-tx-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #DED2B4; }
+    .ml-tx-row:first-child { border-top: none; }
+    .ml-tx-row-compact { padding: 6px 0 6px 8px; border-top: none; }
+    .ml-tx-icon { font-size: 14px; flex-shrink: 0; }
+    .ml-tx-main { flex: 1; min-width: 0; }
+    .ml-tx-top { display: flex; justify-content: space-between; gap: 8px; }
+    .ml-tx-category { font-size: 13px; font-weight: 600; }
+    .ml-tx-date { font-size: 12px; color: var(--ink-soft); }
+    .ml-tx-memo { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+    .ml-tx-amount { font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; flex-shrink: 0; }
+    .ml-tx-amount.income { color: var(--income); }
+    .ml-tx-amount.expense { color: var(--expense); }
+    .ml-tx-unit { font-size: 11px; font-weight: 500; margin-left: 2px; }
+    .ml-tx-delete { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px; }
+    
+    .ml-submit {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px; background: var(--ink); color: var(--paper); border: none; border-radius: 3px;
+      font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- 여기서부터 리액트 코드입니다 -->
+  <script type="text/babel">
+    const { useState, useCallback, useMemo, useEffect } = React;
+
+    const STORAGE_KEYS = { TX: "ledger:transactions" };
+    const CATEGORY_SUGGESTIONS = {
+      cash: { expense: ["메소구매", "캐시구매", "아이템구매"], income: ["메소판매", "아이템 판매"] },
+      meso: { expense: ["메소판매", "강화", "아이템구매", "도핑", "대출"], income: ["메소구매", "재획", "보스", "대출", "아이템 판매"] },
+      piece: { expense: ["스킬강화", "아이템 판매"], income: ["재획", "아이템 구매"] },
+    };
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+    function toDateStr(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+    function todayStr() { return toDateStr(new Date()); }
+    function firstDayOfThisMonth() { const d = new Date(); return toDateStr(new Date(d.getFullYear(), d.getMonth(), 1)); }
+    function lastDayOfThisMonth() { const d = new Date(); return toDateStr(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
+    function fmtAmount(n) { return (Number(n) || 0).toLocaleString("ko-KR"); }
+    
+    function fmtMeso(n) {
+      const num = Number(n) || 0;
+      if (Math.abs(num) >= 100000000) {
+        return (num / 100000000).toLocaleString("ko-KR", { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + "억";
+      }
+      return num.toLocaleString("ko-KR");
+    }
+
+    // 숫자를 한글 단위(억, 만, 천)로 변환해 주는 함수
+    function formatKoreanCurrency(numStr, currency) {
+      const n = parseInt(numStr.replace(/,/g, ""), 10);
+      if (isNaN(n) || n === 0) return "";
+      
+      const units = ["", "만", "억", "조"];
+      let res = [];
+      let temp = n;
+      let i = 0;
+      
+      while (temp > 0) {
+        const chunk = temp % 10000;
+        if (chunk > 0) {
+          res.push(chunk.toLocaleString("ko-KR") + units[i]);
+        }
+        temp = Math.floor(temp / 10000);
+        i++;
+      }
+      
+      const unit = currency === "cash" ? "원" : currency === "meso" ? "메소" : "개";
+      return res.reverse().join(" ") + " " + unit;
+    }
+
+    // 계산기 결과 전용 한글 단위 변환 함수 (조, 억, 만, 원/메소)
+    function formatCalcResult(num, suffix) {
+      if (!num || isNaN(num) || num === 0) return "";
+      const units = ["", "만", "억", "조"];
+      let res = [];
+      let temp = num;
+      let i = 0;
+      
+      while (temp > 0) {
+        const chunk = temp % 10000;
+        if (chunk > 0) {
+          res.push(chunk.toLocaleString("ko-KR") + units[i]);
+        }
+        temp = Math.floor(temp / 10000);
+        i++;
+      }
+      return res.reverse().join(" ") + " " + suffix;
+    }
+
+    // 조각시세 계산기용 (조, 억, 만, 메소 단위)
+    function formatPieceCalcResult(num) {
+      if (!num || isNaN(num) || num === 0) return "";
+      const units = ["", "만", "억", "조"];
+      let res = [];
+      let temp = num;
+      let i = 0;
+      
+      while (temp > 0) {
+        const chunk = temp % 10000;
+        if (chunk > 0) {
+          res.push(chunk.toLocaleString("ko-KR") + units[i]);
+        }
+        temp = Math.floor(temp / 10000);
+        i++;
+      }
+      return res.reverse().join(" ") + " 메소";
+    }
+
+    function StatCard({ icon, label, value, unit, tone, isMeso }) {
+      return (
+        <div className={`ml-stat-card ${tone}`}>
+          <div className="ml-stat-icon">{icon}</div>
+          <div className="ml-stat-label">{label}</div>
+          <div className="ml-stat-value">
+            {isMeso ? fmtMeso(value) : fmtAmount(value)}
+            <span className="ml-stat-unit">{unit}</span>
+          </div>
+        </div>
+      );
+    }
+
+    function TxRow({ t, onDelete, compact }) {
+      const isIncome = t.type === "income";
+      const unitLabel = t.currency === "cash" ? "원" : t.currency === "meso" ? "메소" : "개";
+      return (
+        <div className={`ml-tx-row ${compact ? "ml-tx-row-compact" : ""}`}>
+          <div className="ml-tx-icon">{isIncome ? "📈" : "📉"}</div>
+          <div className="ml-tx-main">
+            <div className="ml-tx-top">
+              {!compact && <span className="ml-tx-category">{t.category}</span>}
+              <span className="ml-tx-date">{t.date}</span>
+            </div>
+            {t.memo && <div className="ml-tx-memo">{t.memo}</div>}
+          </div>
+          <div className={`ml-tx-amount ${isIncome ? "income" : "expense"}`}>
+            {isIncome ? "+" : "−"}
+            {fmtAmount(t.amount)}
+            <span className="ml-tx-unit">{unitLabel}</span>
+          </div>
+          {onDelete && (
+            <button className="ml-tx-delete" onClick={onDelete} title="삭제">🗑️</button>
+          )}
+        </div>
+      );
+    }
+
+    function MapleLedger() {
+      const [tab, setTab] = useState("dashboard");
+      const [transactions, setTransactions] = useState([]);
+      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "" });
+      const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
+      const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" }); // 조각시세 계산기 상태
+      const [itemCalc, setItemCalc] = useState({ price: "", count: "" }); // 메소 아이템 계산기 상태
+      const [historyFilter, setHistoryFilter] = useState({ currency: "all", type: "all" });
+      const [historyView, setHistoryView] = useState("list");
+      const [range, setRange] = useState({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() });
+
+      useEffect(() => {
+        try {
+          const txData = localStorage.getItem(STORAGE_KEYS.TX);
+          if (txData) setTransactions(JSON.parse(txData));
+        } catch (e) { console.error(e); }
+      }, []);
+
+      const persistTransactions = useCallback((next) => {
+        setTransactions(next);
+        try { localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(next)); } catch (e) {}
+      }, []);
+
+      const addTransaction = useCallback(() => {
+        const amt = Number(form.amount);
+        if (!amt || amt <= 0) return;
+        const tx = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          date: form.date, currency: form.currency, type: form.type,
+          category: form.category.trim() || "기타", amount: amt, memo: form.memo.trim(),
+        };
+        persistTransactions([tx, ...transactions]);
+        
+        // 폼 초기화
+        setForm(f => ({ ...f, amount: "", memo: "", category: "" }));
+        setCalc({ mesoEok: "", rate: "" });
+        setPieceCalc({ count: "", rate: "" });
+        setItemCalc({ price: "", count: "" });
+      }, [form, transactions, persistTransactions]);
+
+      const deleteTransaction = useCallback((id) => {
+        persistTransactions(transactions.filter((t) => t.id !== id));
+      }, [transactions, persistTransactions]);
+
+      const rangeTx = useMemo(() => transactions.filter(t => t.date >= range.start && t.date <= range.end), [transactions, range]);
+      const sumFor = (list, currency, type) => list.filter(t => t.currency === currency && t.type === type).reduce((s, t) => s + t.amount, 0);
+
+      const summary = {
+        cashIncome: sumFor(rangeTx, "cash", "income"), cashExpense: sumFor(rangeTx, "cash", "expense"),
+        mesoIncome: sumFor(rangeTx, "meso", "income"), mesoExpense: sumFor(rangeTx, "meso", "expense"),
+        pieceIncome: sumFor(rangeTx, "piece", "income"), pieceExpense: sumFor(rangeTx, "piece", "expense"),
+      };
+
+      const isThisMonth = range.start === firstDayOfThisMonth() && range.end === lastDayOfThisMonth();
+      
+      const filteredHistory = useMemo(() => transactions.filter(t => 
+        (historyFilter.currency === "all" || t.currency === historyFilter.currency) && 
+        (historyFilter.type === "all" || t.type === historyFilter.type)
+      ), [transactions, historyFilter]);
+
+      const groupedHistory = useMemo(() => {
+        const map = {};
+        filteredHistory.forEach(t => {
+          const key = `${t.currency}|${t.category}`;
+          if (!map[key]) map[key] = { currency: t.currency, category: t.category, net: 0, items: [] };
+          map[key].net += t.type === "income" ? t.amount : -t.amount;
+          map[key].items.push(t);
+        });
+        return Object.values(map).sort((a, b) => {
+          if (a.net >= 0 && b.net < 0) return -1;
+          if (a.net < 0 && b.net >= 0) return 1;
+          return Math.abs(b.net) - Math.abs(a.net);
+        });
+      }, [filteredHistory]);
+
+      const suggestions = CATEGORY_SUGGESTIONS[form.currency][form.type];
+      
+      // 현금 시세 계산기 결과 및 콤마 처리용 파싱
+      const rawCalcMeso = Number(calc.mesoEok.replace(/,/g, "")) || 0;
+      const rawCalcRate = Number(calc.rate.replace(/,/g, "")) || 0;
+      const calcResult = (rawCalcMeso > 0 && rawCalcRate > 0) ? Math.round(rawCalcMeso * rawCalcRate) : null;
+      
+      // 조각시세 계산기 결과 및 콤마 처리용 파싱
+      const rawPieceCount = Number(pieceCalc.count.replace(/,/g, "")) || 0;
+      const rawPieceRate = Number(pieceCalc.rate.replace(/,/g, "")) || 0;
+      const pieceCalcResult = (rawPieceCount > 0 && rawPieceRate > 0) ? Math.round(rawPieceCount * rawPieceRate) : null;
+
+      // 메소 아이템 계산기 결과 (가격 * 갯수)
+      const rawItemPrice = Number(itemCalc.price.replace(/,/g, "")) || 0;
+      const rawItemCount = Number(itemCalc.count.replace(/,/g, "")) || 0;
+      const itemCalcResult = (rawItemPrice > 0 && rawItemCount > 0) ? rawItemPrice * rawItemCount : null;
+
+      return (
+        <div className="ml-root">
+          <header className="ml-header">
+            <div className="ml-header-title">
+              <span className="icon">🍁</span>
+              <div>
+                <h1>장부</h1>
+              </div>
+            </div>
+          </header>
+
+          <nav className="ml-tabs">
+            {[["dashboard", "메인"], ["add", "기록하기"], ["history", "전체 내역"]].map(([k, l]) => (
+              <button key={k} className={`ml-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>{l}</button>
+            ))}
+          </nav>
+
+          <main className="ml-main">
+            {tab === "dashboard" && (
+              <section className="ml-page">
+                <div className="ml-panel">
+                  <div className="ml-range-head">
+                    <h2>기간</h2>
+                    {!isThisMonth && <button className="ml-range-reset" onClick={() => setRange({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() })}>이번 달로</button>}
+                  </div>
+                  <div className="ml-range-row">
+                    <input type="date" value={range.start} onChange={e => setRange(r => ({ ...r, start: e.target.value }))} />
+                    <span>~</span>
+                    <input type="date" value={range.end} onChange={e => setRange(r => ({ ...r, end: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div className="ml-stat-grid">
+                  {/* 현금 파트 */}
+                  <StatCard icon="💳" label="현금 총수입" value={summary.cashIncome} unit="원" tone="income" />
+                  <StatCard icon="💳" label="현금 총지출" value={summary.cashExpense} unit="원" tone="expense" />
+                  <div style={{ gridColumn: "1 / -1", marginBottom: "4px" }}>
+                    <StatCard 
+                      icon="🧾" 
+                      label="현금 정산" 
+                      value={summary.cashIncome - summary.cashExpense} 
+                      unit="원" 
+                      tone={(summary.cashIncome - summary.cashExpense) >= 0 ? "income" : "expense"} 
+                    />
+                  </div>
+
+                  {/* 메소 파트 */}
+                  <StatCard icon="💰" label="메소 총수입" value={summary.mesoIncome} unit="메소" tone="income" isMeso={true} />
+                  <StatCard icon="💰" label="메소 총지출" value={summary.mesoExpense} unit="메소" tone="expense" isMeso={true} />
+                  <div style={{ gridColumn: "1 / -1", marginBottom: "4px" }}>
+                    <StatCard 
+                      icon="🧾" 
+                      label="메소 정산" 
+                      value={summary.mesoIncome - summary.mesoExpense} 
+                      unit="메소" 
+                      tone={(summary.mesoIncome - summary.mesoExpense) >= 0 ? "income" : "expense"} 
+                      isMeso={true} 
+                    />
+                  </div>
+
+                  {/* 조각 파트 */}
+                  <StatCard icon="🧩" label="조각 총수입" value={summary.pieceIncome} unit="개" tone="income" />
+                  <StatCard icon="🧩" label="조각 총지출" value={summary.pieceExpense} unit="개" tone="expense" />
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <StatCard 
+                      icon="🧾" 
+                      label="조각 정산" 
+                      value={summary.pieceIncome - summary.pieceExpense} 
+                      unit="개" 
+                      tone={(summary.pieceIncome - summary.pieceExpense) >= 0 ? "income" : "expense"} 
+                    />
+                  </div>
+                </div>
+
+                <div className="ml-panel">
+                  <h2>최근 거래</h2>
+                  {transactions.length === 0 && <p className="ml-empty">첫 거래를 기록해보세요.</p>}
+                  {transactions.slice(0, 5).map(t => <TxRow key={t.id} t={t} />)}
+                </div>
+              </section>
+            )}
+
+            {tab === "add" && (
+              <section className="ml-page">
+                <div className="ml-panel">
+                  <h2>새 기록</h2>
+                  <div className="ml-form-row">
+                    <label>날짜</label>
+                    <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+                  </div>
+
+                  <div className="ml-form-row">
+                    <label>통화</label>
+                    <div className="ml-seg">
+                      <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "" }))}>💳 현금</button>
+                      <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "" }))}>💰 메소</button>
+                      <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "" }))}>🧩 조각</button>
+                    </div>
+                  </div>
+
+                  <div className="ml-form-row">
+                    <label>유형</label>
+                    <div className="ml-seg">
+                      <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "" }))}>지출</button>
+                      <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "" }))}>수입</button>
+                    </div>
+                  </div>
+
+                  <div className="ml-form-row">
+                    <label>카테고리</label>
+                    <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
+                  </div>
+                  <div className="ml-chips">
+                    {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s }))}>{s}</button>)}
+                  </div>
+
+                  {form.currency === "cash" && (
+                    <div className="ml-calc">
+                      <div className="ml-calc-title">🧮 시세 계산기</div>
+                      <div className="ml-calc-row">
+                        <input type="text" inputMode="numeric" placeholder="메소 수량(억)" value={calc.mesoEok} onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setCalc(c => ({ ...c, mesoEok: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                        }} />
+                        <span>×</span>
+                        <input type="text" inputMode="numeric" placeholder="1억당 원" value={calc.rate} onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                        }} />
+                      </div>
+                      <div className="ml-calc-result">
+                        <span>{calcResult != null ? formatCalcResult(calcResult, "원") : "메소 수량과 시세를 입력해주세요"}</span>
+                        <button className="ml-calc-apply" onClick={() => calcResult && setForm(f => ({ ...f, currency: "cash", amount: String(calcResult) }))} disabled={calcResult == null}>금액에 적용</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {form.currency === "piece" && (form.category === "아이템 구매" || form.category === "아이템 판매") && (
+                    <div className="ml-calc">
+                      <div className="ml-calc-title">🧮 조각시세 계산기</div>
+                      <div className="ml-calc-row">
+                        <input type="text" inputMode="numeric" placeholder="조각 갯수" value={pieceCalc.count} onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                        }} />
+                        <span>×</span>
+                        <input type="text" inputMode="numeric" placeholder="조각당 가격" value={pieceCalc.rate} onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                        }} />
+                      </div>
+                      <div className="ml-calc-result">
+                        <span>{pieceCalcResult != null ? formatPieceCalcResult(pieceCalcResult) : "갯수와 단가를 입력해주세요"}</span>
+                        <button className="ml-calc-apply" onClick={() => {
+                          if (pieceCalcResult != null) {
+                            const isExpense = form.type === "expense";
+                            const targetType = isExpense ? "income" : "expense";
+                            const pieceType = isExpense ? "expense" : "income";
+                            
+                            const mesoTx = {
+                              id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                              date: form.date, currency: "meso", type: targetType,
+                              category: form.category.trim() || "기타", amount: pieceCalcResult, memo: form.memo.trim(),
+                            };
+                            
+                            const pieceTx = {
+                              id: `${Date.now() + 1}-${Math.random().toString(36).slice(2, 7)}`,
+                              date: form.date, currency: "piece", type: pieceType,
+                              category: form.category.trim() || "기타", amount: rawPieceCount, memo: form.memo.trim(),
+                            };
+
+                            persistTransactions([mesoTx, pieceTx, ...transactions]);
+                            
+                            setForm(f => ({ ...f, amount: "", memo: "", category: "" }));
+                            setPieceCalc({ count: "", rate: "" });
+                          }
+                        }} disabled={pieceCalcResult == null || rawPieceCount <= 0}>메소 및 조각 장부에 동시 기록</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {form.currency === "meso" && (form.category === "아이템구매" || form.category === "아이템 판매") && (
+                    <div className="ml-calc">
+                      <div className="ml-calc-title">🧮 아이템 계산기 (가격 × 갯수)</div>
+                      <div className="ml-calc-row">
+                        <input type="text" inputMode="numeric" placeholder="개당 가격" value={itemCalc.price} onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, price: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                        }} />
+                        <span>×</span>
+                        <input type="text" inputMode="numeric" placeholder="갯수" value={itemCalc.count} onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                        }} />
+                      </div>
+                      <div className="ml-calc-result">
+                        <span>{itemCalcResult != null ? formatCalcResult(itemCalcResult, "메소") : "가격과 갯수를 입력해주세요"}</span>
+                        <button className="ml-calc-apply" onClick={() => itemCalcResult != null && setForm(f => ({ ...f, currency: "meso", amount: String(itemCalcResult) }))} disabled={itemCalcResult == null}>메소 금액에 적용</button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="ml-form-row">
+                    <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
+                    <input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} 
+                      onChange={e => {
+                        const val = e.target.value.replace(/,/g, "");
+                        if (/^\d*$/.test(val)) setForm(f => ({ ...f, amount: val }));
+                      }} 
+                    />
+                    {form.amount && <div className="ml-korean-amount">{formatKoreanCurrency(form.amount, form.currency)}</div>}
+                  </div>
+
+                  <div className="ml-form-row">
+                    <label>메모</label>
+                    <input type="text" placeholder="선택 사항" value={form.memo} onChange={e => setForm(f => ({ ...f, memo: e.target.value }))} />
+                  </div>
+
+                  <button className="ml-submit" onClick={addTransaction}>➕ 장부에 적기</button>
+                </div>
+              </section>
+            )}
+
+            {tab === "history" && (
+              <section className="ml-page">
+                <div className="ml-panel">
+                  <div className="ml-filter-row">
+                    <select value={historyFilter.currency} onChange={e => setHistoryFilter(f => ({ ...f, currency: e.target.value }))}>
+                      <option value="all">전체 통화</option><option value="cash">현금</option><option value="meso">메소</option><option value="piece">조각</option>
+                    </select>
+                    <select value={historyFilter.type} onChange={e => setHistoryFilter(f => ({ ...f, type: e.target.value }))}>
+                      <option value="all">전체 유형</option><option value="expense">지출</option><option value="income">수입</option>
+                    </select>
+                  </div>
+
+                  <div className="ml-seg ml-view-toggle">
+                    <button className={historyView === "list" ? "active" : ""} onClick={() => setHistoryView("list")}>📋 목록</button>
+                    <button className={historyView === "category" ? "active" : ""} onClick={() => setHistoryView("category")}>🗂️ 카테고리별</button>
+                  </div>
+
+                  {filteredHistory.length === 0 && <p className="ml-empty">조건에 맞는 기록이 없어요.</p>}
+
+                  {historyView === "list" && filteredHistory.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} />)}
+
+                  {historyView === "category" && groupedHistory.map(g => (
+                    <div key={`${g.currency}|${g.category}`}>
+                      <div className="ml-group-header">
+                        <span className="ml-group-name">
+                          {g.category} 
+                          <span className="ml-group-badge">
+                            {g.currency === "cash" ? "현금" : g.currency === "meso" ? "메소" : "조각"}
+                          </span>
+                        </span>
+                        <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
+                          {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
+                          {g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개"}
+                        </span>
+                      </div>
+                      {g.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<MapleLedger />);
+  </script>
+</body>
+</html>
