@@ -36,45 +36,38 @@
     }
     .ml-root * { box-sizing: border-box; }
 
-    /* 전체 레이아웃 (PC에서 오른쪽 고정 계산기를 위한 그리드 배치) */
-    .ml-layout {
-      max-width: 940px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-    @media (min-width: 900px) {
-      .ml-layout {
-        grid-template-columns: 640px 260px;
-        align-items: start;
-      }
-    }
-
     .ml-content-area {
       max-width: 640px;
       width: 100%;
       margin: 0 auto;
     }
 
-    /* 우측 고정 계산기 스타일 */
+    /* 우측 하단 플로팅 계산기 스타일 */
     .ml-sidebar-calc {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 260px;
+      z-index: 1000;
       background: var(--paper);
       border: 1px solid var(--line);
-      border-radius: 3px;
+      border-radius: 4px;
       padding: 16px;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
-    @media (min-width: 900px) {
+    @media (max-width: 680px) {
       .ml-sidebar-calc {
-        position: sticky;
-        top: 20px;
+        left: 14px;
+        right: 14px;
+        width: auto;
+        bottom: 14px;
       }
     }
 
     .ml-loading { display: flex; align-items: center; justify-content: center; min-height: 300px; color: var(--gold); }
     
     .ml-header { margin: 0 auto 16px; }
+    .ml-header-top { display: flex; align-items: center; justify-content: space-between; }
     .ml-header-title { display: flex; align-items: flex-start; gap: 10px; color: var(--paper); }
     .ml-header-title h1 {
       font-family: 'Fraunces', serif;
@@ -84,6 +77,12 @@
       letter-spacing: 0.2px;
     }
     .ml-header-title span.icon { font-size: 24px; margin-top: 2px; }
+
+    .ml-calc-toggle-btn {
+      background: #3A4A3B; color: var(--paper); border: 1px solid #4A5A4B;
+      padding: 6px 12px; font-size: 13px; font-weight: 500; border-radius: 3px; cursor: pointer;
+    }
+    .ml-calc-toggle-btn:hover { background: #4A5A4B; border-color: var(--gold); }
 
     .ml-tabs {
       margin: 0 auto 18px;
@@ -149,6 +148,7 @@
     .ml-form-row input, .ml-filter-row select {
       font-family: 'Inter', sans-serif; font-size: 14px; padding: 9px 10px;
       border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; color: var(--ink);
+      width: 100%; min-width: 0;
     }
     .ml-form-row input:focus, .ml-filter-row select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 
@@ -169,18 +169,23 @@
     .ml-chip:hover { border-color: var(--gold); color: var(--ink); }
 
     .ml-calc { background: #E6DCC4; border: 1px dashed var(--line); border-radius: 3px; padding: 12px; margin-bottom: 14px; }
-    .ml-calc-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
-    .ml-calc-row { display: flex; align-items: center; gap: 8px; }
-    .ml-calc-row input { flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px; border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; }
+    .ml-calc-title { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+    .ml-calc-row { display: flex; align-items: center; gap: 6px; width: 100%; }
+    .ml-calc-row input { flex: 1; min-width: 0; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 6px; border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; }
     .ml-calc-result { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--ink); }
-    .ml-calc-apply { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 3px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
+    .ml-calc-apply { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 3px; border: 1px solid var(--ink); background: transparent; cursor: pointer; white-space: nowrap; }
     .ml-calc-apply:disabled { opacity: 0.4; cursor: default; }
 
-    /* 사이드바 계산기 내부 요소 */
+    .ml-calc-screen {
+      background: #FBF7EC; border: 1px solid var(--line); border-radius: 3px;
+      padding: 8px 10px; margin-bottom: 10px; text-align: right;
+    }
+    .ml-calc-expression {
+      font-size: 11px; color: var(--ink-soft); min-height: 16px; overflow-x: auto; white-space: nowrap;
+    }
     .ml-calc-display {
-      width: 100%; background: #FBF7EC; border: 1px solid var(--line); border-radius: 3px;
-      padding: 10px; font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600;
-      text-align: right; margin-bottom: 10px; color: var(--ink); overflow-x: auto;
+      font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600;
+      color: var(--ink); overflow-x: auto; white-space: nowrap;
     }
     .ml-calc-keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
     .ml-calc-btn {
@@ -350,32 +355,60 @@
 
     function MapleLedger() {
       const [tab, setTab] = useState("dashboard");
+      const [showCalc, setShowCalc] = useState(true);
       const [transactions, setTransactions] = useState([]);
       const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "" });
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       const [itemCalc, setItemCalc] = useState({ price: "", count: "" });
       
-      const [stdCalc, setStdCalc] = useState({ display: "0", waitingForOperand: false, pendingOp: null, prevVal: null });
+      const [stdCalc, setStdCalc] = useState({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
 
       const handleStdNum = (numStr) => {
         setStdCalc(prev => {
           if (prev.waitingForOperand) {
-            return { ...prev, display: numStr, waitingForOperand: false };
+            return {
+              ...prev,
+              display: numStr,
+              expression: prev.expression + " " + numStr,
+              waitingForOperand: false
+            };
           } else {
-            return { ...prev, display: prev.display === "0" ? numStr : prev.display + numStr };
+            const newDisplay = prev.display === "0" ? numStr : prev.display + numStr;
+            let newExpr = prev.expression;
+            if (newExpr === "" || newExpr === "0") {
+              newExpr = numStr;
+            } else {
+              const parts = newExpr.split(" ");
+              parts[parts.length - 1] = newDisplay;
+              newExpr = parts.join(" ");
+            }
+            return { ...prev, display: newDisplay, expression: newExpr };
           }
         });
       };
 
       const handleStdOp = (op) => {
         setStdCalc(prev => {
-          const currentVal = parseFloat(prev.display);
+          const currentVal = parseFloat(prev.display.replace(/,/g, "")) || 0;
           if (prev.pendingOp && !prev.waitingForOperand) {
             const result = calculateStd(prev.prevVal, currentVal, prev.pendingOp);
-            return { display: String(result), prevVal: result, pendingOp: op, waitingForOperand: true };
+            return {
+              display: String(result),
+              expression: prev.expression + " " + op,
+              prevVal: result,
+              pendingOp: op,
+              waitingForOperand: true
+            };
           }
-          return { ...prev, prevVal: currentVal, pendingOp: op, waitingForOperand: true };
+          const baseExpr = prev.expression === "" ? prev.display : prev.expression;
+          return {
+            ...prev,
+            prevVal: currentVal,
+            pendingOp: op,
+            expression: baseExpr + " " + op,
+            waitingForOperand: true
+          };
         });
       };
 
@@ -390,15 +423,67 @@
       const handleStdEquals = () => {
         setStdCalc(prev => {
           if (!prev.pendingOp || prev.prevVal === null) return prev;
-          const currentVal = parseFloat(prev.display);
+          const currentVal = parseFloat(prev.display.replace(/,/g, "")) || 0;
           const result = calculateStd(prev.prevVal, currentVal, prev.pendingOp);
-          return { display: String(result), waitingForOperand: true, pendingOp: null, prevVal: null };
+          return {
+            display: String(result),
+            expression: prev.expression + " = " + result,
+            waitingForOperand: true,
+            pendingOp: null,
+            prevVal: null
+          };
         });
       };
 
       const handleStdClear = () => {
-        setStdCalc({ display: "0", waitingForOperand: false, pendingOp: null, prevVal: null });
+        setStdCalc({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
       };
+
+      const handleStdDelete = () => {
+        setStdCalc(prev => {
+          if (prev.waitingForOperand) return prev;
+          let newDisplay = prev.display.length > 1 ? prev.display.slice(0, -1) : "0";
+          let newExpr = prev.expression;
+          if (newExpr !== "") {
+            const parts = newExpr.split(" ");
+            if (parts.length > 0) {
+              parts[parts.length - 1] = newDisplay;
+              newExpr = parts.join(" ").trim();
+            }
+          }
+          return { ...prev, display: newDisplay, expression: newExpr };
+        });
+      };
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (!showCalc) return;
+          if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+
+          if ((e.key >= "0" && e.key <= "9") || e.key === ".") {
+            handleStdNum(e.key);
+          } else if (e.key === "+") {
+            handleStdOp("+");
+          } else if (e.key === "-") {
+            handleStdOp("-");
+          } else if (e.key === "*" || e.key === "x") {
+            handleStdOp("×");
+          } else if (e.key === "/") {
+            e.preventDefault();
+            handleStdOp("÷");
+          } else if (e.key === "Enter" || e.key === "=") {
+            handleStdEquals();
+          } else if (e.key === "Backspace" || e.key === "Delete") {
+            e.preventDefault();
+            handleStdDelete();
+          } else if (e.key === "Escape" || e.key === "c" || e.key === "C") {
+            handleStdClear();
+          }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+      }, [showCalc]);
 
       useEffect(() => {
         try {
@@ -483,302 +568,317 @@
 
       return (
         <div className="ml-root">
-          <div className="ml-layout">
-            <div className="ml-content-area">
-              <header className="ml-header">
+          <div className="ml-content-area">
+            <header className="ml-header">
+              <div className="ml-header-top">
                 <div className="ml-header-title">
                   <span className="icon">🍁</span>
                   <div>
                     <h1>장부</h1>
                   </div>
                 </div>
-              </header>
-
-              <nav className="ml-tabs">
-                {[["dashboard", "메인"], ["add", "기록하기"], ["history", "전체 내역"]].map(([k, l]) => (
-                  <button key={k} className={`ml-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>{l}</button>
-                ))}
-              </nav>
-
-              <main>
-                {tab === "dashboard" && (
-                  <section className="ml-page">
-                    <div className="ml-panel">
-                      <div className="ml-range-head">
-                        <h2>기간</h2>
-                        {!isThisMonth && <button className="ml-range-reset" onClick={() => setRange({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() })}>이번 달로</button>}
-                      </div>
-                      <div className="ml-range-row">
-                        <input type="date" value={range.start} onChange={e => setRange(r => ({ ...r, start: e.target.value }))} />
-                        <span>~</span>
-                        <input type="date" value={range.end} onChange={e => setRange(r => ({ ...r, end: e.target.value }))} />
-                      </div>
-                    </div>
-
-                    <div className="ml-stat-grid">
-                      <StatCard icon="💳" label="현금 총수입" value={summary.cashIncome} unit="원" tone="income" />
-                      <StatCard icon="💳" label="현금 총지출" value={summary.cashExpense} unit="원" tone="expense" />
-                      <div style={{ gridColumn: "1 / -1", marginBottom: "4px" }}>
-                        <StatCard 
-                          icon="🧾" 
-                          label="현금 정산" 
-                          value={summary.cashIncome - summary.cashExpense} 
-                          unit="원" 
-                          tone={(summary.cashIncome - summary.cashExpense) >= 0 ? "income" : "expense"} 
-                        />
-                      </div>
-
-                      <StatCard icon="💰" label="메소 총수입" value={summary.mesoIncome} unit="메소" tone="income" isMeso={true} />
-                      <StatCard icon="💰" label="메소 총지출" value={summary.mesoExpense} unit="메소" tone="expense" isMeso={true} />
-                      <div style={{ gridColumn: "1 / -1", marginBottom: "4px" }}>
-                        <StatCard 
-                          icon="🧾" 
-                          label="메소 정산" 
-                          value={summary.mesoIncome - summary.mesoExpense} 
-                          unit="메소" 
-                          tone={(summary.mesoIncome - summary.mesoExpense) >= 0 ? "income" : "expense"} 
-                          isMeso={true} 
-                        />
-                      </div>
-
-                      <StatCard icon="🧩" label="조각 총수입" value={summary.pieceIncome} unit="개" tone="income" />
-                      <StatCard icon="🧩" label="조각 총지출" value={summary.pieceExpense} unit="개" tone="expense" />
-                      <div style={{ gridColumn: "1 / -1" }}>
-                        <StatCard 
-                          icon="🧾" 
-                          label="조각 정산" 
-                          value={summary.pieceIncome - summary.pieceExpense} 
-                          unit="개" 
-                          tone={(summary.pieceIncome - summary.pieceExpense) >= 0 ? "income" : "expense"} 
-                        />
-                      </div>
-                    </div>
-
-                    <div className="ml-panel">
-                      <h2>최근 거래</h2>
-                      {transactions.length === 0 && <p className="ml-empty">첫 거래를 기록해보세요.</p>}
-                      {transactions.slice(0, 5).map(t => <TxRow key={t.id} t={t} />)}
-                    </div>
-                  </section>
-                )}
-
-                {tab === "add" && (
-                  <section className="ml-page">
-                    <div className="ml-panel">
-                      <h2>새 기록</h2>
-                      <div className="ml-form-row">
-                        <label>날짜</label>
-                        <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
-                      </div>
-
-                      <div className="ml-form-row">
-                        <label>통화</label>
-                        <div className="ml-seg">
-                          <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "" }))}>💳 현금</button>
-                          <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "" }))}>💰 메소</button>
-                          <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "" }))}>🧩 조각</button>
-                        </div>
-                      </div>
-
-                      <div className="ml-form-row">
-                        <label>유형</label>
-                        <div className="ml-seg">
-                          <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "" }))}>지출</button>
-                          <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "" }))}>수입</button>
-                        </div>
-                      </div>
-
-                      <div className="ml-form-row">
-                        <label>카테고리</label>
-                        <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
-                      </div>
-                      <div className="ml-chips">
-                        {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s }))}>{s}</button>)}
-                      </div>
-
-                      {form.currency === "cash" && (
-                        <div className="ml-calc">
-                          <div className="ml-calc-title">🧮 시세 계산기</div>
-                          <div className="ml-calc-row">
-                            <input type="text" inputMode="numeric" placeholder="메소 수량(억)" value={calc.mesoEok} onChange={e => {
-                              const val = e.target.value.replace(/,/g, "");
-                              if (/^\d*$/.test(val)) setCalc(c => ({ ...c, mesoEok: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                            }} />
-                            <span>×</span>
-                            <input type="text" inputMode="numeric" placeholder="1억당 원" value={calc.rate} onChange={e => {
-                              const val = e.target.value.replace(/,/g, "");
-                              if (/^\d*$/.test(val)) setCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                            }} />
-                          </div>
-                          <div className="ml-calc-result">
-                            <span>{calcResult != null ? formatCalcResult(calcResult, "원") : "메소 수량과 시세를 입력해주세요"}</span>
-                            <button className="ml-calc-apply" onClick={() => calcResult && setForm(f => ({ ...f, currency: "cash", amount: String(calcResult) }))} disabled={calcResult == null}>금액에 적용</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {form.currency === "piece" && (form.category === "아이템 구매" || form.category === "아이템 판매") && (
-                        <div className="ml-calc">
-                          <div className="ml-calc-title">🧮 조각시세 계산기</div>
-                          <div className="ml-calc-row">
-                            <input type="text" inputMode="numeric" placeholder="조각 갯수" value={pieceCalc.count} onChange={e => {
-                              const val = e.target.value.replace(/,/g, "");
-                              if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                            }} />
-                            <span>×</span>
-                            <input type="text" inputMode="numeric" placeholder="조각당 가격" value={pieceCalc.rate} onChange={e => {
-                              const val = e.target.value.replace(/,/g, "");
-                              if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                            }} />
-                          </div>
-                          <div className="ml-calc-result">
-                            <span>{pieceCalcResult != null ? formatPieceCalcResult(pieceCalcResult) : "갯수와 단가를 입력해주세요"}</span>
-                            <button className="ml-calc-apply" onClick={() => {
-                              if (pieceCalcResult != null) {
-                                const isExpense = form.type === "expense";
-                                const targetType = isExpense ? "income" : "expense";
-                                const pieceType = isExpense ? "expense" : "income";
-                                
-                                const mesoTx = {
-                                  id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                                  date: form.date, currency: "meso", type: targetType,
-                                  category: form.category.trim() || "기타", amount: pieceCalcResult, memo: form.memo.trim(),
-                                };
-                                
-                                const pieceTx = {
-                                  id: `${Date.now() + 1}-${Math.random().toString(36).slice(2, 7)}`,
-                                  date: form.date, currency: "piece", type: pieceType,
-                                  category: form.category.trim() || "기타", amount: rawPieceCount, memo: form.memo.trim(),
-                                };
-
-                                persistTransactions([mesoTx, pieceTx, ...transactions]);
-                                setForm(f => ({ ...f, amount: "", memo: "", category: "" }));
-                                setPieceCalc({ count: "", rate: "" });
-                              }
-                            }} disabled={pieceCalcResult == null || rawPieceCount <= 0}>메소 및 조각 장부에 동시 기록</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {form.currency === "meso" && (form.category === "아이템구매" || form.category === "아이템 판매") && (
-                        <div className="ml-calc">
-                          <div className="ml-calc-title">🧮 아이템 계산기 (가격 × 갯수)</div>
-                          <div className="ml-calc-row">
-                            <input type="text" inputMode="numeric" placeholder="개당 가격" value={itemCalc.price} onChange={e => {
-                              const val = e.target.value.replace(/,/g, "");
-                              if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, price: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                            }} />
-                            <span>×</span>
-                            <input type="text" inputMode="numeric" placeholder="갯수" value={itemCalc.count} onChange={e => {
-                              const val = e.target.value.replace(/,/g, "");
-                              if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                            }} />
-                          </div>
-                          <div className="ml-calc-result">
-                            <span>{itemCalcResult != null ? formatCalcResult(itemCalcResult, "메소") : "가격과 갯수를 입력해주세요"}</span>
-                            <button className="ml-calc-apply" onClick={() => itemCalcResult != null && setForm(f => ({ ...f, currency: "meso", amount: String(itemCalcResult) }))} disabled={itemCalcResult == null}>메소 금액에 적용</button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="ml-form-row">
-                        <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
-                        <input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} 
-                          onChange={e => {
-                            const val = e.target.value.replace(/,/g, "");
-                            if (/^\d*$/.test(val)) setForm(f => ({ ...f, amount: val }));
-                          }} 
-                        />
-                        {form.amount && <div className="ml-korean-amount">{formatKoreanCurrency(form.amount, form.currency)}</div>}
-                      </div>
-
-                      <div className="ml-form-row">
-                        <label>메모</label>
-                        <input type="text" placeholder="선택 사항" value={form.memo} onChange={e => setForm(f => ({ ...f, memo: e.target.value }))} />
-                      </div>
-
-                      <button className="ml-submit" onClick={addTransaction}>➕ 장부에 적기</button>
-                    </div>
-                  </section>
-                )}
-
-                {tab === "history" && (
-                  <section className="ml-page">
-                    <div className="ml-panel">
-                      <div className="ml-filter-row">
-                        <select value={historyFilter.currency} onChange={e => setHistoryFilter(f => ({ ...f, currency: e.target.value }))}>
-                          <option value="all">전체 통화</option><option value="cash">현금</option><option value="meso">메소</option><option value="piece">조각</option>
-                        </select>
-                        <select value={historyFilter.type} onChange={e => setHistoryFilter(f => ({ ...f, type: e.target.value }))}>
-                          <option value="all">전체 유형</option><option value="expense">지출</option><option value="income">수입</option>
-                        </select>
-                      </div>
-
-                      <div className="ml-seg ml-view-toggle">
-                        <button className={historyView === "list" ? "active" : ""} onClick={() => setHistoryView("list")}>📋 목록</button>
-                        <button className={historyView === "category" ? "active" : ""} onClick={() => setHistoryView("category")}>🗂️ 카테고리별</button>
-                      </div>
-
-                      {filteredHistory.length === 0 && <p className="ml-empty">조건에 맞는 기록이 없어요.</p>}
-
-                      {historyView === "list" && filteredHistory.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} />)}
-
-                      {historyView === "category" && groupedHistory.map(g => (
-                        <div key={`${g.currency}|${g.category}`}>
-                          <div className="ml-group-header">
-                            <span className="ml-group-name">
-                              {g.category} 
-                              <span className="ml-group-badge">
-                                {g.currency === "cash" ? "현금" : g.currency === "meso" ? "메소" : "조각"}
-                              </span>
-                            </span>
-                            <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
-                              {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
-                              {g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개"}
-                            </span>
-                          </div>
-                          {g.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </main>
-            </div>
-
-            {/* 오른쪽 사이드바에 고정된 간편 계산기 */}
-            <aside>
-              <div className="ml-sidebar-calc">
-                <div className="ml-calc-title">🧮 간편 계산기</div>
-                <div className="ml-calc-display">{Number(stdCalc.display).toLocaleString("ko-KR")}</div>
-                <div className="ml-calc-keypad">
-                  <button className="ml-calc-btn" onClick={handleStdClear}>C</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("÷")}>÷</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("×")}>×</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("-")}>-</button>
-
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("7")}>7</button>
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("8")}>8</button>
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("9")}>9</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("+")}>+</button>
-
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("4")}>4</button>
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("5")}>5</button>
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("6")}>6</button>
-                  <button className="ml-calc-btn action" style={{ gridRow: "span 2" }} onClick={handleStdEquals}>=</button>
-
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("1")}>1</button>
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("2")}>2</button>
-                  <button className="ml-calc-btn" onClick={() => handleStdNum("3")}>3</button>
-
-                  <button className="ml-calc-btn" style={{ gridColumn: "span 2" }} onClick={() => handleStdNum("0")}>0</button>
-                  <button className="ml-calc-btn" onClick={() => {
-                    setStdCalc(prev => ({ ...prev, display: prev.display.includes(".") ? prev.display : prev.display + "." }));
-                  }}>.</button>
-                </div>
+                <button className="ml-calc-toggle-btn" onClick={() => setShowCalc(!showCalc)}>
+                  {showCalc ? "계산기 끄기 ✖" : "🧮 계산기 켜기"}
+                </button>
               </div>
-            </aside>
+            </header>
+
+            <nav className="ml-tabs">
+              {[["dashboard", "메인"], ["add", "기록하기"], ["history", "전체 내역"]].map(([k, l]) => (
+                <button key={k} className={`ml-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </nav>
+
+            <main>
+              {tab === "dashboard" && (
+                <section className="ml-page">
+                  <div className="ml-panel">
+                    <div className="ml-range-head">
+                      <h2>기간</h2>
+                      {!isThisMonth && <button className="ml-range-reset" onClick={() => setRange({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() })}>이번 달로</button>}
+                    </div>
+                    <div className="ml-range-row">
+                      <input type="date" value={range.start} onChange={e => setRange(r => ({ ...r, start: e.target.value }))} />
+                      <span>~</span>
+                      <input type="date" value={range.end} onChange={e => setRange(r => ({ ...r, end: e.target.value }))} />
+                    </div>
+                  </div>
+
+                  <div className="ml-stat-grid">
+                    <StatCard icon="💳" label="현금 총수입" value={summary.cashIncome} unit="원" tone="income" />
+                    <StatCard icon="💳" label="현금 총지출" value={summary.cashExpense} unit="원" tone="expense" />
+                    <div style={{ gridColumn: "1 / -1", marginBottom: "4px" }}>
+                      <StatCard 
+                        icon="🧾" 
+                        label="현금 정산" 
+                        value={summary.cashIncome - summary.cashExpense} 
+                        unit="원" 
+                        tone={(summary.cashIncome - summary.cashExpense) >= 0 ? "income" : "expense"} 
+                      />
+                    </div>
+
+                    <StatCard icon="💰" label="메소 총수입" value={summary.mesoIncome} unit="메소" tone="income" isMeso={true} />
+                    <StatCard icon="💰" label="메소 총지출" value={summary.mesoExpense} unit="메소" tone="expense" isMeso={true} />
+                    <div style={{ gridColumn: "1 / -1", marginBottom: "4px" }}>
+                      <StatCard 
+                        icon="🧾" 
+                        label="메소 정산" 
+                        value={summary.mesoIncome - summary.mesoExpense} 
+                        unit="메소" 
+                        tone={(summary.mesoIncome - summary.mesoExpense) >= 0 ? "income" : "expense"} 
+                        isMeso={true} 
+                      />
+                    </div>
+
+                    <StatCard icon="🧩" label="조각 총수입" value={summary.pieceIncome} unit="개" tone="income" />
+                    <StatCard icon="🧩" label="조각 총지출" value={summary.pieceExpense} unit="개" tone="expense" />
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <StatCard 
+                        icon="🧾" 
+                        label="조각 정산" 
+                        value={summary.pieceIncome - summary.pieceExpense} 
+                        unit="개" 
+                        tone={(summary.pieceIncome - summary.pieceExpense) >= 0 ? "income" : "expense"} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="ml-panel">
+                    <h2>최근 거래</h2>
+                    {transactions.length === 0 && <p className="ml-empty">첫 거래를 기록해보세요.</p>}
+                    {transactions.slice(0, 5).map(t => <TxRow key={t.id} t={t} />)}
+                  </div>
+                </section>
+              )}
+
+              {tab === "add" && (
+                <section className="ml-page">
+                  <div className="ml-panel">
+                    <h2>새 기록</h2>
+                    <div className="ml-form-row">
+                      <label>날짜</label>
+                      <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+                    </div>
+
+                    <div className="ml-form-row">
+                      <label>통화</label>
+                      <div className="ml-seg">
+                        <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "" }))}>💳 현금</button>
+                        <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "" }))}>💰 메소</button>
+                        <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "" }))}>🧩 조각</button>
+                      </div>
+                    </div>
+
+                    <div className="ml-form-row">
+                      <label>유형</label>
+                      <div className="ml-seg">
+                        <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "" }))}>지출</button>
+                        <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "" }))}>수입</button>
+                      </div>
+                    </div>
+
+                    <div className="ml-form-row">
+                      <label>카테고리</label>
+                      <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
+                    </div>
+                    <div className="ml-chips">
+                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s }))}>{s}</button>)}
+                    </div>
+
+                    {form.currency === "cash" && (
+                      <div className="ml-calc">
+                        <div className="ml-calc-title">
+                          <span>🧮 시세 계산기</span>
+                        </div>
+                        <div className="ml-calc-row">
+                          <input type="text" inputMode="numeric" placeholder="메소(억)" value={calc.mesoEok} onChange={e => {
+                            const val = e.target.value.replace(/,/g, "");
+                            if (/^\d*$/.test(val)) setCalc(c => ({ ...c, mesoEok: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                          }} />
+                          <span>×</span>
+                          <input type="text" inputMode="numeric" placeholder="1억당 원" value={calc.rate} onChange={e => {
+                            const val = e.target.value.replace(/,/g, "");
+                            if (/^\d*$/.test(val)) setCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                          }} />
+                        </div>
+                        <div className="ml-calc-result">
+                          <span>{calcResult != null ? formatCalcResult(calcResult, "원") : "메소 수량과 시세를 입력해주세요"}</span>
+                          <button className="ml-calc-apply" onClick={() => calcResult && setForm(f => ({ ...f, currency: "cash", amount: String(calcResult) }))} disabled={calcResult == null}>금액에 적용</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {form.currency === "piece" && (form.category === "아이템 구매" || form.category === "아이템 판매") && (
+                      <div className="ml-calc">
+                        <div className="ml-calc-title">
+                          <span>🧮 조각시세 계산기</span>
+                        </div>
+                        <div className="ml-calc-row">
+                          <input type="text" inputMode="numeric" placeholder="조각 갯수" value={pieceCalc.count} onChange={e => {
+                            const val = e.target.value.replace(/,/g, "");
+                            if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                          }} />
+                          <span>×</span>
+                          <input type="text" inputMode="numeric" placeholder="조각당 가격" value={pieceCalc.rate} onChange={e => {
+                            const val = e.target.value.replace(/,/g, "");
+                            if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                          }} />
+                        </div>
+                        <div className="ml-calc-result">
+                          <span>{pieceCalcResult != null ? formatPieceCalcResult(pieceCalcResult) : "갯수와 단가를 입력해주세요"}</span>
+                          <button className="ml-calc-apply" onClick={() => {
+                            if (pieceCalcResult != null) {
+                              const isExpense = form.type === "expense";
+                              const targetType = isExpense ? "income" : "expense";
+                              const pieceType = isExpense ? "expense" : "income";
+                              
+                              const mesoTx = {
+                                id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                                date: form.date, currency: "meso", type: targetType,
+                                category: form.category.trim() || "기타", amount: pieceCalcResult, memo: form.memo.trim(),
+                              };
+                              
+                              const pieceTx = {
+                                id: `${Date.now() + 1}-${Math.random().toString(36).slice(2, 7)}`,
+                                date: form.date, currency: "piece", type: pieceType,
+                                category: form.category.trim() || "기타", amount: rawPieceCount, memo: form.memo.trim(),
+                              };
+
+                              persistTransactions([mesoTx, pieceTx, ...transactions]);
+                              setForm(f => ({ ...f, amount: "", memo: "", category: "" }));
+                              setPieceCalc({ count: "", rate: "" });
+                            }
+                          }} disabled={pieceCalcResult == null || rawPieceCount <= 0}>메소 및 조각 장부에 동시 기록</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {form.currency === "meso" && (form.category === "아이템구매" || form.category === "아이템 판매") && (
+                      <div className="ml-calc">
+                        <div className="ml-calc-title">
+                          <span>🧮 아이템 계산기 (가격 × 갯수)</span>
+                        </div>
+                        <div className="ml-calc-row">
+                          <input type="text" inputMode="numeric" placeholder="개당 가격" value={itemCalc.price} onChange={e => {
+                            const val = e.target.value.replace(/,/g, "");
+                            if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, price: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                          }} />
+                          <span>×</span>
+                          <input type="text" inputMode="numeric" placeholder="갯수" value={itemCalc.count} onChange={e => {
+                            const val = e.target.value.replace(/,/g, "");
+                            if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
+                          }} />
+                        </div>
+                        <div className="ml-calc-result">
+                          <span>{itemCalcResult != null ? formatCalcResult(itemCalcResult, "메소") : "가격과 갯수를 입력해주세요"}</span>
+                          <button className="ml-calc-apply" onClick={() => itemCalcResult != null && setForm(f => ({ ...f, currency: "meso", amount: String(itemCalcResult) }))} disabled={itemCalcResult == null}>메소 금액에 적용</button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="ml-form-row">
+                      <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
+                      <input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} 
+                        onChange={e => {
+                          const val = e.target.value.replace(/,/g, "");
+                          if (/^\d*$/.test(val)) setForm(f => ({ ...f, amount: val }));
+                        }} 
+                      />
+                      {form.amount && <div className="ml-korean-amount">{formatKoreanCurrency(form.amount, form.currency)}</div>}
+                    </div>
+
+                    <div className="ml-form-row">
+                      <label>메모</label>
+                      <input type="text" placeholder="선택 사항" value={form.memo} onChange={e => setForm(f => ({ ...f, memo: e.target.value }))} />
+                    </div>
+
+                    <button className="ml-submit" onClick={addTransaction}>➕ 장부에 적기</button>
+                  </div>
+                </section>
+              )}
+
+              {tab === "history" && (
+                <section className="ml-page">
+                  <div className="ml-panel">
+                    <div className="ml-filter-row">
+                      <select value={historyFilter.currency} onChange={e => setHistoryFilter(f => ({ ...f, currency: e.target.value }))}>
+                        <option value="all">전체 통화</option><option value="cash">현금</option><option value="meso">메소</option><option value="piece">조각</option>
+                      </select>
+                      <select value={historyFilter.type} onChange={e => setHistoryFilter(f => ({ ...f, type: e.target.value }))}>
+                        <option value="all">전체 유형</option><option value="expense">지출</option><option value="income">수입</option>
+                      </select>
+                    </div>
+
+                    <div className="ml-seg ml-view-toggle">
+                      <button className={historyView === "list" ? "active" : ""} onClick={() => setHistoryView("list")}>📋 목록</button>
+                      <button className={historyView === "category" ? "active" : ""} onClick={() => setHistoryView("category")}>🗂️ 카테고리별</button>
+                    </div>
+
+                    {filteredHistory.length === 0 && <p className="ml-empty">조건에 맞는 기록이 없어요.</p>}
+
+                    {historyView === "list" && filteredHistory.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} />)}
+
+                    {historyView === "category" && groupedHistory.map(g => (
+                      <div key={`${g.currency}|${g.category}`}>
+                        <div className="ml-group-header">
+                          <span className="ml-group-name">
+                            {g.category} 
+                            <span className="ml-group-badge">
+                              {g.currency === "cash" ? "현금" : g.currency === "meso" ? "메소" : "조각"}
+                            </span>
+                          </span>
+                          <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
+                            {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
+                            {g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개"}
+                          </span>
+                        </div>
+                        {g.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </main>
           </div>
+
+          {/* 우측 하단 플로팅 계산기 (켜져 있을 때만 노출) */}
+          {showCalc && (
+            <div className="ml-sidebar-calc">
+              <div className="ml-calc-title">
+                <span>🧮 간편 계산기</span>
+              </div>
+              <div className="ml-calc-screen">
+                <div className="ml-calc-expression">{stdCalc.expression}</div>
+                <div className="ml-calc-display">{Number(stdCalc.display.replace(/,/g, "") || 0).toLocaleString("ko-KR")}</div>
+              </div>
+              <div className="ml-calc-keypad">
+                <button className="ml-calc-btn" onClick={handleStdClear}>C</button>
+                <button className="ml-calc-btn" onClick={handleStdDelete} title="한 글자 지우기">⌫</button>
+                <button className="ml-calc-btn op" onClick={() => handleStdOp("÷")}>÷</button>
+                <button className="ml-calc-btn op" onClick={() => handleStdOp("×")}>×</button>
+
+                <button className="ml-calc-btn" onClick={() => handleStdNum("7")}>7</button>
+                <button className="ml-calc-btn" onClick={() => handleStdNum("8")}>8</button>
+                <button className="ml-calc-btn" onClick={() => handleStdNum("9")}>9</button>
+                <button className="ml-calc-btn op" onClick={() => handleStdOp("-")}>-</button>
+
+                <button className="ml-calc-btn" onClick={() => handleStdNum("4")}>4</button>
+                <button className="ml-calc-btn" onClick={() => handleStdNum("5")}>5</button>
+                <button className="ml-calc-btn" onClick={() => handleStdNum("6")}>6</button>
+                <button className="ml-calc-btn op" onClick={() => handleStdOp("+")}>+</button>
+
+                <button className="ml-calc-btn" onClick={() => handleStdNum("1")}>1</button>
+                <button className="ml-calc-btn" onClick={() => handleStdNum("2")}>2</button>
+                <button className="ml-calc-btn" onClick={() => handleStdNum("3")}>3</button>
+                <button className="ml-calc-btn action" style={{ gridRow: "span 2" }} onClick={handleStdEquals}>=</button>
+
+                <button className="ml-calc-btn" style={{ gridColumn: "span 2" }} onClick={() => handleStdNum("0")}>0</button>
+                <button className="ml-calc-btn" onClick={() => {
+                  setStdCalc(prev => ({ ...prev, display: prev.display.includes(".") ? prev.display : prev.display + "." }));
+                }}>.</button>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
