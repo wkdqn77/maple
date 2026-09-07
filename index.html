@@ -425,7 +425,7 @@
             delete next[id];
           } else {
             if (!cfg.isBlackMage && !existingKeyForBoss && currentNormalBossCount >= 12) {
-              return prev; // 12개 초과 시 차단
+              return prev;
             }
             if (existingKeyForBoss) {
               delete next[existingKeyForBoss];
@@ -655,13 +655,19 @@
 
       const isThisMonth = range.start === firstDayOfThisMonth() && range.end === lastDayOfThisMonth();
       
+      // 전체 내역 탭 전용 날짜 범위 상태 (기본값: 이번 달)
+      const [historyRange, setHistoryRange] = useState({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() });
+      const isHistoryThisMonth = historyRange.start === firstDayOfThisMonth() && historyRange.end === lastDayOfThisMonth();
+
       const [historyFilter, setHistoryFilter] = useState({ currency: "all", type: "all" });
       const [historyView, setHistoryView] = useState("list");
 
+      // 날짜 범위와 통화/유형 필터가 모두 적용된 내역
       const filteredHistory = useMemo(() => transactions.filter(t => 
+        t.date >= historyRange.start && t.date <= historyRange.end &&
         (historyFilter.currency === "all" || t.currency === historyFilter.currency) && 
         (historyFilter.type === "all" || t.type === historyFilter.type)
-      ), [transactions, historyFilter]);
+      ), [transactions, historyRange, historyFilter]);
 
       const groupedHistory = useMemo(() => {
         const map = {};
@@ -811,7 +817,6 @@
                           {BOSS_CONFIGS.map((b) => {
                             const activeItem = Object.values(bossSelections).find(item => item.bossName === b.name);
                             const isThisBossChecked = !!activeItem;
-                            // 일반 보스가 이미 12개 채워졌고, 이 보스가 아직 선택되지 않았다면 비활성화 대상
                             const isLimitReached = !b.isBlackMage && currentNormalBossCount >= 12 && !isThisBossChecked;
 
                             return (
@@ -1013,6 +1018,16 @@
               {tab === "history" && (
                 <section className="ml-page">
                   <div className="ml-panel">
+                    <div className="ml-range-head">
+                      <h2>조회 기간</h2>
+                      {!isHistoryThisMonth && <button className="ml-range-reset" onClick={() => setHistoryRange({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() })}>이번 달로</button>}
+                    </div>
+                    <div className="ml-range-row" style={{ marginBottom: "12px" }}>
+                      <input type="date" value={historyRange.start} onChange={e => setHistoryRange(r => ({ ...r, start: e.target.value }))} />
+                      <span>~</span>
+                      <input type="date" value={historyRange.end} onChange={e => setHistoryRange(r => ({ ...r, end: e.target.value }))} />
+                    </div>
+
                     <div className="ml-filter-row">
                       <select value={historyFilter.currency} onChange={e => setHistoryFilter(f => ({ ...f, currency: e.target.value }))}>
                         <option value="all">전체 통화</option><option value="cash">현금</option><option value="meso">메소</option><option value="piece">조각</option>
