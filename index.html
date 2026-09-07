@@ -197,6 +197,7 @@
     .ml-filter-row select { flex: 1; }
     .ml-view-toggle { margin-bottom: 14px; }
 
+    /* 카테고리 대그룹 */
     .ml-group-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; background: #E6DCC4; border: 1px solid var(--line); border-radius: 3px; margin-top: 10px; cursor: pointer; user-select: none; }
     .ml-group-header:hover { border-color: var(--gold); }
     .ml-group-name { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
@@ -205,9 +206,17 @@
     .ml-group-total.income { color: var(--income); }
     .ml-group-total.expense { color: var(--expense); }
 
+    /* 날짜별 서브 그룹 */
+    .ml-subgroup-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 20px; background: #EFE6D2; border-top: 1px solid #DED2B4; cursor: pointer; user-select: none; }
+    .ml-subgroup-header:hover { background: #E6DCC4; }
+    .ml-subgroup-date { font-size: 12px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+    .ml-subgroup-total { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; }
+    .ml-subgroup-total.income { color: var(--income); }
+    .ml-subgroup-total.expense { color: var(--expense); }
+
     .ml-tx-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #DED2B4; }
     .ml-tx-row:first-child { border-top: none; }
-    .ml-tx-row-compact { padding: 6px 0 6px 8px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
+    .ml-tx-row-compact { padding: 6px 0 6px 28px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
     .ml-tx-icon { font-size: 14px; flex-shrink: 0; }
     .ml-tx-main { flex: 1; min-width: 0; }
     .ml-tx-top { display: flex; justify-content: space-between; gap: 8px; }
@@ -394,10 +403,16 @@
       const [bossSelections, setBossSelections] = useState({});
       const [bossDate, setBossDate] = useState(todayStr());
 
+      // 아코디언 토글 상태 관리 (대그룹 및 날짜별 서브그룹)
       const [collapsedGroups, setCollapsedGroups] = useState({});
+      const [collapsedSubGroups, setCollapsedSubGroups] = useState({});
 
       const toggleGroup = (key) => {
         setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+      };
+
+      const toggleSubGroup = (key) => {
+        setCollapsedSubGroups(prev => ({ ...prev, [key]: !prev[key] }));
       };
 
       const currentNormalBossCount = useMemo(() => {
@@ -655,29 +670,42 @@
 
       const isThisMonth = range.start === firstDayOfThisMonth() && range.end === lastDayOfThisMonth();
       
-      // 전체 내역 탭 전용 날짜 범위 상태 (기본값: 이번 달)
       const [historyRange, setHistoryRange] = useState({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() });
       const isHistoryThisMonth = historyRange.start === firstDayOfThisMonth() && historyRange.end === lastDayOfThisMonth();
 
       const [historyFilter, setHistoryFilter] = useState({ currency: "all", type: "all" });
       const [historyView, setHistoryView] = useState("list");
 
-      // 날짜 범위와 통화/유형 필터가 모두 적용된 내역
       const filteredHistory = useMemo(() => transactions.filter(t => 
         t.date >= historyRange.start && t.date <= historyRange.end &&
         (historyFilter.currency === "all" || t.currency === historyFilter.currency) && 
         (historyFilter.type === "all" || t.type === historyFilter.type)
       ), [transactions, historyRange, historyFilter]);
 
+      // 카테고리별 그룹화 + 같은 날짜별 서브그룹 구조 만들기
       const groupedHistory = useMemo(() => {
-        const map = {};
+        const catMap = {};
         filteredHistory.forEach(t => {
-          const key = `${t.currency}|${t.category}`;
-          if (!map[key]) map[key] = { currency: t.currency, category: t.category, net: 0, items: [] };
-          map[key].net += t.type === "income" ? t.amount : -t.amount;
-          map[key].items.push(t);
+          const catKey = `${t.currency}|${t.category}`;
+          if (!catMap[catKey]) {
+            catMap[catKey] = { currency: t.currency, category: t.category, net: 0, dateMap: {} };
+          }
+          catMap[catKey].net += t.type === "income" ? t.amount : -t.amount;
+
+          if (!catMap[catKey].dateMap[t.date]) {
+            catMap[catKey].dateMap[t.date] = { date: t.date, net: 0, items: [] };
+          }
+          catMap[catKey].dateMap[t.date].net += t.type === "income" ? t.amount : -t.amount;
+          catMap[catKey].dateMap[t.date].items.push(t);
         });
-        return Object.values(map).sort((a, b) => {
+
+        // 날짜별 내역을 최신순 정렬
+        const result = Object.values(catMap).map(group => {
+          const sortedSubGroups = Object.values(group.dateMap).sort((a, b) => b.date.localeCompare(a.date));
+          return { ...group, subGroups: sortedSubGroups };
+        });
+
+        return result.sort((a, b) => {
           if (a.net >= 0 && b.net < 0) return -1;
           if (a.net < 0 && b.net >= 0) return 1;
           return Math.abs(b.net) - Math.abs(a.net);
@@ -1049,6 +1077,8 @@
                     {historyView === "category" && groupedHistory.map(g => {
                       const groupKey = `${g.currency}|${g.category}`;
                       const isCollapsed = !!collapsedGroups[groupKey];
+                      const currencyLabel = g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개";
+
                       return (
                         <div key={groupKey}>
                           <div className="ml-group-header" onClick={() => toggleGroup(groupKey)}>
@@ -1061,10 +1091,29 @@
                             </span>
                             <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
                               {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
-                              {g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개"}
+                              {currencyLabel}
                             </span>
                           </div>
-                          {!isCollapsed && g.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+
+                          {!isCollapsed && g.subGroups.map(sub => {
+                            const subKey = `${groupKey}|${sub.date}`;
+                            const isSubCollapsed = !!collapsedSubGroups[subKey];
+                            return (
+                              <div key={subKey}>
+                                <div className="ml-subgroup-header" onClick={() => toggleSubGroup(subKey)}>
+                                  <span className="ml-subgroup-date">
+                                    <span>{isSubCollapsed ? "▸" : "▾"}</span>
+                                    📅 {sub.date}
+                                  </span>
+                                  <span className={`ml-subgroup-total ${sub.net >= 0 ? "income" : "expense"}`}>
+                                    {sub.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(sub.net))}
+                                    {currencyLabel}
+                                  </span>
+                                </div>
+                                {!isSubCollapsed && sub.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })}
