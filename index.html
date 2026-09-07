@@ -7,9 +7,9 @@
   
   <link rel="icon" href="https://i.ibb.co/JwZ0B8C4/favicon.jpg" type="image/jpeg">
   
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
@@ -37,12 +37,11 @@
     .ml-root * { box-sizing: border-box; }
 
     .ml-content-area {
-      max-width: 640px;
+      max-width: 680px;
       width: 100%;
       margin: 0 auto;
     }
 
-    /* 우측 하단 플로팅 계산기 스타일 */
     .ml-sidebar-calc {
       position: fixed;
       bottom: 20px;
@@ -55,7 +54,7 @@
       padding: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
-    @media (max-width: 680px) {
+    @media (max-width: 720px) {
       .ml-sidebar-calc {
         left: 14px;
         right: 14px;
@@ -64,8 +63,6 @@
       }
     }
 
-    .ml-loading { display: flex; align-items: center; justify-content: center; min-height: 300px; color: var(--gold); }
-    
     .ml-header { margin: 0 auto 16px; }
     .ml-header-top { display: flex; align-items: center; justify-content: space-between; }
     .ml-header-title { display: flex; align-items: flex-start; gap: 10px; color: var(--paper); }
@@ -114,7 +111,7 @@
       padding: 18px 16px;
       box-shadow: 0 1px 0 rgba(0,0,0,0.15);
     }
-    .ml-panel h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin: 0; color: var(--ink); }
+    .ml-panel h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin: 0 0 12px; color: var(--ink); }
     .ml-empty { font-size: 13px; color: var(--ink-soft); margin: 0; padding: 10px 0; }
 
     .ml-range-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -200,16 +197,17 @@
     .ml-filter-row select { flex: 1; }
     .ml-view-toggle { margin-bottom: 14px; }
 
-    .ml-group-header { display: flex; justify-content: space-between; padding: 8px 0 4px; border-top: 1px solid var(--line); margin-top: 10px;}
+    .ml-group-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; background: #E6DCC4; border: 1px solid var(--line); border-radius: 3px; margin-top: 10px; cursor: pointer; user-select: none; }
+    .ml-group-header:hover { border-color: var(--gold); }
     .ml-group-name { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
     .ml-group-badge { font-size: 10px; font-weight: 600; color: var(--ink-soft); background: #DED2B4; border-radius: 8px; padding: 1px 7px; }
-    .ml-group-total { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ml-group-total { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
     .ml-group-total.income { color: var(--income); }
     .ml-group-total.expense { color: var(--expense); }
 
     .ml-tx-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #DED2B4; }
     .ml-tx-row:first-child { border-top: none; }
-    .ml-tx-row-compact { padding: 6px 0 6px 8px; border-top: none; }
+    .ml-tx-row-compact { padding: 6px 0 6px 8px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
     .ml-tx-icon { font-size: 14px; flex-shrink: 0; }
     .ml-tx-main { flex: 1; min-width: 0; }
     .ml-tx-top { display: flex; justify-content: space-between; gap: 8px; }
@@ -227,6 +225,16 @@
       padding: 11px; background: var(--ink); color: var(--paper); border: none; border-radius: 3px;
       font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px;
     }
+
+    .ml-boss-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ml-boss-table th { background: #E6DCC4; padding: 8px; text-align: left; border-bottom: 2px solid var(--line); color: var(--ink); font-weight: 600; }
+    .ml-boss-table td { padding: 8px; border-bottom: 1px solid #DED2B4; vertical-align: middle; }
+    .ml-boss-diffs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ml-boss-diff-label { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; cursor: pointer; background: #FBF7EC; padding: 3px 6px; border: 1px solid var(--line); border-radius: 3px; }
+    .ml-boss-diff-label input { accent-color: var(--income); }
+    .ml-boss-diff-label.disabled { opacity: 0.4; cursor: not-allowed; background: #E8E2D0; }
+    .ml-boss-party-select { padding: 4px; font-size: 12px; border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; }
+    .ml-boss-total-bar { display: flex; justify-content: space-between; align-items: center; background: #E6DCC4; padding: 12px; border-radius: 3px; margin-bottom: 12px; font-weight: 700; flex-wrap: wrap; gap: 8px; }
   </style>
 </head>
 <body>
@@ -238,9 +246,30 @@
     const STORAGE_KEYS = { TX: "ledger:transactions" };
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템구매"], income: ["메소판매", "아이템 판매"] },
-      meso: { expense: ["메소판매", "강화", "아이템구매", "도핑", "대출"], income: ["메소구매", "재획", "보스", "대출", "아이템 판매"] },
+      meso: { expense: ["메소판매", "강화", "아이템구매", "도핑", "대출"], income: ["보스", "메소구매", "재획", "대출", "아이템 판매"] },
       piece: { expense: ["스킬강화", "아이템 판매"], income: ["재획", "아이템 구매"] },
     };
+
+    const BOSS_CONFIGS = [
+      { name: "스우", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 16700000 }, { key: "hard", label: "HARD", price: 51500000 }, { key: "extreme", label: "EXTREME", price: 574000000 }] },
+      { name: "데미안", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 17500000 }, { key: "hard", label: "HARD", price: 48900000 }] },
+      { name: "가엔슬", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 25500000 }, { key: "chaos", label: "CHAOS", price: 75100000 }] },
+      { name: "루시드", maxParty: 6, diffs: [{ key: "easy", label: "EASY", price: 29800000 }, { key: "normal", label: "NORMAL", price: 35600000 }, { key: "hard", label: "HARD", price: 62900000 }] },
+      { name: "윌", maxParty: 6, diffs: [{ key: "easy", label: "EASY", price: 32300000 }, { key: "normal", label: "NORMAL", price: 41100000 }, { key: "hard", label: "HARD", price: 77100000 }] },
+      { name: "더스크", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 44000000 }, { key: "chaos", label: "CHAOS", price: 69800000 }] },
+      { name: "진힐라", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 71200000 }, { key: "hard", label: "HARD", price: 106000000 }] },
+      { name: "듄켈", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 47500000 }, { key: "hard", label: "HARD", price: 94400000 }] },
+      { name: "세렌", maxParty: 6, diffs: [{ key: "normal", label: "NORMAL", price: 239000000 }, { key: "hard", label: "HARD", price: 356000000 }, { key: "extreme", label: "EXTREME", price: 2835000000 }] },
+      { name: "칼로스", maxParty: 6, diffs: [{ key: "easy", label: "EASY", price: 280000000 }, { key: "normal", label: "NORMAL", price: 505000000 }, { key: "chaos", label: "CHAOS", price: 1273000000 }, { key: "extreme", label: "EXTREME", price: 4104000000 }] },
+      { name: "대적자", maxParty: 3, diffs: [{ key: "easy", label: "EASY", price: 308000000 }, { key: "normal", label: "NORMAL", price: 560000000 }, { key: "hard", label: "HARD", price: 1435000000 }, { key: "extreme", label: "EXTREME", price: 4712000000 }] },
+      { name: "카링", maxParty: 6, diffs: [{ key: "easy", label: "EASY", price: 377000000 }, { key: "normal", label: "NORMAL", price: 678000000 }, { key: "hard", label: "HARD", price: 1739000000 }, { key: "extreme", label: "EXTREME", price: 5387000000 }] },
+      { name: "흉성", maxParty: 3, diffs: [{ key: "normal", label: "NORMAL", price: 625000000 }, { key: "hard", label: "HARD", price: 2678000000 }] },
+      { name: "벨로나", maxParty: 3, diffs: [{ key: "easy", label: "EASY", price: 440000000 }, { key: "normal", label: "NORMAL", price: 850000000 }, { key: "hard", label: "HARD", price: 2950000000 }] },
+      { name: "림보", maxParty: 3, diffs: [{ key: "normal", label: "NORMAL", price: 1026000000 }, { key: "hard", label: "HARD", price: 2385000000 }] },
+      { name: "발드릭스", maxParty: 3, diffs: [{ key: "normal", label: "NORMAL", price: 1368000000 }, { key: "hard", label: "HARD", price: 3078000000 }] },
+      { name: "유피테르", maxParty: 3, diffs: [{ key: "normal", label: "NORMAL", price: 1615000000 }, { key: "hard", label: "HARD", price: 4845000000 }] },
+      { name: "검은마법사", maxParty: 6, isBlackMage: true, diffs: [{ key: "hard", label: "HARD", price: 665000000 }, { key: "extreme", label: "EXTREME", price: 8740000000 }] },
+    ];
 
     function pad2(n) { return String(n).padStart(2, "0"); }
     function toDateStr(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
@@ -362,6 +391,103 @@
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       const [itemCalc, setItemCalc] = useState({ price: "", count: "" });
       
+      const [bossSelections, setBossSelections] = useState({});
+      const [bossDate, setBossDate] = useState(todayStr());
+
+      const [collapsedGroups, setCollapsedGroups] = useState({});
+
+      const toggleGroup = (key) => {
+        setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+      };
+
+      const currentNormalBossCount = useMemo(() => {
+        let count = 0;
+        Object.keys(bossSelections).forEach(id => {
+          const [bossName] = id.split("_");
+          const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
+          if (cfg && !cfg.isBlackMage) {
+            count++;
+          }
+        });
+        return count;
+      }, [bossSelections]);
+
+      const handleBossCheck = (bossName, diffKey) => {
+        const id = `${bossName}_${diffKey}`;
+        const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
+        if (!cfg) return;
+
+        setBossSelections(prev => {
+          const next = { ...prev };
+          const existingKeyForBoss = Object.keys(next).find(k => k.startsWith(`${bossName}_`));
+
+          if (next[id]) {
+            delete next[id];
+          } else {
+            if (!cfg.isBlackMage && !existingKeyForBoss && currentNormalBossCount >= 12) {
+              return prev; // 12개 초과 시 차단
+            }
+            if (existingKeyForBoss) {
+              delete next[existingKeyForBoss];
+            }
+            next[id] = { bossName, diffKey, party: 1 };
+          }
+          return next;
+        });
+      };
+
+      const handleBossPartyChange = (bossName, diffKey, partyNum) => {
+        const id = `${bossName}_${diffKey}`;
+        setBossSelections(prev => {
+          if (!prev[id]) return prev;
+          return { ...prev, [id]: { ...prev[id], party: Number(partyNum) } };
+        });
+      };
+
+      const calculatedBossTotal = useMemo(() => {
+        let total = 0;
+        Object.values(bossSelections).forEach(item => {
+          const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+          if (cfg) {
+            const diff = cfg.diffs.find(d => d.key === item.diffKey);
+            if (diff) {
+              total += Math.floor(diff.price / item.party);
+            }
+          }
+        });
+        return total;
+      }, [bossSelections]);
+
+      const registerBossTransactions = () => {
+        if (Object.keys(bossSelections).length === 0) return;
+        const newTxs = [];
+        const nowTime = Date.now();
+
+        Object.values(bossSelections).forEach((item, index) => {
+          const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+          if (!cfg) return;
+          const diff = cfg.diffs.find(d => d.key === item.diffKey);
+          if (!diff) return;
+
+          const finalPrice = Math.floor(diff.price / item.party);
+          const memoStr = `${item.bossName} (${diff.label})${item.party > 1 ? ` / ${item.party}인 파티` : ""}`;
+
+          newTxs.push({
+            id: `${nowTime}-${index}-${Math.random().toString(36).slice(2, 7)}`,
+            date: bossDate,
+            currency: "meso",
+            type: "income",
+            category: "보스",
+            amount: finalPrice,
+            memo: memoStr
+          });
+        });
+
+        persistTransactions([...newTxs, ...transactions]);
+        setBossSelections({});
+        setTab("dashboard");
+      };
+
       const [stdCalc, setStdCalc] = useState({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
 
       const handleStdNum = (numStr) => {
@@ -584,7 +710,7 @@
             </header>
 
             <nav className="ml-tabs">
-              {[["dashboard", "메인"], ["add", "기록하기"], ["history", "전체 내역"]].map(([k, l]) => (
+              {[["dashboard", "메인"], ["boss", "보스 정산"], ["add", "기록하기"], ["history", "전체 내역"]].map(([k, l]) => (
                 <button key={k} className={`ml-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>{l}</button>
               ))}
             </nav>
@@ -647,6 +773,93 @@
                     <h2>최근 거래</h2>
                     {transactions.length === 0 && <p className="ml-empty">첫 거래를 기록해보세요.</p>}
                     {transactions.slice(0, 5).map(t => <TxRow key={t.id} t={t} />)}
+                  </div>
+                </section>
+              )}
+
+              {tab === "boss" && (
+                <section className="ml-page">
+                  <div className="ml-panel">
+                    <h2>보스 일괄 정산</h2>
+                    <div className="ml-form-row" style={{ marginBottom: "16px" }}>
+                      <label>기록 날짜</label>
+                      <input type="date" value={bossDate} onChange={e => setBossDate(e.target.value)} />
+                    </div>
+
+                    <div className="ml-boss-total-bar" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                        <span>선택된 보스 총 합산: {fmtMeso(calculatedBossTotal)} ({calculatedBossTotal.toLocaleString()} 메소)</span>
+                        <button className="ml-calc-apply" onClick={registerBossTransactions} disabled={Object.keys(bossSelections).length === 0}>
+                          장부에 한 번에 기록 ➕
+                        </button>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--ink-soft)" }}>
+                        📌 일반 보스 선택 수: <strong style={{ color: currentNormalBossCount >= 12 ? "var(--expense)" : "var(--income)" }}>{currentNormalBossCount}</strong> / 12개 (검은마법사 별도)
+                      </div>
+                    </div>
+
+                    <div style={{ overflowX: "auto" }}>
+                      <table className="ml-boss-table">
+                        <thead>
+                          <tr>
+                            <th>보스</th>
+                            <th>난이도 선택</th>
+                            <th style={{ width: "70px" }}>파티원</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {BOSS_CONFIGS.map((b) => {
+                            const activeItem = Object.values(bossSelections).find(item => item.bossName === b.name);
+                            const isThisBossChecked = !!activeItem;
+                            // 일반 보스가 이미 12개 채워졌고, 이 보스가 아직 선택되지 않았다면 비활성화 대상
+                            const isLimitReached = !b.isBlackMage && currentNormalBossCount >= 12 && !isThisBossChecked;
+
+                            return (
+                              <tr key={b.name} style={{ opacity: isLimitReached ? 0.5 : 1 }}>
+                                <td style={{ fontWeight: 600 }}>
+                                  {b.name} {b.isBlackMage && <span style={{ fontSize: "10px", color: "var(--expense)", fontWeight: 700 }}>(별도)</span>}
+                                </td>
+                                <td>
+                                  <div className="ml-boss-diffs">
+                                    {b.diffs.map(d => {
+                                      const id = `${b.name}_${d.key}`;
+                                      const isChecked = !!bossSelections[id];
+                                      return (
+                                        <label key={d.key} className={`ml-boss-diff-label ${isLimitReached && !isChecked ? "disabled" : ""}`} style={{ borderColor: isChecked ? "var(--gold)" : "var(--line)" }}>
+                                          <input 
+                                            type="checkbox" 
+                                            checked={isChecked} 
+                                            disabled={isLimitReached && !isChecked}
+                                            onChange={() => handleBossCheck(b.name, d.key)} 
+                                          />
+                                          <span>{d.label}</span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </td>
+                                <td>
+                                  <select 
+                                    className="ml-boss-party-select" 
+                                    value={activeItem?.party || 1}
+                                    onChange={e => {
+                                      if (activeItem) {
+                                        handleBossPartyChange(b.name, activeItem.diffKey, e.target.value);
+                                      }
+                                    }}
+                                    disabled={!activeItem}
+                                  >
+                                    {Array.from({ length: b.maxParty }, (_, i) => i + 1).map(n => (
+                                      <option key={n} value={n}>{n}인</option>
+                                    ))}
+                                  </select>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </section>
               )}
@@ -818,30 +1031,34 @@
 
                     {historyView === "list" && filteredHistory.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} />)}
 
-                    {historyView === "category" && groupedHistory.map(g => (
-                      <div key={`${g.currency}|${g.category}`}>
-                        <div className="ml-group-header">
-                          <span className="ml-group-name">
-                            {g.category} 
-                            <span className="ml-group-badge">
-                              {g.currency === "cash" ? "현금" : g.currency === "meso" ? "메소" : "조각"}
+                    {historyView === "category" && groupedHistory.map(g => {
+                      const groupKey = `${g.currency}|${g.category}`;
+                      const isCollapsed = !!collapsedGroups[groupKey];
+                      return (
+                        <div key={groupKey}>
+                          <div className="ml-group-header" onClick={() => toggleGroup(groupKey)}>
+                            <span className="ml-group-name">
+                              <span>{isCollapsed ? "▶" : "▼"}</span>
+                              {g.category} 
+                              <span className="ml-group-badge">
+                                {g.currency === "cash" ? "현금" : g.currency === "meso" ? "메소" : "조각"}
+                              </span>
                             </span>
-                          </span>
-                          <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
-                            {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
-                            {g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개"}
-                          </span>
+                            <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
+                              {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
+                              {g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개"}
+                            </span>
+                          </div>
+                          {!isCollapsed && g.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
                         </div>
-                        {g.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </section>
               )}
             </main>
           </div>
 
-          {/* 우측 하단 플로팅 계산기 (켜져 있을 때만 노출) */}
           {showCalc && (
             <div className="ml-sidebar-calc">
               <div className="ml-calc-title">
