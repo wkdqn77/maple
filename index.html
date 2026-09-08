@@ -32,7 +32,7 @@
       background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
-      padding: 20px 14px 60px;
+      padding: 20px 14px 110px; /* 모바일 하단 플로팅 버튼에 내용이 가리지 않도록 넉넉한 패딩 확보 */
       box-sizing: border-box;
     }
     .ml-root * { box-sizing: border-box; }
@@ -43,11 +43,12 @@
       margin: 0 auto;
     }
 
+    /* 우측 하단 플로팅 컨테이너 (분배금 및 간편 계산기) */
     .ml-sidebar-calc-container {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 290px;
+      bottom: 16px;
+      right: 14px;
+      width: 270px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
@@ -67,19 +68,11 @@
     }
     .ml-calc-toggle-btn:hover { background: #4A5A4B; border-color: var(--gold); }
 
-    @media (max-width: 720px) {
-      .ml-sidebar-calc-container {
-        left: 14px;
-        right: 14px;
-        width: auto;
-        bottom: 20px;
-      }
-    }
-
+    /* 좌측 하단 플로팅 컨테이너 (정산 목표 위젯) */
     .ml-floating-goal-container {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
+      bottom: 16px;
+      left: 14px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
@@ -93,7 +86,7 @@
     .ml-goal-toggle-btn:hover { background: #4A5A4B; border-color: var(--gold); }
 
     .ml-goal-floating-box {
-      width: 260px;
+      width: 250px;
       background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 4px;
@@ -102,7 +95,7 @@
     }
 
     .ml-mini-goal-widget {
-      width: 260px;
+      width: 250px;
       background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 4px;
@@ -138,9 +131,22 @@
       transition: width 0.3s ease;
     }
 
-    @media (max-width: 720px) {
-      .ml-goal-floating-box, .ml-mini-goal-widget {
-        width: 230px;
+    /* 모바일 화면 최적화 (버튼 겹침 방지 및 크기 조절) */
+    @media (max-width: 768px) {
+      .ml-sidebar-calc-container {
+        right: 10px;
+        width: 210px;
+      }
+      .ml-floating-goal-container {
+        left: 10px;
+      }
+      .ml-sidebar-calc, .ml-goal-floating-box, .ml-mini-goal-widget {
+        width: 190px;
+        padding: 10px;
+      }
+      .ml-calc-toggle-btn, .ml-goal-toggle-btn {
+        font-size: 11px;
+        padding: 6px 8px;
       }
     }
 
@@ -1119,7 +1125,7 @@
         return base;
       }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
 
-      // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여 금액 파티장 귀속 로직
+      // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여금 파티장 귀속
       const salePrice = Number(splitInput.salePrice.replace(/,/g, "")) || 0;
       const memberCount = Number(splitInput.partyCount) || 1;
       const feeRate = (Number(splitInput.feePercent) || 0) / 100;
@@ -1130,7 +1136,7 @@
         const actual = salePrice * (1 - feeRate);
         const equalShare = actual / (1 + (memberCount - 1) / (1 - feeRate));
         
-        // 파티원 전달 금액(수수료 포함)을 100의 자리에서 내림 처리
+        // 파티원 전달 금액(수수료 포함) 100의 자리 내림
         const rawMemberBeforeFee = equalShare / (1 - feeRate);
         const memberBeforeFee = Math.floor(rawMemberBeforeFee / 100) * 100;
 
@@ -1864,7 +1870,7 @@
                   </div>
                 </div>
 
-                {/* 캡처 대상 영역 */}
+                {/* 캡처 대상 영역 (2열 레이아웃으로 줄바뀜 방지) */}
                 <div id="split-result-capture-area" style={{ background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px", padding: "8px 10px", marginBottom: "8px" }}>
                   <div style={{ fontSize: "11px", color: "var(--ink-soft)", borderBottom: "1px solid var(--line)", paddingBottom: "6px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                     <div>
@@ -1886,7 +1892,7 @@
                     최종 동일 분배금: <strong style={{ color: "var(--income)" }}>{formatDetailedUnit(splitResult.memberFinal, "메소")}</strong>
                   </div>
                   <div style={{ fontSize: "10px", color: "var(--ink-soft)", marginTop: "6px", borderTop: "1px dashed var(--line)", paddingTop: "4px", lineHeight: "1.4" }}>
-                    💡 파티원에게 <strong>{formatDetailedUnit(splitResult.memberBeforeFee, "메소")}</strong>를 보내면, 파티원과 파티장 모두 최종적으로 정확히 <strong>{formatDetailedUnit(splitResult.memberFinal, "메소")}</strong>을 갖게 됩니다!
+                    💡 파티원에게 <strong>{formatDetailedUnit(splitResult.memberBeforeFee, "메소")}</strong>를 보내면, 파티원과 파티장 모두 최종적으로 정확히 <strong>{formatDetailedUnit(splitResult.memberFinal, "메소")}</strong>을 갖게 됩니다! (100원 내림 잔여분 파티장 귀속)
                   </div>
                 </div>
 
