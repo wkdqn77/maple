@@ -42,28 +42,39 @@
       margin: 0 auto;
     }
 
-    .ml-sidebar-calc {
+    .ml-sidebar-calc-container {
       position: fixed;
       bottom: 20px;
       right: 20px;
       width: 260px;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ml-sidebar-calc {
       background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 4px;
       padding: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
+    .ml-calc-toggle-btn {
+      background: #3A4A3B; color: var(--paper); border: 1px solid #4A5A4B;
+      padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 20px; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center; width: 100%;
+    }
+    .ml-calc-toggle-btn:hover { background: #4A5A4B; border-color: var(--gold); }
+
     @media (max-width: 720px) {
-      .ml-sidebar-calc {
+      .ml-sidebar-calc-container {
         left: 14px;
         right: 14px;
         width: auto;
-        bottom: 70px;
+        bottom: 20px;
       }
     }
 
-    /* 왼쪽 하단 플로팅 목표 설정 및 미니 현황판 위젯 */
     .ml-floating-goal-container {
       position: fixed;
       bottom: 20px;
@@ -133,7 +144,7 @@
     }
 
     .ml-header { margin: 0 auto 16px; }
-    .ml-header-top { display: flex; align-items: center; justify-content: space-between; }
+    .ml-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
     .ml-header-title { display: flex; align-items: flex-start; gap: 10px; color: var(--paper); }
     .ml-header-title h1 {
       font-family: 'Fraunces', serif;
@@ -144,11 +155,30 @@
     }
     .ml-header-title span.icon { font-size: 24px; margin-top: 2px; }
 
-    .ml-calc-toggle-btn {
-      background: #3A4A3B; color: var(--paper); border: 1px solid #4A5A4B;
-      padding: 6px 12px; font-size: 13px; font-weight: 500; border-radius: 3px; cursor: pointer;
+    .ml-mvp-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #2A3A2C;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #3A4A3B;
     }
-    .ml-calc-toggle-btn:hover { background: #4A5A4B; border-color: var(--gold); }
+    .ml-mvp-box label {
+      font-size: 12px;
+      color: var(--paper);
+      font-weight: 600;
+    }
+    .ml-mvp-box select {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 4px 6px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: #FBF7EC;
+      color: var(--ink);
+      font-weight: 600;
+    }
 
     .ml-tabs {
       margin: 0 auto 18px;
@@ -180,18 +210,23 @@
       padding: 18px 16px;
       box-shadow: 0 1px 0 rgba(0,0,0,0.15);
     }
+    .ml-panel-compact {
+      padding: 12px 14px;
+    }
     .ml-panel h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin: 0 0 12px; color: var(--ink); }
+    .ml-panel-compact h2 { font-size: 15px; margin: 0 0 8px; }
+
     .ml-empty { font-size: 13px; color: var(--ink-soft); margin: 0; padding: 10px 0; }
 
-    .ml-range-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .ml-range-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .ml-range-reset {
-      font-size: 12px; font-weight: 600; color: var(--ink-soft); background: none;
-      border: 1px solid var(--line); border-radius: 12px; padding: 4px 10px; cursor: pointer;
+      font-size: 11px; font-weight: 600; color: var(--ink-soft); background: none;
+      border: 1px solid var(--line); border-radius: 12px; padding: 2px 8px; cursor: pointer;
     }
     .ml-range-reset:hover { border-color: var(--gold); color: var(--ink); }
     .ml-range-row { display: flex; align-items: center; gap: 8px; }
     .ml-range-row input {
-      flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 10px;
+      flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; padding: 6px 10px;
       border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; color: var(--ink);
     }
 
@@ -218,7 +253,7 @@
     }
     .ml-form-row input:focus, .ml-filter-row select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 
-    .ml-korean-amount { font-size: 13px; color: var(--income); font-weight: 600; margin-top: 2px; text-align: right; }
+    .ml-korean-amount { font-size: 13px; color: var(--income); font-weight: 600; margin-top: 4px; text-align: right; line-height: 1.4; }
 
     .ml-seg { display: flex; gap: 6px; }
     .ml-seg button {
@@ -259,21 +294,27 @@
     }
     .ml-calc-btn:hover { background: #F5EFE1; border-color: var(--gold); }
     .ml-calc-btn.op { background: #DED2B4; color: var(--ink); }
-    .ml-calc-btn.action { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .ml-calc-btn.action { background: #2A2016; color: #EFE6D2; border-color: #2A2016; }
 
     .ml-filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
     .ml-filter-row select { flex: 1; }
     .ml-view-toggle { margin-bottom: 14px; }
 
-    .ml-group-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; background: #E6DCC4; border: 1px solid var(--line); border-radius: 3px; margin-top: 10px; cursor: pointer; user-select: none; }
-    .ml-group-header:hover { border-color: var(--gold); }
+    .ml-currency-root-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #DED2B4; border: 1px solid var(--line); border-radius: 4px; margin-top: 10px; cursor: pointer; user-select: none; font-weight: 700; }
+    .ml-currency-root-header:hover { border-color: var(--gold); }
+    .ml-currency-root-name { font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+    .ml-currency-root-total { font-size: 15px; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
+    .ml-currency-root-total.income { color: var(--income); }
+    .ml-currency-root-total.expense { color: var(--expense); }
+
+    .ml-group-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 10px 10px 20px; background: #E6DCC4; border-top: 1px solid var(--line); cursor: pointer; user-select: none; }
+    .ml-group-header:hover { background: #DFD4B8; }
     .ml-group-name { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
-    .ml-group-badge { font-size: 10px; font-weight: 600; color: var(--ink-soft); background: #DED2B4; border-radius: 8px; padding: 1px 7px; }
     .ml-group-total { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
     .ml-group-total.income { color: var(--income); }
     .ml-group-total.expense { color: var(--expense); }
 
-    .ml-subgroup-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 20px; background: #EFE6D2; border-top: 1px solid #DED2B4; cursor: pointer; user-select: none; }
+    .ml-subgroup-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 8px 35px; background: #EFE6D2; border-top: 1px solid #DED2B4; cursor: pointer; user-select: none; }
     .ml-subgroup-header:hover { background: #E6DCC4; }
     .ml-subgroup-date { font-size: 12px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
     .ml-subgroup-total { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; }
@@ -282,7 +323,7 @@
 
     .ml-tx-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #DED2B4; }
     .ml-tx-row:first-child { border-top: none; }
-    .ml-tx-row-compact { padding: 6px 0 6px 28px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
+    .ml-tx-row-compact { padding: 6px 0 6px 45px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
     .ml-tx-icon { font-size: 14px; flex-shrink: 0; }
     .ml-tx-main { flex: 1; min-width: 0; }
     .ml-tx-top { display: flex; justify-content: space-between; gap: 8px; }
@@ -318,12 +359,11 @@
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data" };
-    const MASTER_NEXON_API_KEY = "live_8f0a213904e578a168673a9e3ecff61d4ffbc1dfa9d8bb1fb9819934bb61b6f9f3f4c754cb57eef5dc9e89d6e50778c1";
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade" };
 
     const CATEGORY_SUGGESTIONS = {
-      cash: { expense: ["메소구매", "캐시구매", "아이템구매"], income: ["메소판매", "아이템 판매"] },
-      meso: { expense: ["메소판매", "강화", "아이템구매", "도핑", "대출"], income: ["보스", "메소구매", "재획", "대출", "아이템 판매"] },
+      cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
+      meso: { expense: ["메소판매", "강화", "아이템 구매", "도핑", "대출"], income: ["보스", "메소구매", "재획", "대출", "아이템 판매"] },
       piece: { expense: ["스킬강화", "아이템 판매"], income: ["재획", "아이템 구매"] },
     };
 
@@ -356,12 +396,15 @@
     
     function formatDetailedUnit(n, unitName) {
       const num = Number(n) || 0;
-      if (num === 0) return "0" + unitName;
+      if (num === 0 || Object.is(num, -0)) return "0" + unitName;
 
-      const jo = Math.floor(num / 1000000000000);
-      const eok = Math.floor((num % 1000000000000) / 100000000);
-      const man = Math.floor((num % 100000000) / 10000);
-      const il = num % 10000;
+      const isNeg = num < 0;
+      const absNum = Math.abs(num);
+
+      const jo = Math.floor(absNum / 1000000000000);
+      const eok = Math.floor((absNum % 1000000000000) / 100000000);
+      const man = Math.floor((absNum % 100000000) / 10000);
+      const il = absNum % 10000;
 
       let res = [];
       if (jo > 0) res.push(`${jo.toLocaleString()}조`);
@@ -369,13 +412,19 @@
       if (man > 0) res.push(`${man.toLocaleString()}만`);
       if (il > 0 || res.length === 0) res.push(`${il.toLocaleString()}`);
 
-      return res.join(" ") + " " + unitName;
+      return (isNeg ? "-" : "") + res.join(" ") + " " + unitName;
     }
 
-    function fmtAmount(n) { return (Number(n) || 0).toLocaleString("ko-KR"); }
+    function fmtAmount(n) { 
+      const val = Number(n) || 0;
+      if (val === 0 || Object.is(val, -0)) return "0";
+      return val.toLocaleString("ko-KR"); 
+    }
     
     function fmtMeso(n) {
-      return formatDetailedUnit(n, "메소");
+      const val = Number(n) || 0;
+      if (val === 0 || Object.is(val, -0)) return "0메소";
+      return formatDetailedUnit(val, "메소");
     }
 
     function formatKoreanCurrency(numStr, currency) {
@@ -396,12 +445,13 @@
     }
 
     function StatCard({ icon, label, value, unit, tone, isMeso }) {
+      const cleanVal = (Number(value) || 0) === 0 ? 0 : value;
       return (
         <div className={`ml-stat-card ${tone}`}>
           <div className="ml-stat-icon">{icon}</div>
           <div className="ml-stat-label">{label}</div>
           <div className="ml-stat-value">
-            {formatDetailedUnit(value, unit)}
+            {formatDetailedUnit(cleanVal, unit)}
           </div>
         </div>
       );
@@ -436,10 +486,9 @@
       const [tab, setTab] = useState("dashboard");
       const [showCalc, setShowCalc] = useState(true);
       const [transactions, setTransactions] = useState([]);
-      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "" });
+      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0 });
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
-      const [itemCalc, setItemCalc] = useState({ price: "", count: "" });
       
       const [bossSelections, setBossSelections] = useState({});
       const [bossDate, setBossDate] = useState(todayStr());
@@ -447,15 +496,22 @@
       const [showGoalBox, setShowGoalBox] = useState(false);
       const [goals, setGoals] = useState({ cash: "", meso: "", piece: "" });
 
+      const [nexonApiKey, setNexonApiKey] = useState("");
+      const [mvpGrade, setMvpGrade] = useState("없음");
       const [searchName, setSearchName] = useState("");
       const [charData, setCharData] = useState(null);
-      const [charStat, setCharStat] = useState(null);
+      const [maxCombatPower, setMaxCombatPower] = useState(null);
       const [charExp, setCharExp] = useState(null);
       const [charLoading, setCharLoading] = useState(false);
       const [charError, setCharError] = useState("");
 
+      const [collapsedCurrencyRoots, setCollapsedCurrencyRoots] = useState({});
       const [collapsedGroups, setCollapsedGroups] = useState({});
       const [collapsedSubGroups, setCollapsedSubGroups] = useState({});
+
+      const toggleCurrencyRoot = (key) => {
+        setCollapsedCurrencyRoots(prev => ({ ...prev, [key]: !prev[key] }));
+      };
 
       const toggleGroup = (key) => {
         setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
@@ -467,12 +523,49 @@
 
       useEffect(() => {
         try {
+          const savedKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+          if (savedKey) setNexonApiKey(savedKey);
+          const savedMvp = localStorage.getItem(STORAGE_KEYS.MVP);
+          if (savedMvp) setMvpGrade(savedMvp);
           const txData = localStorage.getItem(STORAGE_KEYS.TX);
           if (txData) setTransactions(JSON.parse(txData));
           const goalsSaved = localStorage.getItem(STORAGE_KEYS.GOALS);
           if (goalsSaved) setGoals(JSON.parse(goalsSaved));
         } catch (e) { console.error(e); }
       }, []);
+
+      const handleApiKeyChange = (val) => {
+        setNexonApiKey(val);
+        try { localStorage.setItem(STORAGE_KEYS.API_KEY, val); } catch(e) {}
+      };
+
+      const handleMvpChange = (val) => {
+        setMvpGrade(val);
+        try { localStorage.setItem(STORAGE_KEYS.MVP, val); } catch(e) {}
+      };
+
+      // 현재 선택된 카테고리가 수수료 설정 대상인지 판별하는 함수
+      const isFeeApplicableCategory = useMemo(() => {
+        const c = form.currency;
+        const t = form.type;
+        const cat = form.category;
+        // 1. 현금 지출 메소구매
+        if (c === "cash" && t === "expense" && cat === "메소구매") return true;
+        // 2. 메소 수입 대출 또는 아이템 판매
+        if (c === "meso" && t === "income" && (cat === "대출" || cat === "아이템 판매")) return true;
+        // 3. 조각 지출 아이템 판매
+        if (c === "piece" && t === "expense" && cat === "아이템 판매") return true;
+        return false;
+      }, [form.currency, form.type, form.category]);
+
+      // 실버~블랙 선택 시 수수료 3% 고정 자동 적용 (수수료 적용 대상 카테고리일 때만)
+      const effectiveFeeRate = useMemo(() => {
+        if (!isFeeApplicableCategory) return 0;
+        if (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)) {
+          return 3;
+        }
+        return form.feeRate;
+      }, [isFeeApplicableCategory, mvpGrade, form.feeRate]);
 
       const saveGoals = (nextGoals) => {
         setGoals(nextGoals);
@@ -482,44 +575,72 @@
       const searchCharacter = async () => {
         const name = searchName.trim();
         if (!name) return;
+        if (!nexonApiKey.trim()) {
+          setCharError("넥슨 오픈 API 키를 먼저 입력해주세요.");
+          return;
+        }
 
         setCharLoading(true);
         setCharError("");
         setCharData(null);
-        setCharStat(null);
+        setMaxCombatPower(null);
         setCharExp(null);
 
         try {
           const idRes = await fetch(`https://open.api.nexon.com/maplestory/v1/id?character_name=${encodeURIComponent(name)}`, {
-            headers: { "x-nxopen-api-key": MASTER_NEXON_API_KEY }
+            headers: { "x-nxopen-api-key": nexonApiKey.trim() }
           });
           const idJson = await idRes.json();
 
           if (!idRes.ok || !idJson.ocid) {
-            setCharError("존재하지 않는 캐릭터이거나 검색 결과가 없습니다.");
+            setCharError("존재하지 않는 캐릭터이거나 API 키가 올바르지 않습니다.");
             setCharLoading(false);
             return;
           }
 
           const ocid = idJson.ocid;
 
-          const [basicRes, statRes, expRes] = await Promise.all([
-            fetch(`https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${ocid}`, { headers: { "x-nxopen-api-key": MASTER_NEXON_API_KEY } }),
-            fetch(`https://open.api.nexon.com/maplestory/v1/character/stat?ocid=${ocid}`, { headers: { "x-nxopen-api-key": MASTER_NEXON_API_KEY } }),
-            fetch(`https://open.api.nexon.com/maplestory/v1/character/exp?ocid=${ocid}`, { headers: { "x-nxopen-api-key": MASTER_NEXON_API_KEY } })
+          const today = new Date();
+          const dates = [];
+          for (let i = 0; i < 10; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            dates.push(toDateStr(d));
+          }
+
+          const [basicRes, expRes, ...statResults] = await Promise.all([
+            fetch(`https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${ocid}`, { headers: { "x-nxopen-api-key": nexonApiKey.trim() } }),
+            fetch(`https://open.api.nexon.com/maplestory/v1/character/exp?ocid=${ocid}`, { headers: { "x-nxopen-api-key": nexonApiKey.trim() } }),
+            ...dates.map(dateStr => fetch(`https://open.api.nexon.com/maplestory/v1/character/stat?ocid=${ocid}&date=${dateStr}`, { headers: { "x-nxopen-api-key": nexonApiKey.trim() } }))
           ]);
 
           const basicJson = await basicRes.json();
-          const statJson = statRes.ok ? await statRes.json() : null;
           const expJson = expRes.ok ? await expRes.json() : null;
 
-          if (basicRes.ok) {
-            setCharData(basicJson);
-            setCharStat(statJson);
-            setCharExp(expJson);
-          } else {
+          if (!basicRes.ok) {
             setCharError("캐릭터 정보를 불러오지 못했습니다.");
+            setCharLoading(false);
+            return;
           }
+
+          setCharData(basicJson);
+          setCharExp(expJson);
+
+          let maxCp = 0;
+          for (const sRes of statResults) {
+            if (sRes.ok) {
+              const sJson = await sRes.json();
+              if (sJson && sJson.final_stat) {
+                const cpItem = sJson.final_stat.find(s => s.stat_name === "전투력");
+                if (cpItem && cpItem.stat_value) {
+                  const val = Number(cpItem.stat_value) || 0;
+                  if (val > maxCp) maxCp = val;
+                }
+              }
+            }
+          }
+          setMaxCombatPower(maxCp > 0 ? maxCp : null);
+
         } catch (err) {
           console.error(err);
           setCharError("네트워크 오류가 발생했습니다.");
@@ -527,12 +648,6 @@
           setCharLoading(false);
         }
       };
-
-      const combatPower = useMemo(() => {
-        if (!charStat || !charStat.final_stat) return null;
-        const statItem = charStat.final_stat.find(s => s.stat_name === "전투력");
-        return statItem ? statItem.stat_value : null;
-      }, [charStat]);
 
       const currentNormalBossCount = useMemo(() => {
         let count = 0;
@@ -758,20 +873,70 @@
       }, []);
 
       const addTransaction = useCallback(() => {
-        const amt = Number(form.amount);
-        if (!amt || amt <= 0) return;
+        const rawAmt = Number(form.amount);
+        if (!rawAmt || rawAmt <= 0) return;
+
+        let finalAmt = rawAmt;
+        if (isFeeApplicableCategory && effectiveFeeRate > 0) {
+          finalAmt = Math.round(rawAmt * (1 - effectiveFeeRate / 100));
+        }
+
         const tx = {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           date: form.date, currency: form.currency, type: form.type,
-          category: form.category.trim() || "기타", amount: amt, memo: form.memo.trim(),
+          category: form.category.trim() || "기타", amount: finalAmt, memo: form.memo.trim(),
         };
         persistTransactions([tx, ...transactions]);
         
-        setForm(f => ({ ...f, amount: "", memo: "", category: "" }));
+        setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
         setCalc({ mesoEok: "", rate: "" });
         setPieceCalc({ count: "", rate: "" });
-        setItemCalc({ price: "", count: "" });
-      }, [form, transactions, persistTransactions]);
+      }, [form, transactions, persistTransactions, isFeeApplicableCategory, effectiveFeeRate]);
+
+      const registerCalcTransaction = useCallback(() => {
+        const mesoEokNum = Number(calc.mesoEok.replace(/,/g, "")) || 0;
+        const rateNum = Number(calc.rate.replace(/,/g, "")) || 0;
+        if (mesoEokNum <= 0 || rateNum <= 0) return;
+
+        const nowTime = Date.now();
+        const memoStr = form.memo.trim();
+        const rawMesoAmount = mesoEokNum * 100000000;
+        const totalCashAmount = mesoEokNum * rateNum;
+
+        if (form.currency === "cash" && form.type === "expense" && form.category === "메소구매") {
+          let finalMesoAmount = rawMesoAmount;
+          if (effectiveFeeRate > 0) {
+            finalMesoAmount = Math.round(rawMesoAmount * (1 - effectiveFeeRate / 100));
+          }
+
+          const cashTx = {
+            id: `${nowTime}-cash-${Math.random().toString(36).slice(2, 7)}`,
+            date: form.date, currency: "cash", type: "expense",
+            category: "메소구매", amount: totalCashAmount, memo: memoStr
+          };
+          const mesoTx = {
+            id: `${nowTime}-meso-${Math.random().toString(36).slice(2, 7)}`,
+            date: form.date, currency: "meso", type: "income",
+            category: "메소구매", amount: finalMesoAmount, memo: memoStr
+          };
+          persistTransactions([cashTx, mesoTx, ...transactions]);
+        } else if (form.currency === "cash" && form.type === "income" && form.category === "메소판매") {
+          const cashTx = {
+            id: `${nowTime}-cash-${Math.random().toString(36).slice(2, 7)}`,
+            date: form.date, currency: "cash", type: "income",
+            category: "메소판매", amount: totalCashAmount, memo: memoStr
+          };
+          const mesoTx = {
+            id: `${nowTime}-meso-${Math.random().toString(36).slice(2, 7)}`,
+            date: form.date, currency: "meso", type: "expense",
+            category: "메소판매", amount: rawMesoAmount, memo: memoStr
+          };
+          persistTransactions([cashTx, mesoTx, ...transactions]);
+        }
+
+        setForm(f => ({ ...f, memo: "", feeRate: 0 }));
+        setCalc({ mesoEok: "", rate: "" });
+      }, [form, calc, transactions, persistTransactions, effectiveFeeRate]);
 
       const deleteTransaction = useCallback((id) => {
         persistTransactions(transactions.filter((t) => t.id !== id));
@@ -817,31 +982,42 @@
         (historyFilter.type === "all" || t.type === historyFilter.type)
       ), [transactions, historyRange, historyFilter]);
 
-      const groupedHistory = useMemo(() => {
-        const catMap = {};
+      const currencyRootGroupedHistory = useMemo(() => {
+        const rootMap = {
+          cash: { name: "현금 (KRW)", currency: "cash", net: 0, categoryMap: {} },
+          meso: { name: "메소", currency: "meso", net: 0, categoryMap: {} },
+          piece: { name: "조각 (Pieces)", currency: "piece", net: 0, categoryMap: {} }
+        };
+
         filteredHistory.forEach(t => {
-          const catKey = `${t.currency}|${t.category}`;
-          if (!catMap[catKey]) {
-            catMap[catKey] = { currency: t.currency, category: t.category, net: 0, dateMap: {} };
-          }
-          catMap[catKey].net += t.type === "income" ? t.amount : -t.amount;
+          const root = rootMap[t.currency];
+          if (!root) return;
 
-          if (!catMap[catKey].dateMap[t.date]) {
-            catMap[catKey].dateMap[t.date] = { date: t.date, net: 0, items: [] };
+          const netVal = t.type === "income" ? t.amount : -t.amount;
+          root.net += netVal;
+
+          if (!root.categoryMap[t.category]) {
+            root.categoryMap[t.category] = { category: t.category, currency: t.currency, net: 0, dateMap: {} };
           }
-          catMap[catKey].dateMap[t.date].net += t.type === "income" ? t.amount : -t.amount;
-          catMap[catKey].dateMap[t.date].items.push(t);
+          root.categoryMap[t.category].net += netVal;
+
+          if (!root.categoryMap[t.category].dateMap[t.date]) {
+            root.categoryMap[t.category].dateMap[t.date] = { date: t.date, net: 0, items: [] };
+          }
+          root.categoryMap[t.category].dateMap[t.date].net += netVal;
+          root.categoryMap[t.category].dateMap[t.date].items.push(t);
         });
 
-        const result = Object.values(catMap).map(group => {
-          const sortedSubGroups = Object.values(group.dateMap).sort((a, b) => b.date.localeCompare(a.date));
-          return { ...group, subGroups: sortedSubGroups };
-        });
-
-        return result.sort((a, b) => {
-          if (a.net >= 0 && b.net < 0) return -1;
-          if (a.net < 0 && b.net >= 0) return 1;
-          return Math.abs(b.net) - Math.abs(a.net);
+        return Object.values(rootMap).map(root => {
+          const categories = Object.values(root.categoryMap).map(cat => {
+            const subGroups = Object.values(cat.dateMap).sort((a, b) => b.date.localeCompare(a.date));
+            return { ...cat, subGroups };
+          }).sort((a, b) => {
+            if (a.net >= 0 && b.net < 0) return -1;
+            if (a.net < 0 && b.net >= 0) return 1;
+            return Math.abs(b.net) - Math.abs(a.net);
+          });
+          return { ...root, categories };
         });
       }, [filteredHistory]);
 
@@ -853,11 +1029,15 @@
       
       const rawPieceCount = Number(pieceCalc.count.replace(/,/g, "")) || 0;
       const rawPieceRate = Number(pieceCalc.rate.replace(/,/g, "")) || 0;
-      const pieceCalcResult = (rawPieceCount > 0 && rawPieceRate > 0) ? Math.round(rawPieceCount * rawPieceRate) : null;
-
-      const rawItemPrice = Number(itemCalc.price.replace(/,/g, "")) || 0;
-      const rawItemCount = Number(itemCalc.count.replace(/,/g, "")) || 0;
-      const itemCalcResult = (rawItemPrice > 0 && rawItemCount > 0) ? rawItemPrice * rawItemCount : null;
+      
+      const pieceCalcResult = useMemo(() => {
+        if (rawPieceCount <= 0 || rawPieceRate <= 0) return null;
+        let base = rawPieceCount * rawPieceRate;
+        if (form.currency === "piece" && form.type === "expense" && form.category === "아이템 판매" && effectiveFeeRate > 0) {
+          base = Math.round(base * (1 - effectiveFeeRate / 100));
+        }
+        return base;
+      }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
 
       return (
         <div className="ml-root">
@@ -870,9 +1050,18 @@
                     <h1>장부</h1>
                   </div>
                 </div>
-                <button className="ml-calc-toggle-btn" onClick={() => setShowCalc(!showCalc)}>
-                  {showCalc ? "계산기 끄기 ✖" : "🧮 계산기 켜기"}
-                </button>
+                <div className="ml-mvp-box">
+                  <label>MVP</label>
+                  <select value={mvpGrade} onChange={e => handleMvpChange(e.target.value)}>
+                    <option value="없음">없음</option>
+                    <option value="브론즈">브론즈</option>
+                    <option value="실버">실버</option>
+                    <option value="골드">골드</option>
+                    <option value="다이아">다이아</option>
+                    <option value="레드">레드</option>
+                    <option value="블랙">블랙</option>
+                  </select>
+                </div>
               </div>
             </header>
 
@@ -885,7 +1074,7 @@
             <main>
               {tab === "dashboard" && (
                 <section className="ml-page">
-                  <div className="ml-panel">
+                  <div className="ml-panel ml-panel-compact">
                     <div className="ml-range-head">
                       <h2>기간</h2>
                       {!isThisMonth && <button className="ml-range-reset" onClick={() => setRange({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() })}>이번 달로</button>}
@@ -949,6 +1138,15 @@
                   <div className="ml-panel">
                     <h2>캐릭터 검색</h2>
                     <div className="ml-form-row">
+                      <label>넥슨 오픈 API 키 (최초 1회 입력)</label>
+                      <input 
+                        type="password" 
+                        placeholder="live_... 또는 test_... 키 입력" 
+                        value={nexonApiKey} 
+                        onChange={e => handleApiKeyChange(e.target.value)} 
+                      />
+                    </div>
+                    <div className="ml-form-row" style={{ marginTop: "8px" }}>
                       <label>캐릭터 닉네임</label>
                       <div style={{ display: "flex", gap: "6px" }}>
                         <input 
@@ -967,28 +1165,32 @@
                     {charError && <p style={{ fontSize: "13px", color: "var(--expense)", marginTop: "10px" }}>{charError}</p>}
 
                     {charData && (
-                      <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "14px", background: "#FBF7EC", padding: "14px", borderRadius: "3px", border: "1px solid var(--line)" }}>
-                          <img src={charData.character_image} alt="캐릭터 이미지" style={{ width: "72px", height: "72px", objectFit: "contain", background: "#E6DCC4", borderRadius: "3px" }} />
-                          <div style={{ fontSize: "14px", lineHeight: "1.5" }}>
-                            <strong style={{ fontSize: "16px", fontFamily: "'Fraunces', serif" }}>{charData.character_name}</strong><br/>
-                            <span>Lv.{charData.character_level} ({charData.character_exp_rate}%)</span><br/>
-                            <span style={{ color: "var(--ink-soft)", fontSize: "13px" }}>
-                              {charData.world_name} · {charData.character_class}
-                            </span>
-                          </div>
+                      <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#FBF7EC", padding: "16px", borderRadius: "3px", border: "1px solid var(--line)" }}>
+                          <img 
+                            src={charData.character_image} 
+                            alt="캐릭터 이미지" 
+                            style={{ width: "100%", maxWidth: "260px", height: "auto", maxHeight: "260px", objectFit: "contain", background: "#E6DCC4", borderRadius: "4px", border: "1px solid var(--line)", display: "block" }} 
+                          />
+                        </div>
+                        <div style={{ background: "#FBF7EC", padding: "14px", borderRadius: "3px", border: "1px solid var(--line)", textAlign: "center" }}>
+                          <strong style={{ fontSize: "20px", fontFamily: "'Fraunces', serif" }}>{charData.character_name}</strong><br/>
+                          <span style={{ fontSize: "15px" }}>Lv.{charData.character_level} ({charData.character_exp_rate}%)</span><br/>
+                          <span style={{ color: "var(--ink-soft)", fontSize: "14px" }}>
+                            {charData.world_name} · {charData.character_class}
+                          </span>
                         </div>
 
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                          <div style={{ background: "#FBF7EC", padding: "10px", borderRadius: "3px", border: "1px solid var(--line)" }}>
-                            <div style={{ fontSize: "11px", color: "var(--ink-soft)", marginBottom: "2px" }}>⚔️ 전투력</div>
-                            <div style={{ fontSize: "14px", fontWeight: "700", fontFamily: "'Fraunces', serif" }}>
-                              {combatPower ? Number(combatPower).toLocaleString() : "조회 불가"}
+                          <div style={{ background: "#FBF7EC", padding: "12px", borderRadius: "3px", border: "1px solid var(--line)" }}>
+                            <div style={{ fontSize: "11px", color: "var(--ink-soft)", marginBottom: "3px" }}>⚔️ 전투력 (최근 10일 중 최고)</div>
+                            <div style={{ fontSize: "15px", fontWeight: "700", fontFamily: "'Fraunces', serif" }}>
+                              {maxCombatPower ? Number(maxCombatPower).toLocaleString() : "조회 불가"}
                             </div>
                           </div>
-                          <div style={{ background: "#FBF7EC", padding: "10px", borderRadius: "3px", border: "1px solid var(--line)" }}>
-                            <div style={{ fontSize: "11px", color: "var(--ink-soft)", marginBottom: "2px" }}>📈 오늘 획득 경험치</div>
-                            <div style={{ fontSize: "13px", fontWeight: "700", fontFamily: "'Fraunces', serif" }}>
+                          <div style={{ background: "#FBF7EC", padding: "12px", borderRadius: "3px", border: "1px solid var(--line)" }}>
+                            <div style={{ fontSize: "11px", color: "var(--ink-soft)", marginBottom: "3px" }}>📈 오늘 획득 경험치 변화량</div>
+                            <div style={{ fontSize: "14px", fontWeight: "700", fontFamily: "'Fraunces', serif" }}>
                               {charExp && charExp.access_date ? `${charExp.exp_rate || 0}% 증가` : "데이터 없음"}
                             </div>
                           </div>
@@ -1097,32 +1299,44 @@
                     <div className="ml-form-row">
                       <label>통화</label>
                       <div className="ml-seg">
-                        <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "" }))}>💳 현금</button>
-                        <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "" }))}>💰 메소</button>
-                        <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "" }))}>🧩 조각</button>
+                        <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "", feeRate: 0 }))}>💳 현금</button>
+                        <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "", feeRate: 0 }))}>💰 메소</button>
+                        <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "", feeRate: 0 }))}>🧩 조각</button>
                       </div>
                     </div>
 
                     <div className="ml-form-row">
                       <label>유형</label>
                       <div className="ml-seg">
-                        <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "" }))}>지출</button>
-                        <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "" }))}>수입</button>
+                        <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "", feeRate: 0 }))}>지출</button>
+                        <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "", feeRate: 0 }))}>수입</button>
                       </div>
                     </div>
 
                     <div className="ml-form-row">
                       <label>카테고리</label>
-                      <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
+                      <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value, feeRate: 0 }))} />
                     </div>
                     <div className="ml-chips">
-                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s }))}>{s}</button>)}
+                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s, feeRate: 0 }))}>{s}</button>)}
                     </div>
 
-                    {form.currency === "cash" && (
+                    {/* 수수료 설정이 필요한 지정된 카테고리에서만 수수료 UI 노출 */}
+                    {isFeeApplicableCategory && (
+                      <div className="ml-form-row">
+                        <label>⚙️ 수수료 설정 {["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) && <span style={{ color: "var(--gold)" }}>(MVP {mvpGrade} 3% 고정 적용됨)</span>}</label>
+                        <div className="ml-seg">
+                          <button className={effectiveFeeRate === 0 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 0 }))} disabled={["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)}>수수료 없음</button>
+                          <button className={effectiveFeeRate === 3 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 3 }))} disabled={["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)}>3% 차감</button>
+                          <button className={effectiveFeeRate === 5 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 5 }))} disabled={["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)}>5% 차감</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매") && (
                       <div className="ml-calc">
                         <div className="ml-calc-title">
-                          <span>🧮 시세 계산기</span>
+                          <span>🧮 메소 시세 계산기 (메소수량/현금금액 자동 연동)</span>
                         </div>
                         <div className="ml-calc-row">
                           <input type="text" inputMode="numeric" placeholder="메소(억)" value={calc.mesoEok} onChange={e => {
@@ -1135,9 +1349,23 @@
                             if (/^\d*$/.test(val)) setCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
                           }} />
                         </div>
-                        <div className="ml-calc-result">
-                          <span>{calcResult != null ? formatCalcResult(calcResult, "원") : "메소 수량과 시세를 입력해주세요"}</span>
-                          <button className="ml-calc-apply" onClick={() => calcResult && setForm(f => ({ ...f, currency: "cash", amount: String(calcResult) }))} disabled={calcResult == null}>금액에 적용</button>
+                        <div className="ml-calc-result" style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}>
+                          <div>
+                            {calcResult != null ? (
+                              <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
+                                <div>지출/수입 현금: <strong>{formatDetailedUnit(calcResult, "원")}</strong></div>
+                                <div>메소 수량: <strong>{formatDetailedUnit(rawCalcMeso * 100000000, "메소")}</strong></div>
+                                {form.currency === "cash" && form.type === "expense" && form.category === "메소구매" && effectiveFeeRate > 0 && (
+                                  <div style={{ marginTop: "2px", color: "var(--expense)" }}>
+                                    수수료 {effectiveFeeRate}% 적용 최종 메소: {formatDetailedUnit(Math.round((rawCalcMeso * 100000000) * (1 - effectiveFeeRate / 100)), "메소")}
+                                  </div>
+                                )}
+                              </div>
+                            ) : "메소 수량과 시세를 입력해주세요"}
+                          </div>
+                          <button className="ml-calc-apply" style={{ width: "100%", padding: "8px", textAlign: "center" }} onClick={registerCalcTransaction} disabled={calcResult == null}>
+                            현금 및 메소에 함께 기록 ➕
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1145,7 +1373,7 @@
                     {form.currency === "piece" && (form.category === "아이템 구매" || form.category === "아이템 판매") && (
                       <div className="ml-calc">
                         <div className="ml-calc-title">
-                          <span>🧮 조각시세 계산기</span>
+                          <span>🧮 조각시세 계산기 {form.currency === "piece" && form.type === "expense" && form.category === "아이템 판매" && effectiveFeeRate > 0 ? `(수수료 ${effectiveFeeRate}% 적용)` : ""}</span>
                         </div>
                         <div className="ml-calc-row">
                           <input type="text" inputMode="numeric" placeholder="조각 갯수" value={pieceCalc.count} onChange={e => {
@@ -1158,9 +1386,9 @@
                             if (/^\d*$/.test(val)) setPieceCalc(c => ({ ...c, rate: val ? Number(val).toLocaleString("ko-KR") : "" }));
                           }} />
                         </div>
-                        <div className="ml-calc-result">
+                        <div className="ml-calc-result" style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}>
                           <span>{pieceCalcResult != null ? formatPieceCalcResult(pieceCalcResult) : "갯수와 단가를 입력해주세요"}</span>
-                          <button className="ml-calc-apply" onClick={() => {
+                          <button className="ml-calc-apply" style={{ width: "100%", padding: "8px", textAlign: "center" }} onClick={() => {
                             if (pieceCalcResult != null) {
                               const isExpense = form.type === "expense";
                               const targetType = isExpense ? "income" : "expense";
@@ -1179,7 +1407,7 @@
                               };
 
                               persistTransactions([mesoTx, pieceTx, ...transactions]);
-                              setForm(f => ({ ...f, amount: "", memo: "", category: "" }));
+                              setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
                               setPieceCalc({ count: "", rate: "" });
                             }
                           }} disabled={pieceCalcResult == null || rawPieceCount <= 0}>메소 및 조각 장부에 동시 기록</button>
@@ -1187,46 +1415,38 @@
                       </div>
                     )}
 
-                    {form.currency === "meso" && (form.category === "아이템구매" || form.category === "아이템 판매") && (
-                      <div className="ml-calc">
-                        <div className="ml-calc-title">
-                          <span>🧮 아이템 계산기 (가격 × 갯수)</span>
-                        </div>
-                        <div className="ml-calc-row">
-                          <input type="text" inputMode="numeric" placeholder="개당 가격" value={itemCalc.price} onChange={e => {
+                    {!(form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매")) && (
+                      <div className="ml-form-row">
+                        <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
+                        <input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} 
+                          onChange={e => {
                             const val = e.target.value.replace(/,/g, "");
-                            if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, price: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                          }} />
-                          <span>×</span>
-                          <input type="text" inputMode="numeric" placeholder="갯수" value={itemCalc.count} onChange={e => {
-                            const val = e.target.value.replace(/,/g, "");
-                            if (/^\d*$/.test(val)) setItemCalc(c => ({ ...c, count: val ? Number(val).toLocaleString("ko-KR") : "" }));
-                          }} />
-                        </div>
-                        <div className="ml-calc-result">
-                          <span>{itemCalcResult != null ? formatCalcResult(itemCalcResult, "메소") : "가격과 갯수를 입력해주세요"}</span>
-                          <button className="ml-calc-apply" onClick={() => itemCalcResult != null && setForm(f => ({ ...f, currency: "meso", amount: String(itemCalcResult) }))} disabled={itemCalcResult == null}>메소 금액에 적용</button>
-                        </div>
+                            if (/^\d*$/.test(val)) setForm(f => ({ ...f, amount: val }));
+                          }} 
+                        />
+                        {form.amount && (
+                          <div className="ml-korean-amount">
+                            {isFeeApplicableCategory && effectiveFeeRate > 0 ? (
+                              <div>
+                                <span style={{ color: "var(--expense)" }}>수수료 {effectiveFeeRate}% (-{formatKoreanCurrency(String(Math.round(Number(form.amount) * (effectiveFeeRate / 100))), form.currency)})</span><br/>
+                                <span>최종 적용 금액: {formatKoreanCurrency(String(Math.round(Number(form.amount) * (1 - effectiveFeeRate / 100))), form.currency)}</span>
+                              </div>
+                            ) : (
+                              formatKoreanCurrency(form.amount, form.currency)
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
-
-                    <div className="ml-form-row">
-                      <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
-                      <input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} 
-                        onChange={e => {
-                          const val = e.target.value.replace(/,/g, "");
-                          if (/^\d*$/.test(val)) setForm(f => ({ ...f, amount: val }));
-                        }} 
-                      />
-                      {form.amount && <div className="ml-korean-amount">{formatKoreanCurrency(form.amount, form.currency)}</div>}
-                    </div>
 
                     <div className="ml-form-row">
                       <label>메모</label>
                       <input type="text" placeholder="선택 사항" value={form.memo} onChange={e => setForm(f => ({ ...f, memo: e.target.value }))} />
                     </div>
 
-                    <button className="ml-submit" onClick={addTransaction}>➕ 장부에 적기</button>
+                    {!(form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매")) && (
+                      <button className="ml-submit" onClick={addTransaction}>➕ 장부에 적기</button>
+                    )}
                   </div>
                 </section>
               )}
@@ -1262,46 +1482,69 @@
 
                     {historyView === "list" && filteredHistory.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} />)}
 
-                    {historyView === "category" && groupedHistory.map(g => {
-                      const groupKey = `${g.currency}|${g.category}`;
-                      const isCollapsed = !!collapsedGroups[groupKey];
-                      const currencyLabel = g.currency === "cash" ? "원" : g.currency === "meso" ? "메소" : "개";
+                    {historyView === "category" && currencyRootGroupedHistory.map(root => {
+                      const rootKey = root.currency;
+                      const isRootCollapsed = !!collapsedCurrencyRoots[rootKey];
+                      const rootUnitLabel = root.currency === "cash" ? "원" : root.currency === "meso" ? "메소" : "개";
 
                       return (
-                        <div key={groupKey}>
-                          <div className="ml-group-header" onClick={() => toggleGroup(groupKey)}>
-                            <span className="ml-group-name">
-                              <span>{isCollapsed ? "▶" : "▼"}</span>
-                              {g.category} 
-                              <span className="ml-group-badge">
-                                {g.currency === "cash" ? "현금" : g.currency === "meso" ? "메소" : "조각"}
-                              </span>
+                        <div key={rootKey}>
+                          <div className="ml-currency-root-header" onClick={() => toggleCurrencyRoot(rootKey)}>
+                            <span className="ml-currency-root-name">
+                              <span>{isRootCollapsed ? "▶" : "▼"}</span>
+                              {root.name}
                             </span>
-                            <span className={`ml-group-total ${g.net >= 0 ? "income" : "expense"}`}>
-                              {g.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(g.net))}
-                              {currencyLabel}
+                            <span className={`ml-currency-root-total ${root.net >= 0 ? "income" : "expense"}`}>
+                              {root.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(root.net))}
+                              {rootUnitLabel}
                             </span>
                           </div>
 
-                          {!isCollapsed && g.subGroups.map(sub => {
-                            const subKey = `${groupKey}|${sub.date}`;
-                            const isSubCollapsed = !!collapsedSubGroups[subKey];
-                            return (
-                              <div key={subKey}>
-                                <div className="ml-subgroup-header" onClick={() => toggleSubGroup(subKey)}>
-                                  <span className="ml-subgroup-date">
-                                    <span>{isSubCollapsed ? "▸" : "▾"}</span>
-                                    📅 {sub.date}
-                                  </span>
-                                  <span className={`ml-subgroup-total ${sub.net >= 0 ? "income" : "expense"}`}>
-                                    {sub.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(sub.net))}
-                                    {currencyLabel}
-                                  </span>
-                                </div>
-                                {!isSubCollapsed && sub.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
-                              </div>
-                            );
-                          })}
+                          {!isRootCollapsed && (
+                            root.categories.length === 0 ? (
+                              <div style={{ padding: "10px 20px", fontSize: "12px", color: "var(--ink-soft)", background: "#FBF7EC" }}>내역이 없습니다.</div>
+                            ) : (
+                              root.categories.map(cat => {
+                                const catKey = `${rootKey}|${cat.category}`;
+                                const isCatCollapsed = !!collapsedGroups[catKey];
+
+                                return (
+                                  <div key={catKey}>
+                                    <div className="ml-group-header" onClick={() => toggleGroup(catKey)}>
+                                      <span className="ml-group-name">
+                                        <span>{isCatCollapsed ? "▶" : "▼"}</span>
+                                        {cat.category}
+                                      </span>
+                                      <span className={`ml-group-total ${cat.net >= 0 ? "income" : "expense"}`}>
+                                        {cat.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(cat.net))}
+                                        {rootUnitLabel}
+                                      </span>
+                                    </div>
+
+                                    {!isCatCollapsed && cat.subGroups.map(sub => {
+                                      const subKey = `${catKey}|${sub.date}`;
+                                      const isSubCollapsed = !!collapsedSubGroups[subKey];
+                                      return (
+                                        <div key={subKey}>
+                                          <div className="ml-subgroup-header" onClick={() => toggleSubGroup(subKey)}>
+                                            <span className="ml-subgroup-date">
+                                              <span>{isSubCollapsed ? "▸" : "▾"}</span>
+                                              📅 {sub.date}
+                                            </span>
+                                            <span className={`ml-subgroup-total ${sub.net >= 0 ? "income" : "expense"}`}>
+                                              {sub.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(sub.net))}
+                                              {rootUnitLabel}
+                                            </span>
+                                          </div>
+                                          {!isSubCollapsed && sub.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })
+                            )
+                          )}
                         </div>
                       );
                     })}
@@ -1408,43 +1651,49 @@
             </button>
           </div>
 
-          {showCalc && (
-            <div className="ml-sidebar-calc">
-              <div className="ml-calc-title">
-                <span>🧮 간편 계산기</span>
+          {/* 우측 하단 계산기 및 계산기 끄기 버튼 플로팅 고정 영역 */}
+          <div className="ml-sidebar-calc-container">
+            {showCalc && (
+              <div className="ml-sidebar-calc">
+                <div className="ml-calc-title">
+                  <span>🧮 간편 계산기</span>
+                </div>
+                <div className="ml-calc-screen">
+                  <div className="ml-calc-expression">{stdCalc.expression}</div>
+                  <div className="ml-calc-display">{Number(stdCalc.display.replace(/,/g, "") || 0).toLocaleString("ko-KR")}</div>
+                </div>
+                <div className="ml-calc-keypad">
+                  <button className="ml-calc-btn" onClick={handleStdClear}>C</button>
+                  <button className="ml-calc-btn" onClick={handleStdDelete} title="한 글자 지우기">⌫</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("÷")}>÷</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("×")}>×</button>
+
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("7")}>7</button>
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("8")}>8</button>
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("9")}>9</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("-")}>-</button>
+
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("4")}>4</button>
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("5")}>5</button>
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("6")}>6</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("+")}>+</button>
+
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("1")}>1</button>
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("2")}>2</button>
+                  <button className="ml-calc-btn" onClick={() => handleStdNum("3")}>3</button>
+                  <button className="ml-calc-btn action" style={{ gridRow: "span 2" }} onClick={handleStdEquals}>=</button>
+
+                  <button className="ml-calc-btn" style={{ gridColumn: "span 2" }} onClick={() => handleStdNum("0")}>0</button>
+                  <button className="ml-calc-btn" onClick={() => {
+                    setStdCalc(prev => ({ ...prev, display: prev.display.includes(".") ? prev.display : prev.display + "." }));
+                  }}>.</button>
+                </div>
               </div>
-              <div className="ml-calc-screen">
-                <div className="ml-calc-expression">{stdCalc.expression}</div>
-                <div className="ml-calc-display">{Number(stdCalc.display.replace(/,/g, "") || 0).toLocaleString("ko-KR")}</div>
-              </div>
-              <div className="ml-calc-keypad">
-                <button className="ml-calc-btn" onClick={handleStdClear}>C</button>
-                <button className="ml-calc-btn" onClick={handleStdDelete} title="한 글자 지우기">⌫</button>
-                <button className="ml-calc-btn op" onClick={() => handleStdOp("÷")}>÷</button>
-                <button className="ml-calc-btn op" onClick={() => handleStdOp("×")}>×</button>
-
-                <button className="ml-calc-btn" onClick={() => handleStdNum("7")}>7</button>
-                <button className="ml-calc-btn" onClick={() => handleStdNum("8")}>8</button>
-                <button className="ml-calc-btn" onClick={() => handleStdNum("9")}>9</button>
-                <button className="ml-calc-btn op" onClick={() => handleStdOp("-")}>-</button>
-
-                <button className="ml-calc-btn" onClick={() => handleStdNum("4")}>4</button>
-                <button className="ml-calc-btn" onClick={() => handleStdNum("5")}>5</button>
-                <button className="ml-calc-btn" onClick={() => handleStdNum("6")}>6</button>
-                <button className="ml-calc-btn op" onClick={() => handleStdOp("+")}>+</button>
-
-                <button className="ml-calc-btn" onClick={() => handleStdNum("1")}>1</button>
-                <button className="ml-calc-btn" onClick={() => handleStdNum("2")}>2</button>
-                <button className="ml-calc-btn" onClick={() => handleStdNum("3")}>3</button>
-                <button className="ml-calc-btn action" style={{ gridRow: "span 2" }} onClick={handleStdEquals}>=</button>
-
-                <button className="ml-calc-btn" style={{ gridColumn: "span 2" }} onClick={() => handleStdNum("0")}>0</button>
-                <button className="ml-calc-btn" onClick={() => {
-                  setStdCalc(prev => ({ ...prev, display: prev.display.includes(".") ? prev.display : prev.display + "." }));
-                }}>.</button>
-              </div>
-            </div>
-          )}
+            )}
+            <button className="ml-calc-toggle-btn" onClick={() => setShowCalc(!showCalc)}>
+              {showCalc ? "계산기 끄기 ✖" : "🧮 계산기 켜기"}
+            </button>
+          </div>
         </div>
       );
     }
