@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
@@ -46,7 +47,7 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 260px;
+      width: 290px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
@@ -497,6 +498,10 @@
     function MapleLedger() {
       const [tab, setTab] = useState("dashboard");
       const [showCalc, setShowCalc] = useState(true);
+      const [showSplitCalc, setShowSplitCalc] = useState(false);
+      
+      const [splitInput, setSplitInput] = useState({ salePrice: "", partyCount: "3", feePercent: "3" });
+
       const [transactions, setTransactions] = useState([]);
       const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0 });
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
@@ -1088,7 +1093,6 @@
         });
       }, [filteredHistory]);
 
-      // 기록하기 탭 추천 카테고리 칩을 글자 개수 순서로 정렬
       const suggestions = useMemo(() => {
         const list = CATEGORY_SUGGESTIONS[form.currency][form.type] || [];
         return [...list].sort((a, b) => {
@@ -1114,6 +1118,46 @@
         }
         return base;
       }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
+
+      // 사용자 제공 공식 적용 (정수 반올림 깔끔하게 정리)
+      const salePrice = Number(splitInput.salePrice.replace(/,/g, "")) || 0;
+      const memberCount = Number(splitInput.partyCount) || 1;
+      const feeRate = (Number(splitInput.feePercent) || 0) / 100;
+
+      const splitResult = useMemo(() => {
+        if (salePrice <= 0 || memberCount <= 0) return { actual: 0, memberFinal: 0, leaderFinal: 0, memberBeforeFee: 0 };
+
+        const actual = Math.round(salePrice * (1 - feeRate));
+        const equalShare = actual / (1 + (memberCount - 1) / (1 - feeRate));
+        const leaderFinal = equalShare;
+        const memberBeforeFee = equalShare / (1 - feeRate);
+        const memberFinal = memberBeforeFee * (1 - feeRate);
+
+        return { 
+          actual, 
+          memberFinal: Math.round(memberFinal), 
+          leaderFinal: Math.round(leaderFinal),
+          memberBeforeFee: Math.round(memberBeforeFee)
+        };
+      }, [salePrice, memberCount, feeRate]);
+
+      const handleCaptureSplitResult = () => {
+        const targetElement = document.getElementById("split-result-capture-area");
+        if (!targetElement) return;
+
+        window.html2canvas(targetElement, { backgroundColor: "#EFE6D2", scale: 2 }).then(canvas => {
+          canvas.toBlob(blob => {
+            const item = new ClipboardItem({ "image/png": blob });
+            navigator.clipboard.write([item]).then(() => {
+              setShowToast(true);
+              setTimeout(() => setShowToast(false), 1500);
+            }).catch(err => {
+              console.error(err);
+              alert("클립보드 복사에 실패했습니다.");
+            });
+          });
+        });
+      };
 
       return (
         <div className="ml-root">
@@ -1663,7 +1707,7 @@
 
           {showToast && (
             <div className="ml-toast">
-              기록되었습니다.
+              클립보드에 복사되었습니다!
             </div>
           )}
 
@@ -1763,7 +1807,91 @@
             </button>
           </div>
 
+          {/* 우측 하단 플로팅 고정 영역 */}
           <div className="ml-sidebar-calc-container">
+            {showSplitCalc && (
+              <div className="ml-sidebar-calc">
+                <div className="ml-calc-title">
+                  <span>💰 분배금 계산기 (공평 분배)</span>
+                </div>
+                
+                <div className="ml-form-row" style={{ marginBottom: "6px" }}>
+                  <label>경매장 판매액</label>
+                  <input 
+                    type="text" 
+                    placeholder="0" 
+                    value={splitInput.salePrice ? Number(splitInput.salePrice).toLocaleString("ko-KR") : ""} 
+                    onChange={e => {
+                      const val = e.target.value.replace(/,/g, "");
+                      if (/^\d*$/.test(val)) setSplitInput(s => ({ ...s, salePrice: val }));
+                    }} 
+                  />
+                  {splitInput.salePrice && (
+                    <div className="ml-korean-amount" style={{ fontSize: "11px", textAlign: "right" }}>
+                      {formatDetailedUnit(splitInput.salePrice, "메소")}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
+                  <div className="ml-form-row" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>총 인원수</label>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max="18" 
+                      value={splitInput.partyCount} 
+                      onChange={e => setSplitInput(s => ({ ...s, partyCount: e.target.value }))} 
+                    />
+                  </div>
+                  <div className="ml-form-row" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>수수료 (%)</label>
+                    <input 
+                      type="number" 
+                      min="0" 
+                      max="100" 
+                      value={splitInput.feePercent} 
+                      onChange={e => setSplitInput(s => ({ ...s, feePercent: e.target.value }))} 
+                    />
+                  </div>
+                </div>
+
+                {/* 캡처 대상 영역 (2열 레이아웃 적용으로 줄바뀜 방지) */}
+                <div id="split-result-capture-area" style={{ background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px", padding: "8px 10px", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "11px", color: "var(--ink-soft)", borderBottom: "1px solid var(--line)", paddingBottom: "6px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                    <div>
+                      <div style={{ fontSize: "10px", color: "var(--ink-soft)" }}>경매장 판매액:</div>
+                      <strong style={{ fontSize: "13px" }}>{splitInput.salePrice ? Number(splitInput.salePrice).toLocaleString("ko-KR") : "0"} 메소</strong>
+                    </div>
+                    <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                      <span>인원: <strong>{splitInput.partyCount}명</strong></span><br/>
+                      <span>수수료: <strong>{splitInput.feePercent}%</strong></span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--ink-soft)" }}>
+                    실제 수령액: <strong>{formatDetailedUnit(splitResult.actual, "메소")}</strong>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--ink-soft)", marginTop: "2px" }}>
+                    파티원 전달 금액: <strong style={{ color: "var(--income)" }}>{formatDetailedUnit(splitResult.memberBeforeFee, "메소")}</strong>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--ink-soft)", marginTop: "2px" }}>
+                    최종 동일 분배금: <strong style={{ color: "var(--income)" }}>{formatDetailedUnit(splitResult.memberFinal, "메소")}</strong>
+                  </div>
+                  <div style={{ fontSize: "10px", color: "var(--ink-soft)", marginTop: "6px", borderTop: "1px dashed var(--line)", paddingTop: "4px", lineHeight: "1.4" }}>
+                    💡 파티원에게 <strong>{formatDetailedUnit(splitResult.memberBeforeFee, "메소")}</strong>를 보내면, 파티원과 파티장 모두 최종적으로 정확히 <strong>{formatDetailedUnit(splitResult.memberFinal, "메소")}</strong>을 갖게 됩니다!
+                  </div>
+                </div>
+
+                {/* 클립보드 복사 버튼 */}
+                <button className="ml-calc-apply" style={{ width: "100%", padding: "6px", textAlign: "center" }} onClick={handleCaptureSplitResult} disabled={salePrice <= 0}>
+                  📋 결과 이미지 복사하기 (Ctrl+V)
+                </button>
+              </div>
+            )}
+            <button className="ml-calc-toggle-btn" onClick={() => setShowSplitCalc(!showSplitCalc)}>
+              {showSplitCalc ? "분배금 계산기 닫기 ✖" : "💰 분배금 계산기 켜기"}
+            </button>
+
             {showCalc && (
               <div className="ml-sidebar-calc">
                 <div className="ml-calc-title">
