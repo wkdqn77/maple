@@ -1119,7 +1119,7 @@
         return base;
       }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
 
-      // 사용자 제공 공식 적용 (정수 반올림 깔끔하게 정리)
+      // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여 금액 파티장 귀속 로직
       const salePrice = Number(splitInput.salePrice.replace(/,/g, "")) || 0;
       const memberCount = Number(splitInput.partyCount) || 1;
       const feeRate = (Number(splitInput.feePercent) || 0) / 100;
@@ -1127,17 +1127,25 @@
       const splitResult = useMemo(() => {
         if (salePrice <= 0 || memberCount <= 0) return { actual: 0, memberFinal: 0, leaderFinal: 0, memberBeforeFee: 0 };
 
-        const actual = Math.round(salePrice * (1 - feeRate));
+        const actual = salePrice * (1 - feeRate);
         const equalShare = actual / (1 + (memberCount - 1) / (1 - feeRate));
-        const leaderFinal = equalShare;
-        const memberBeforeFee = equalShare / (1 - feeRate);
+        
+        // 파티원 전달 금액(수수료 포함)을 100의 자리에서 내림 처리
+        const rawMemberBeforeFee = equalShare / (1 - feeRate);
+        const memberBeforeFee = Math.floor(rawMemberBeforeFee / 100) * 100;
+
+        // 파티원 최종 몫
         const memberFinal = memberBeforeFee * (1 - feeRate);
+
+        // 파티장 최종 몫 = 실제 수령액 - (내림된 파티원 전달 금액 * 파티원 수)
+        const partyMembersCount = memberCount - 1;
+        const leaderFinal = actual - (memberBeforeFee * partyMembersCount);
 
         return { 
           actual, 
-          memberFinal: Math.round(memberFinal), 
-          leaderFinal: Math.round(leaderFinal),
-          memberBeforeFee: Math.round(memberBeforeFee)
+          memberFinal, 
+          leaderFinal,
+          memberBeforeFee
         };
       }, [salePrice, memberCount, feeRate]);
 
@@ -1145,7 +1153,7 @@
         const targetElement = document.getElementById("split-result-capture-area");
         if (!targetElement) return;
 
-        window.html2canvas(targetElement, { backgroundColor: "#EFE6D2", scale: 2 }).then(canvas => {
+        window.html2canvas(targetElement, { backgroundColor: "#FBF7EC", scale: 2 }).then(canvas => {
           canvas.toBlob(blob => {
             const item = new ClipboardItem({ "image/png": blob });
             navigator.clipboard.write([item]).then(() => {
@@ -1856,7 +1864,7 @@
                   </div>
                 </div>
 
-                {/* 캡처 대상 영역 (2열 레이아웃 적용으로 줄바뀜 방지) */}
+                {/* 캡처 대상 영역 */}
                 <div id="split-result-capture-area" style={{ background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px", padding: "8px 10px", marginBottom: "8px" }}>
                   <div style={{ fontSize: "11px", color: "var(--ink-soft)", borderBottom: "1px solid var(--line)", paddingBottom: "6px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                     <div>
