@@ -314,16 +314,16 @@
     .ml-group-total.income { color: var(--income); }
     .ml-group-total.expense { color: var(--expense); }
 
-    .ml-subgroup-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 8px 35px; background: #EFE6D2; border-top: 1px solid #DED2B4; cursor: pointer; user-select: none; }
-    .ml-subgroup-header:hover { background: #E6DCC4; }
-    .ml-subgroup-date { font-size: 12px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
-    .ml-subgroup-total { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; }
-    .ml-subgroup-total.income { color: var(--income); }
-    .ml-subgroup-total.expense { color: var(--expense); }
+    .ml-chargroup-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 8px 35px; background: #E6DCC4; border-top: 1px solid #DED2B4; cursor: pointer; user-select: none; }
+    .ml-chargroup-header:hover { background: #DFD4B8; }
+    .ml-chargroup-name { font-size: 12px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+    .ml-chargroup-total { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; }
+    .ml-chargroup-total.income { color: var(--income); }
+    .ml-chargroup-total.expense { color: var(--expense); }
 
     .ml-tx-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #DED2B4; }
     .ml-tx-row:first-child { border-top: none; }
-    .ml-tx-row-compact { padding: 6px 0 6px 45px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
+    .ml-tx-row-compact { padding: 6px 0 6px 50px; border-top: none; background: #FBF7EC; border-bottom: 1px solid #E6DCC4; }
     .ml-tx-icon { font-size: 14px; flex-shrink: 0; }
     .ml-tx-main { flex: 1; min-width: 0; }
     .ml-tx-top { display: flex; justify-content: space-between; gap: 8px; }
@@ -351,6 +351,28 @@
     .ml-boss-diff-label.disabled { opacity: 0.4; cursor: not-allowed; background: #E8E2D0; }
     .ml-boss-party-select { padding: 4px; font-size: 12px; border: 1px solid var(--line); border-radius: 3px; background: #FBF7EC; }
     .ml-boss-total-bar { display: flex; justify-content: space-between; align-items: center; background: #E6DCC4; padding: 12px; border-radius: 3px; margin-bottom: 12px; font-weight: 700; flex-wrap: wrap; gap: 8px; }
+
+    .ml-toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2A2016;
+      color: #EFE6D2;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      z-index: 2000;
+      animation: fadeInOut 1.5s ease;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, 10px); }
+      15% { opacity: 1; transform: translate(-50%, 0); }
+      85% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -10px); }
+    }
   </style>
 </head>
 <body>
@@ -359,7 +381,7 @@
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -434,16 +456,6 @@
       return formatDetailedUnit(n, unit);
     }
 
-    function formatCalcResult(num, suffix) {
-      if (!num || isNaN(num) || num === 0) return "";
-      return formatDetailedUnit(num, suffix);
-    }
-
-    function formatPieceCalcResult(num) {
-      if (!num || isNaN(num) || num === 0) return "";
-      return formatDetailedUnit(num, "메소");
-    }
-
     function StatCard({ icon, label, value, unit, tone, isMeso }) {
       const cleanVal = (Number(value) || 0) === 0 ? 0 : value;
       return (
@@ -490,8 +502,13 @@
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       
-      const [bossSelections, setBossSelections] = useState({});
+      const [characters, setCharacters] = useState(["본캐"]);
+      const [newCharName, setNewCharName] = useState("");
+      const [selectedChar, setSelectedChar] = useState("본캐");
+      const [bossSelectionsPerChar, setBossSelectionsPerChar] = useState({});
+      
       const [bossDate, setBossDate] = useState(todayStr());
+      const [showToast, setShowToast] = useState(false);
 
       const [showGoalBox, setShowGoalBox] = useState(false);
       const [goals, setGoals] = useState({ cash: "", meso: "", piece: "" });
@@ -507,7 +524,7 @@
 
       const [collapsedCurrencyRoots, setCollapsedCurrencyRoots] = useState({});
       const [collapsedGroups, setCollapsedGroups] = useState({});
-      const [collapsedSubGroups, setCollapsedSubGroups] = useState({});
+      const [collapsedCharGroups, setCollapsedCharGroups] = useState({});
 
       const toggleCurrencyRoot = (key) => {
         setCollapsedCurrencyRoots(prev => ({ ...prev, [key]: !prev[key] }));
@@ -517,8 +534,8 @@
         setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
       };
 
-      const toggleSubGroup = (key) => {
-        setCollapsedSubGroups(prev => ({ ...prev, [key]: !prev[key] }));
+      const toggleCharGroup = (key) => {
+        setCollapsedCharGroups(prev => ({ ...prev, [key]: !prev[key] }));
       };
 
       useEffect(() => {
@@ -531,6 +548,18 @@
           if (txData) setTransactions(JSON.parse(txData));
           const goalsSaved = localStorage.getItem(STORAGE_KEYS.GOALS);
           if (goalsSaved) setGoals(JSON.parse(goalsSaved));
+          const charsSaved = localStorage.getItem(STORAGE_KEYS.CHARACTERS);
+          if (charsSaved) {
+            const parsed = JSON.parse(charsSaved);
+            if (parsed && parsed.length > 0) {
+              setCharacters(parsed);
+              setSelectedChar(parsed[0]);
+            }
+          }
+          const bossStateSaved = localStorage.getItem(STORAGE_KEYS.BOSS_STATE);
+          if (bossStateSaved) {
+            setBossSelectionsPerChar(JSON.parse(bossStateSaved));
+          }
         } catch (e) { console.error(e); }
       }, []);
 
@@ -544,21 +573,35 @@
         try { localStorage.setItem(STORAGE_KEYS.MVP, val); } catch(e) {}
       };
 
-      // 현재 선택된 카테고리가 수수료 설정 대상인지 판별하는 함수
+      const addCharacter = () => {
+        const name = newCharName.trim();
+        if (!name || characters.includes(name)) return;
+        const nextChars = [...characters, name];
+        setCharacters(nextChars);
+        setNewCharName("");
+        try { localStorage.setItem(STORAGE_KEYS.CHARACTERS, JSON.stringify(nextChars)); } catch(e) {}
+      };
+
+      const removeCharacter = (charToRemove) => {
+        if (characters.length <= 1) return;
+        const nextChars = characters.filter(c => c !== charToRemove);
+        setCharacters(nextChars);
+        if (selectedChar === charToRemove) {
+          setSelectedChar(nextChars[0]);
+        }
+        try { localStorage.setItem(STORAGE_KEYS.CHARACTERS, JSON.stringify(nextChars)); } catch(e) {}
+      };
+
       const isFeeApplicableCategory = useMemo(() => {
         const c = form.currency;
         const t = form.type;
         const cat = form.category;
-        // 1. 현금 지출 메소구매
         if (c === "cash" && t === "expense" && cat === "메소구매") return true;
-        // 2. 메소 수입 대출 또는 아이템 판매
         if (c === "meso" && t === "income" && (cat === "대출" || cat === "아이템 판매")) return true;
-        // 3. 조각 지출 아이템 판매
         if (c === "piece" && t === "expense" && cat === "아이템 판매") return true;
         return false;
       }, [form.currency, form.type, form.category]);
 
-      // 실버~블랙 선택 시 수수료 3% 고정 자동 적용 (수수료 적용 대상 카테고리일 때만)
       const effectiveFeeRate = useMemo(() => {
         if (!isFeeApplicableCategory) return 0;
         if (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)) {
@@ -649,9 +692,11 @@
         }
       };
 
+      const currentSelections = bossSelectionsPerChar[selectedChar] || {};
+
       const currentNormalBossCount = useMemo(() => {
         let count = 0;
-        Object.keys(bossSelections).forEach(id => {
+        Object.keys(currentSelections).forEach(id => {
           const [bossName] = id.split("_");
           const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
           if (cfg && !cfg.isBlackMage) {
@@ -659,43 +704,49 @@
           }
         });
         return count;
-      }, [bossSelections]);
+      }, [currentSelections]);
 
       const handleBossCheck = (bossName, diffKey) => {
         const id = `${bossName}_${diffKey}`;
         const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
         if (!cfg) return;
 
-        setBossSelections(prev => {
-          const next = { ...prev };
-          const existingKeyForBoss = Object.keys(next).find(k => k.startsWith(`${bossName}_`));
+        setBossSelectionsPerChar(prev => {
+          const charSel = { ...(prev[selectedChar] || {}) };
+          const existingKeyForBoss = Object.keys(charSel).find(k => k.startsWith(`${bossName}_`));
 
-          if (next[id]) {
-            delete next[id];
+          if (charSel[id]) {
+            delete charSel[id];
           } else {
             if (!cfg.isBlackMage && !existingKeyForBoss && currentNormalBossCount >= 12) {
               return prev;
             }
             if (existingKeyForBoss) {
-              delete next[existingKeyForBoss];
+              delete charSel[existingKeyForBoss];
             }
-            next[id] = { bossName, diffKey, party: 1 };
+            charSel[id] = { bossName, diffKey, party: 1 };
           }
-          return next;
+          const nextState = { ...prev, [selectedChar]: charSel };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
         });
       };
 
       const handleBossPartyChange = (bossName, diffKey, partyNum) => {
         const id = `${bossName}_${diffKey}`;
-        setBossSelections(prev => {
-          if (!prev[id]) return prev;
-          return { ...prev, [id]: { ...prev[id], party: Number(partyNum) } };
+        setBossSelectionsPerChar(prev => {
+          const charSel = { ...(prev[selectedChar] || {}) };
+          if (!charSel[id]) return prev;
+          charSel[id] = { ...charSel[id], party: Number(partyNum) };
+          const nextState = { ...prev, [selectedChar]: charSel };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
         });
       };
 
       const calculatedBossTotal = useMemo(() => {
         let total = 0;
-        Object.values(bossSelections).forEach(item => {
+        Object.values(currentSelections).forEach(item => {
           const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
           if (cfg) {
             const diff = cfg.diffs.find(d => d.key === item.diffKey);
@@ -705,21 +756,21 @@
           }
         });
         return total;
-      }, [bossSelections]);
+      }, [currentSelections]);
 
       const registerBossTransactions = () => {
-        if (Object.keys(bossSelections).length === 0) return;
+        if (Object.keys(currentSelections).length === 0) return;
         const newTxs = [];
         const nowTime = Date.now();
 
-        Object.values(bossSelections).forEach((item, index) => {
+        Object.values(currentSelections).forEach((item, index) => {
           const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
           if (!cfg) return;
           const diff = cfg.diffs.find(d => d.key === item.diffKey);
           if (!diff) return;
 
           const finalPrice = Math.floor(diff.price / item.party);
-          const memoStr = `${item.bossName} (${diff.label})${item.party > 1 ? ` / ${item.party}인 파티` : ""}`;
+          const memoStr = `[${selectedChar}] ${item.bossName} (${diff.label})${item.party > 1 ? ` / ${item.party}인 파티` : ""}`;
 
           newTxs.push({
             id: `${nowTime}-${index}-${Math.random().toString(36).slice(2, 7)}`,
@@ -733,8 +784,11 @@
         });
 
         persistTransactions([...newTxs, ...transactions]);
-        setBossSelections({});
-        setTab("dashboard");
+        
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 1500);
       };
 
       const [stdCalc, setStdCalc] = useState({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
@@ -997,31 +1051,53 @@
           root.net += netVal;
 
           if (!root.categoryMap[t.category]) {
-            root.categoryMap[t.category] = { category: t.category, currency: t.currency, net: 0, dateMap: {} };
+            root.categoryMap[t.category] = { category: t.category, currency: t.currency, net: 0, charMap: {} };
           }
           root.categoryMap[t.category].net += netVal;
 
-          if (!root.categoryMap[t.category].dateMap[t.date]) {
-            root.categoryMap[t.category].dateMap[t.date] = { date: t.date, net: 0, items: [] };
+          let charName = "기타/미분류";
+          if (t.memo && t.memo.startsWith("[")) {
+            const bracketEnd = t.memo.indexOf("]");
+            if (bracketEnd > 1) {
+              charName = t.memo.slice(1, bracketEnd);
+            }
           }
-          root.categoryMap[t.category].dateMap[t.date].net += netVal;
-          root.categoryMap[t.category].dateMap[t.date].items.push(t);
+
+          if (!root.categoryMap[t.category].charMap[charName]) {
+            root.categoryMap[t.category].charMap[charName] = { charName, net: 0, items: [] };
+          }
+          root.categoryMap[t.category].charMap[charName].net += netVal;
+          root.categoryMap[t.category].charMap[charName].items.push(t);
         });
 
         return Object.values(rootMap).map(root => {
           const categories = Object.values(root.categoryMap).map(cat => {
-            const subGroups = Object.values(cat.dateMap).sort((a, b) => b.date.localeCompare(a.date));
-            return { ...cat, subGroups };
+            const charGroups = Object.values(cat.charMap).sort((a, b) => {
+              if (a.charName === "기타/미분류") return 1;
+              if (b.charName === "기타/미분류") return -1;
+              return a.charName.localeCompare(b.charName);
+            });
+            return { ...cat, charGroups };
           }).sort((a, b) => {
-            if (a.net >= 0 && b.net < 0) return -1;
-            if (a.net < 0 && b.net >= 0) return 1;
-            return Math.abs(b.net) - Math.abs(a.net);
+            if (a.category.length !== b.category.length) {
+              return a.category.length - b.category.length;
+            }
+            return a.category.localeCompare(b.category);
           });
           return { ...root, categories };
         });
       }, [filteredHistory]);
 
-      const suggestions = CATEGORY_SUGGESTIONS[form.currency][form.type];
+      // 기록하기 탭 추천 카테고리 칩을 글자 개수 순서로 정렬
+      const suggestions = useMemo(() => {
+        const list = CATEGORY_SUGGESTIONS[form.currency][form.type] || [];
+        return [...list].sort((a, b) => {
+          if (a.length !== b.length) {
+            return a.length - b.length;
+          }
+          return a.localeCompare(b);
+        });
+      }, [form.currency, form.type]);
       
       const rawCalcMeso = Number(calc.mesoEok.replace(/,/g, "")) || 0;
       const rawCalcRate = Number(calc.rate.replace(/,/g, "")) || 0;
@@ -1205,20 +1281,52 @@
                 <section className="ml-page">
                   <div className="ml-panel">
                     <h2>보스 일괄 정산</h2>
+                    
+                    <div style={{ background: "#E6DCC4", padding: "12px", borderRadius: "3px", marginBottom: "14px", border: "1px solid var(--line)" }}>
+                      <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--ink-soft)", marginBottom: "8px" }}>🧙 캐릭터 선택 및 관리</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
+                        {characters.map(c => {
+                          const isSelected = selectedChar === c;
+                          const charSelCount = Object.keys(bossSelectionsPerChar[c] || {}).length;
+                          return (
+                            <div key={c} style={{ display: "inline-flex", alignItems: "center", background: isSelected ? "var(--ink)" : "#FBF7EC", color: isSelected ? "var(--paper)" : "var(--ink)", border: "1px solid var(--line)", borderRadius: "14px", padding: "4px 10px", fontSize: "12px", fontWeight: "600" }}>
+                              <span onClick={() => setSelectedChar(c)} style={{ cursor: "pointer" }}>
+                                {c} {charSelCount > 0 && `(${charSelCount})`}
+                              </span>
+                              {characters.length > 1 && (
+                                <button onClick={(e) => { e.stopPropagation(); removeCharacter(c); }} style={{ background: "none", border: "none", color: isSelected ? "var(--paper)" : "var(--expense)", cursor: "pointer", marginLeft: "4px", fontSize: "11px" }}>✖</button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <input 
+                          type="text" 
+                          placeholder="새 캐릭터 이름 입력" 
+                          value={newCharName} 
+                          onChange={e => setNewCharName(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") addCharacter(); }}
+                          style={{ flex: 1, fontSize: "12px", padding: "5px 8px", background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px" }}
+                        />
+                        <button className="ml-calc-apply" onClick={addCharacter} style={{ padding: "5px 10px", fontSize: "12px" }}>캐릭터 추가 ➕</button>
+                      </div>
+                    </div>
+
                     <div className="ml-form-row" style={{ marginBottom: "16px" }}>
-                      <label>기록 날짜</label>
+                      <label>기록 날짜 ({selectedChar})</label>
                       <input type="date" value={bossDate} onChange={e => setBossDate(e.target.value)} />
                     </div>
 
                     <div className="ml-boss-total-bar" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                        <span>선택된 보스 총 합산: {fmtMeso(calculatedBossTotal)} ({calculatedBossTotal.toLocaleString()} 메소)</span>
-                        <button className="ml-calc-apply" onClick={registerBossTransactions} disabled={Object.keys(bossSelections).length === 0}>
-                          장부에 한 번에 기록 ➕
+                        <span>[{selectedChar}] 선택된 보스 총 합산: {fmtMeso(calculatedBossTotal)} ({calculatedBossTotal.toLocaleString()} 메소)</span>
+                        <button className="ml-calc-apply" onClick={registerBossTransactions} disabled={Object.keys(currentSelections).length === 0}>
+                          [{selectedChar}] 장부에 기록 ➕
                         </button>
                       </div>
                       <div style={{ fontSize: "12px", color: "var(--ink-soft)" }}>
-                        📌 일반 보스 선택 수: <strong style={{ color: currentNormalBossCount >= 12 ? "var(--expense)" : "var(--income)" }}>{currentNormalBossCount}</strong> / 12개 (검은마법사 별도)
+                        📌 [{selectedChar}] 일반 보스 선택 수: <strong style={{ color: currentNormalBossCount >= 12 ? "var(--expense)" : "var(--income)" }}>{currentNormalBossCount}</strong> / 12개 (검은마법사 별도)
                       </div>
                     </div>
 
@@ -1233,7 +1341,7 @@
                         </thead>
                         <tbody>
                           {BOSS_CONFIGS.map((b) => {
-                            const activeItem = Object.values(bossSelections).find(item => item.bossName === b.name);
+                            const activeItem = Object.values(currentSelections).find(item => item.bossName === b.name);
                             const isThisBossChecked = !!activeItem;
                             const isLimitReached = !b.isBlackMage && currentNormalBossCount >= 12 && !isThisBossChecked;
 
@@ -1246,7 +1354,7 @@
                                   <div className="ml-boss-diffs">
                                     {b.diffs.map(d => {
                                       const id = `${b.name}_${d.key}`;
-                                      const isChecked = !!bossSelections[id];
+                                      const isChecked = !!currentSelections[id];
                                       return (
                                         <label key={d.key} className={`ml-boss-diff-label ${isLimitReached && !isChecked ? "disabled" : ""}`} style={{ borderColor: isChecked ? "var(--gold)" : "var(--line)" }}>
                                           <input 
@@ -1321,7 +1429,6 @@
                       {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s, feeRate: 0 }))}>{s}</button>)}
                     </div>
 
-                    {/* 수수료 설정이 필요한 지정된 카테고리에서만 수수료 UI 노출 */}
                     {isFeeApplicableCategory && (
                       <div className="ml-form-row">
                         <label>⚙️ 수수료 설정 {["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) && <span style={{ color: "var(--gold)" }}>(MVP {mvpGrade} 3% 고정 적용됨)</span>}</label>
@@ -1387,7 +1494,7 @@
                           }} />
                         </div>
                         <div className="ml-calc-result" style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}>
-                          <span>{pieceCalcResult != null ? formatPieceCalcResult(pieceCalcResult) : "갯수와 단가를 입력해주세요"}</span>
+                          <span>{pieceCalcResult != null ? formatKoreanCurrency(String(pieceCalcResult), "meso") : "갯수와 단가를 입력해주세요"}</span>
                           <button className="ml-calc-apply" style={{ width: "100%", padding: "8px", textAlign: "center" }} onClick={() => {
                             if (pieceCalcResult != null) {
                               const isExpense = form.type === "expense";
@@ -1521,22 +1628,22 @@
                                       </span>
                                     </div>
 
-                                    {!isCatCollapsed && cat.subGroups.map(sub => {
-                                      const subKey = `${catKey}|${sub.date}`;
-                                      const isSubCollapsed = !!collapsedSubGroups[subKey];
+                                    {!isCatCollapsed && cat.charGroups.map(cg => {
+                                      const cgKey = `${catKey}|${cg.charName}`;
+                                      const isCgCollapsed = !!collapsedCharGroups[cgKey];
                                       return (
-                                        <div key={subKey}>
-                                          <div className="ml-subgroup-header" onClick={() => toggleSubGroup(subKey)}>
-                                            <span className="ml-subgroup-date">
-                                              <span>{isSubCollapsed ? "▸" : "▾"}</span>
-                                              📅 {sub.date}
+                                        <div key={cgKey}>
+                                          <div className="ml-chargroup-header" onClick={() => toggleCharGroup(cgKey)}>
+                                            <span className="ml-chargroup-name">
+                                              <span>{isCgCollapsed ? "▸" : "▾"}</span>
+                                              🧙 {cg.charName}
                                             </span>
-                                            <span className={`ml-subgroup-total ${sub.net >= 0 ? "income" : "expense"}`}>
-                                              {sub.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(sub.net))}
+                                            <span className={`ml-chargroup-total ${cg.net >= 0 ? "income" : "expense"}`}>
+                                              {cg.net >= 0 ? "+" : "−"}{fmtAmount(Math.abs(cg.net))}
                                               {rootUnitLabel}
                                             </span>
                                           </div>
-                                          {!isSubCollapsed && sub.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+                                          {!isCgCollapsed && cg.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
                                         </div>
                                       );
                                     })}
@@ -1554,7 +1661,12 @@
             </main>
           </div>
 
-          {/* 왼쪽 하단 플로팅 목표 위젯 & 설정 패널 */}
+          {showToast && (
+            <div className="ml-toast">
+              기록되었습니다.
+            </div>
+          )}
+
           <div className="ml-floating-goal-container">
             {(cashTargetNum > 0 || mesoTargetNum > 0 || pieceTargetNum > 0) && (
               <div className="ml-mini-goal-widget">
@@ -1651,7 +1763,6 @@
             </button>
           </div>
 
-          {/* 우측 하단 계산기 및 계산기 끄기 버튼 플로팅 고정 영역 */}
           <div className="ml-sidebar-calc-container">
             {showCalc && (
               <div className="ml-sidebar-calc">
