@@ -32,7 +32,7 @@
       background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
-      padding: 20px 14px 110px; /* 모바일 하단 플로팅 버튼에 내용이 가리지 않도록 넉넉한 패딩 확보 */
+      padding: 20px 14px 110px;
       box-sizing: border-box;
     }
     .ml-root * { box-sizing: border-box; }
@@ -43,12 +43,11 @@
       margin: 0 auto;
     }
 
-    /* 우측 하단 플로팅 컨테이너 (분배금 및 간편 계산기) */
     .ml-sidebar-calc-container {
       position: fixed;
       bottom: 16px;
       right: 14px;
-      width: 270px;
+      width: 290px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
@@ -68,7 +67,16 @@
     }
     .ml-calc-toggle-btn:hover { background: #4A5A4B; border-color: var(--gold); }
 
-    /* 좌측 하단 플로팅 컨테이너 (정산 목표 위젯) */
+    @media (max-width: 768px) {
+      .ml-sidebar-calc-container {
+        right: 10px;
+        width: 260px;
+      }
+      .ml-sidebar-calc {
+        padding: 12px;
+      }
+    }
+
     .ml-floating-goal-container {
       position: fixed;
       bottom: 16px;
@@ -129,25 +137,6 @@
       background: var(--income);
       border-radius: 3px;
       transition: width 0.3s ease;
-    }
-
-    /* 모바일 화면 최적화 (버튼 겹침 방지 및 크기 조절) */
-    @media (max-width: 768px) {
-      .ml-sidebar-calc-container {
-        right: 10px;
-        width: 210px;
-      }
-      .ml-floating-goal-container {
-        left: 10px;
-      }
-      .ml-sidebar-calc, .ml-goal-floating-box, .ml-mini-goal-widget {
-        width: 190px;
-        padding: 10px;
-      }
-      .ml-calc-toggle-btn, .ml-goal-toggle-btn {
-        font-size: 11px;
-        padding: 6px 8px;
-      }
     }
 
     .ml-header { margin: 0 auto 16px; }
@@ -1125,7 +1114,7 @@
         return base;
       }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
 
-      // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여금 파티장 귀속
+      // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여 금액 파티장 귀속
       const salePrice = Number(splitInput.salePrice.replace(/,/g, "")) || 0;
       const memberCount = Number(splitInput.partyCount) || 1;
       const feeRate = (Number(splitInput.feePercent) || 0) / 100;
@@ -1136,7 +1125,7 @@
         const actual = salePrice * (1 - feeRate);
         const equalShare = actual / (1 + (memberCount - 1) / (1 - feeRate));
         
-        // 파티원 전달 금액(수수료 포함) 100의 자리 내림
+        // 파티원 전달 금액(수수료 포함)을 100의 자리에서 내림 처리
         const rawMemberBeforeFee = equalShare / (1 - feeRate);
         const memberBeforeFee = Math.floor(rawMemberBeforeFee / 100) * 100;
 
@@ -1870,12 +1859,12 @@
                   </div>
                 </div>
 
-                {/* 캡처 대상 영역 (2열 레이아웃으로 줄바뀜 방지) */}
-                <div id="split-result-capture-area" style={{ background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px", padding: "8px 10px", marginBottom: "8px" }}>
+                {/* 캡처 대상 영역 */}
+                <div id="split-result-capture-area" style={{ background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px", padding: "8px 10px", marginBottom: "8px", wordBreak: "break-all", overflowWrap: "break-word" }}>
                   <div style={{ fontSize: "11px", color: "var(--ink-soft)", borderBottom: "1px solid var(--line)", paddingBottom: "6px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                     <div>
                       <div style={{ fontSize: "10px", color: "var(--ink-soft)" }}>경매장 판매액:</div>
-                      <strong style={{ fontSize: "13px" }}>{splitInput.salePrice ? Number(splitInput.salePrice).toLocaleString("ko-KR") : "0"} 메소</strong>
+                      <strong style={{ fontSize: "12px" }}>{splitInput.salePrice ? formatDetailedUnit(splitInput.salePrice, "메소") : "0 메소"}</strong>
                     </div>
                     <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                       <span>인원: <strong>{splitInput.partyCount}명</strong></span><br/>
