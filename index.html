@@ -502,6 +502,9 @@
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       
+      // 도핑 품목별 수량 상태 (세이람, 알레리아, 콜렉터, 명예영약)
+      const [dopingCounts, setDopingCounts] = useState({ seiram: "", aleria: "", collector: "", honor: "" });
+      
       const [characters, setCharacters] = useState(["본캐"]);
       const [newCharName, setNewCharName] = useState("");
       const [selectedChar, setSelectedChar] = useState("본캐");
@@ -945,6 +948,7 @@
         setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
         setCalc({ mesoEok: "", rate: "" });
         setPieceCalc({ count: "", rate: "" });
+        setDopingCounts({ seiram: "", aleria: "", collector: "", honor: "" });
       }, [form, transactions, persistTransactions, isFeeApplicableCategory, effectiveFeeRate]);
 
       const registerCalcTransaction = useCallback(() => {
@@ -1114,6 +1118,28 @@
         return base;
       }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
 
+      // 도핑 자동 계산 로직
+      const isDopingCategory = form.currency === "meso" && form.type === "expense" && form.category === "도핑";
+      const dopingTotalAmount = useMemo(() => {
+        if (!isDopingCategory) return 0;
+        const s = (Number(dopingCounts.seiram) || 0) * 2000000;
+        const a = (Number(dopingCounts.aleria) || 0) * 2000000;
+        const c = (Number(dopingCounts.collector) || 0) * 20000000;
+        const h = (Number(dopingCounts.honor) || 0) * 5000000;
+        return s + a + c + h;
+      }, [isDopingCategory, dopingCounts]);
+
+      // 도핑 자동 메모 생성
+      const dopingMemoString = useMemo(() => {
+        if (!isDopingCategory) return "";
+        const parts = [];
+        if (Number(dopingCounts.seiram) > 0) parts.push(`세람${dopingCounts.seiram}`);
+        if (Number(dopingCounts.aleria) > 0) parts.push(`알레리아${dopingCounts.aleria}`);
+        if (Number(dopingCounts.collector) > 0) parts.push(`콜렉터${dopingCounts.collector}`);
+        if (Number(dopingCounts.honor) > 0) parts.push(`명예영약${dopingCounts.honor}`);
+        return parts.join(", ");
+      }, [isDopingCategory, dopingCounts]);
+
       // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여 금액 파티장 귀속
       const salePrice = Number(splitInput.salePrice.replace(/,/g, "")) || 0;
       const memberCount = Number(splitInput.partyCount) || 1;
@@ -1125,14 +1151,10 @@
         const actual = salePrice * (1 - feeRate);
         const equalShare = actual / (1 + (memberCount - 1) / (1 - feeRate));
         
-        // 파티원 전달 금액(수수료 포함)을 100의 자리에서 내림 처리
         const rawMemberBeforeFee = equalShare / (1 - feeRate);
         const memberBeforeFee = Math.floor(rawMemberBeforeFee / 100) * 100;
 
-        // 파티원 최종 몫
         const memberFinal = memberBeforeFee * (1 - feeRate);
-
-        // 파티장 최종 몫 = 실제 수령액 - (내림된 파티원 전달 금액 * 파티원 수)
         const partyMembersCount = memberCount - 1;
         const leaderFinal = actual - (memberBeforeFee * partyMembersCount);
 
@@ -1487,6 +1509,58 @@
                       </div>
                     )}
 
+                    {/* 도핑 선택 시 나타나는 수량 입력 UI */}
+                    {isDopingCategory && (
+                      <div className="ml-calc" style={{ background: "#E6DCC4", padding: "12px", borderRadius: "3px", marginBottom: "10px" }}>
+                        <div className="ml-calc-title"><span>🧪 도핑 품목별 수량 설정</span></div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                          <div className="ml-form-row" style={{ marginBottom: 0 }}>
+                            <label>세이람 (2백만)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              placeholder="0" 
+                              value={dopingCounts.seiram} 
+                              onChange={e => setDopingCounts(d => ({ ...d, seiram: e.target.value }))} 
+                            />
+                          </div>
+                          <div className="ml-form-row" style={{ marginBottom: 0 }}>
+                            <label>알레리아 (2백만)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              placeholder="0" 
+                              value={dopingCounts.aleria} 
+                              onChange={e => setDopingCounts(d => ({ ...d, aleria: e.target.value }))} 
+                            />
+                          </div>
+                          <div className="ml-form-row" style={{ marginBottom: 0 }}>
+                            <label>콜렉터 (2천만)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              placeholder="0" 
+                              value={dopingCounts.collector} 
+                              onChange={e => setDopingCounts(d => ({ ...d, collector: e.target.value }))} 
+                            />
+                          </div>
+                          <div className="ml-form-row" style={{ marginBottom: 0 }}>
+                            <label>명예영약 (5백만)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              placeholder="0" 
+                              value={dopingCounts.honor} 
+                              onChange={e => setDopingCounts(d => ({ ...d, honor: e.target.value }))} 
+                            />
+                          </div>
+                        </div>
+                        <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--income)", fontWeight: "700", textAlign: "right" }}>
+                          합산 금액: {formatDetailedUnit(dopingTotalAmount, "메소")}
+                        </div>
+                      </div>
+                    )}
+
                     {form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매") && (
                       <div className="ml-calc">
                         <div className="ml-calc-title">
@@ -1572,21 +1646,27 @@
                     {!(form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매")) && (
                       <div className="ml-form-row">
                         <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
-                        <input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} 
+                        <input 
+                          type="text" 
+                          inputMode="numeric" 
+                          placeholder="0" 
+                          value={isDopingCategory ? dopingTotalAmount.toLocaleString("ko-KR") : (form.amount ? Number(form.amount).toLocaleString("ko-KR") : "")} 
+                          readOnly={isDopingCategory}
                           onChange={e => {
+                            if (isDopingCategory) return;
                             const val = e.target.value.replace(/,/g, "");
                             if (/^\d*$/.test(val)) setForm(f => ({ ...f, amount: val }));
                           }} 
                         />
-                        {form.amount && (
+                        {(form.amount || isDopingCategory) && (
                           <div className="ml-korean-amount">
                             {isFeeApplicableCategory && effectiveFeeRate > 0 ? (
                               <div>
-                                <span style={{ color: "var(--expense)" }}>수수료 {effectiveFeeRate}% (-{formatKoreanCurrency(String(Math.round(Number(form.amount) * (effectiveFeeRate / 100))), form.currency)})</span><br/>
-                                <span>최종 적용 금액: {formatKoreanCurrency(String(Math.round(Number(form.amount) * (1 - effectiveFeeRate / 100))), form.currency)}</span>
+                                <span style={{ color: "var(--expense)" }}>수수료 {effectiveFeeRate}% (-{formatKoreanCurrency(String(Math.round((isDopingCategory ? dopingTotalAmount : Number(form.amount)) * (effectiveFeeRate / 100))), form.currency)})</span><br/>
+                                <span>최종 적용 금액: {formatKoreanCurrency(String(Math.round((isDopingCategory ? dopingTotalAmount : Number(form.amount)) * (1 - effectiveFeeRate / 100))), form.currency)}</span>
                               </div>
                             ) : (
-                              formatKoreanCurrency(form.amount, form.currency)
+                              formatKoreanCurrency(isDopingCategory ? String(dopingTotalAmount) : form.amount, form.currency)
                             )}
                           </div>
                         )}
@@ -1595,11 +1675,30 @@
 
                     <div className="ml-form-row">
                       <label>메모</label>
-                      <input type="text" placeholder="선택 사항" value={form.memo} onChange={e => setForm(f => ({ ...f, memo: e.target.value }))} />
+                      <input 
+                        type="text" 
+                        placeholder="선택 사항" 
+                        value={isDopingCategory && dopingMemoString ? (form.memo ? `${form.memo} (${dopingMemoString})` : dopingMemoString) : form.memo} 
+                        onChange={e => setForm(f => ({ ...f, memo: e.target.value }))} 
+                      />
                     </div>
 
                     {!(form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매")) && (
-                      <button className="ml-submit" onClick={addTransaction}>➕ 장부에 적기</button>
+                      <button className="ml-submit" onClick={() => {
+                        if (isDopingCategory) {
+                          if (dopingTotalAmount <= 0) return;
+                          const tx = {
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                            date: form.date, currency: "meso", type: "expense",
+                            category: "도핑", amount: dopingTotalAmount, memo: dopingMemoString,
+                          };
+                          persistTransactions([tx, ...transactions]);
+                          setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
+                          setDopingCounts({ seiram: "", aleria: "", collector: "", honor: "" });
+                        } else {
+                          addTransaction();
+                        }
+                      }}>➕ 장부에 적기</button>
                     )}
                   </div>
                 </section>
