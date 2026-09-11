@@ -377,7 +377,7 @@
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", LAST_BOSS_DATA: "ledger:last_boss_data" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -412,6 +412,22 @@
     function firstDayOfThisMonth() { const d = new Date(); return toDateStr(new Date(d.getFullYear(), d.getMonth(), 1)); }
     function lastDayOfThisMonth() { const d = new Date(); return toDateStr(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
     
+    function getThursdayToWednesdayRange(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      const day = d.getDay(); 
+      let diffToThursday = 4 - day;
+      if (day < 4) {
+        diffToThursday = -(3 + day);
+      }
+      const thursday = new Date(d);
+      thursday.setDate(d.getDate() + diffToThursday);
+      
+      const wednesday = new Date(thursday);
+      wednesday.setDate(thursday.getDate() + 6);
+      
+      return { start: toDateStr(thursday), end: toDateStr(wednesday) };
+    }
+
     function formatDetailedUnit(n, unitName) {
       const num = Number(n) || 0;
       if (num === 0 || Object.is(num, -0)) return "0" + unitName;
@@ -452,14 +468,50 @@
       return formatDetailedUnit(n, unit);
     }
 
-    function StatCard({ icon, label, value, unit, tone, isMeso }) {
+    function StatCard({ icon, label, value, unit, tone, isMeso, mesoSettlement }) {
       const cleanVal = (Number(value) || 0) === 0 ? 0 : value;
+      const [mesoValueInput, setMesoValueInput] = useState("");
+
+      const mesoEokDisplay = useMemo(() => {
+        if (!mesoSettlement) return "";
+        const val = Number(cleanVal) || 0;
+        // 메소정산 금액은 1억 단위만 계산 (억 미만은 버림)
+        // 예: 310억 5670만 메소 → 310억만 계산
+        return Math.floor(val / 100000000);
+      }, [cleanVal, mesoSettlement]);
+
+      const mesoPriceResult = useMemo(() => {
+        if (!mesoSettlement) return null;
+        const rate = Number(mesoValueInput.replace(/,/g, ""));
+        if (!rate || isNaN(rate)) return null;
+        // 메소 정산액(억 단위) × 메소값(1억당 원)
+        return mesoEokDisplay * rate;
+      }, [mesoValueInput, mesoEokDisplay, mesoSettlement]);
+
       return (
         <div className={`ml-stat-card ${tone}`}>
           <div className="ml-stat-icon">{icon}</div>
           <div className="ml-stat-label">{label}</div>
-          <div className="ml-stat-value">
-            {formatDetailedUnit(cleanVal, unit)}
+          <div className="ml-stat-value" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "4px" }}>
+            <span>{formatDetailedUnit(cleanVal, unit)}</span>
+            {mesoSettlement && (
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontFamily: "'Inter', sans-serif" }}>
+                <input 
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="메소값"
+                  value={mesoValueInput ? Number(mesoValueInput).toLocaleString("ko-KR") : ""}
+                  onChange={e => {
+                    const v = e.target.value.replace(/,/g, "");
+                    if (/^\d*$/.test(v)) setMesoValueInput(v);
+                  }}
+                  style={{ width: "85px", padding: "3px 6px", fontSize: "11px", background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px" }}
+                />
+                <span style={{ fontSize: "11px", color: "var(--ink-soft)" }}>
+                  {mesoPriceResult !== null ? `= ${formatDetailedUnit(mesoPriceResult, "원")}` : ""}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -502,13 +554,13 @@
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       
-      // 도핑 품목별 수량 상태 (세이람, 알레리아, 콜렉터, 명예영약)
       const [dopingCounts, setDopingCounts] = useState({ seiram: "", aleria: "", collector: "", honor: "" });
       
       const [characters, setCharacters] = useState(["본캐"]);
       const [newCharName, setNewCharName] = useState("");
       const [selectedChar, setSelectedChar] = useState("본캐");
       const [bossSelectionsPerChar, setBossSelectionsPerChar] = useState({});
+      const [lastBossDataPerChar, setLastBossDataPerChar] = useState({});
       
       const [bossDate, setBossDate] = useState(todayStr());
       const [showToast, setShowToast] = useState(false);
@@ -562,6 +614,10 @@
           const bossStateSaved = localStorage.getItem(STORAGE_KEYS.BOSS_STATE);
           if (bossStateSaved) {
             setBossSelectionsPerChar(JSON.parse(bossStateSaved));
+          }
+          const lastBossDataSaved = localStorage.getItem(STORAGE_KEYS.LAST_BOSS_DATA);
+          if (lastBossDataSaved) {
+            setLastBossDataPerChar(JSON.parse(lastBossDataSaved));
           }
         } catch (e) { console.error(e); }
       }, []);
@@ -697,20 +753,41 @@
 
       const currentSelections = bossSelectionsPerChar[selectedChar] || {};
 
-      const currentNormalBossCount = useMemo(() => {
-        let count = 0;
-        Object.keys(currentSelections).forEach(id => {
-          const [bossName] = id.split("_");
-          const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
-          if (cfg && !cfg.isBlackMage) {
-            count++;
+      const currentWeekRange = useMemo(() => {
+        return getThursdayToWednesdayRange(bossDate);
+      }, [bossDate]);
+
+      const alreadyRecordedBossesThisWeek = useMemo(() => {
+        const recorded = new Set();
+        transactions.forEach(t => {
+          if (t.category === "보스" && t.date >= currentWeekRange.start && t.date <= currentWeekRange.end) {
+            if (t.memo && t.memo.startsWith(`[${selectedChar}]`)) {
+              const match = t.memo.match(/\]\s+([^\s(]+)\s+\(([^)]+)\)/);
+              if (match) {
+                recorded.add(`${match[1]}_${match[2]}`);
+              }
+            }
           }
         });
-        return count;
-      }, [currentSelections]);
+        return recorded;
+      }, [transactions, selectedChar, currentWeekRange]);
+
+
+      const isBossAlreadyRecordedThisWeek = (bossName) => {
+        // 해당 보스가 이번 주에 어떤 난이도로든 기록되어 있으면
+        // 같은 보스의 다른 난이도도 선택할 수 없도록 한다.
+        return Array.from(alreadyRecordedBossesThisWeek).some(key => key.startsWith(`${bossName}_`));
+      };
 
       const handleBossCheck = (bossName, diffKey) => {
         const id = `${bossName}_${diffKey}`;
+        const diffLabelMap = { normal: "NORMAL", hard: "HARD", extreme: "EXTREME", chaos: "CHAOS", easy: "EASY" };
+        const dLabel = diffLabelMap[diffKey] || diffKey.toUpperCase();
+        
+        if (alreadyRecordedBossesThisWeek.has(`${bossName}_${dLabel}`) || isBossAlreadyRecordedThisWeek(bossName)) {
+          return;
+        }
+
         const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
         if (!cfg) return;
 
@@ -721,15 +798,20 @@
           if (charSel[id]) {
             delete charSel[id];
           } else {
-            if (!cfg.isBlackMage && !existingKeyForBoss && currentNormalBossCount >= 12) {
-              return prev;
-            }
             if (existingKeyForBoss) {
               delete charSel[existingKeyForBoss];
             }
             charSel[id] = { bossName, diffKey, party: 1 };
           }
           const nextState = { ...prev, [selectedChar]: charSel };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
+        });
+      };
+
+      const handleClearAllSelections = () => {
+        setBossSelectionsPerChar(prev => {
+          const nextState = { ...prev, [selectedChar]: {} };
           try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
           return nextState;
         });
@@ -761,12 +843,94 @@
         return total;
       }, [currentSelections]);
 
+      const getLastBossData = () => lastBossDataPerChar[selectedChar] || [];
+
+      // 마지막 등록 기록에서 보스만 불러오기
+      const loadLastBosses = () => {
+        const lastData = getLastBossData();
+        if (!lastData.length) return;
+
+        setBossSelectionsPerChar(prev => {
+          const charSel = {};
+          lastData.forEach(item => {
+            const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+            if (!cfg) return;
+            const diff = cfg.diffs.find(d => d.key === item.diffKey);
+            if (!diff) return;
+            if (isBossAlreadyRecordedThisWeek(item.bossName)) return;
+
+            const id = `${item.bossName}_${item.diffKey}`;
+            charSel[id] = { bossName: item.bossName, diffKey: item.diffKey, party: 1 };
+          });
+          const nextState = { ...prev, [selectedChar]: charSel };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
+        });
+      };
+
+      // 현재 선택된 보스에 한해 마지막 등록 때 사용한 인원수만 불러오기
+      const loadLastPartyCounts = () => {
+        const lastData = getLastBossData();
+        if (!lastData.length || !Object.keys(currentSelections).length) return;
+
+        setBossSelectionsPerChar(prev => {
+          const charSel = { ...(prev[selectedChar] || {}) };
+          Object.keys(charSel).forEach(id => {
+            const item = charSel[id];
+            const saved = lastData.find(x => x.bossName === item.bossName && x.diffKey === item.diffKey);
+            if (saved) {
+              charSel[id] = { ...item, party: Number(saved.party) || 1 };
+            }
+          });
+          const nextState = { ...prev, [selectedChar]: charSel };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
+        });
+      };
+
+      // 마지막 등록 보스와 인원수를 한 번에 불러오기
+      const loadLastBossesAndParties = () => {
+        const lastData = getLastBossData();
+        if (!lastData.length) return;
+
+        setBossSelectionsPerChar(prev => {
+          const charSel = {};
+          lastData.forEach(item => {
+            const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+            if (!cfg) return;
+            const diff = cfg.diffs.find(d => d.key === item.diffKey);
+            if (!diff) return;
+            if (isBossAlreadyRecordedThisWeek(item.bossName)) return;
+
+            const id = `${item.bossName}_${item.diffKey}`;
+            charSel[id] = {
+              bossName: item.bossName,
+              diffKey: item.diffKey,
+              party: Number(item.party) || 1
+            };
+          });
+          const nextState = { ...prev, [selectedChar]: charSel };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
+        });
+      };
+
       const registerBossTransactions = () => {
         if (Object.keys(currentSelections).length === 0) return;
         const newTxs = [];
         const nowTime = Date.now();
 
-        Object.values(currentSelections).forEach((item, index) => {
+        const validSelections = Object.values(currentSelections).filter(item => {
+          const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+          if (!cfg) return false;
+          const diff = cfg.diffs.find(d => d.key === item.diffKey);
+          if (!diff) return false;
+          return !alreadyRecordedBossesThisWeek.has(`${item.bossName}_${diff.label}`);
+        });
+
+        if (validSelections.length === 0) return;
+
+        validSelections.forEach((item, index) => {
           const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
           if (!cfg) return;
           const diff = cfg.diffs.find(d => d.key === item.diffKey);
@@ -784,6 +948,24 @@
             amount: finalPrice,
             memo: memoStr
           });
+        });
+
+        // 마지막으로 실제 장부에 등록한 보스/난이도/인원수를 캐릭터별로 저장
+        const lastRegistered = validSelections.map(item => ({
+          bossName: item.bossName,
+          diffKey: item.diffKey,
+          party: Number(item.party) || 1
+        }));
+        setLastBossDataPerChar(prev => {
+          const nextState = { ...prev, [selectedChar]: lastRegistered };
+          try { localStorage.setItem(STORAGE_KEYS.LAST_BOSS_DATA, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
+        });
+
+        setBossSelectionsPerChar(prev => {
+          const nextState = { ...prev, [selectedChar]: {} };
+          try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+          return nextState;
         });
 
         persistTransactions([...newTxs, ...transactions]);
@@ -1118,7 +1300,6 @@
         return base;
       }, [rawPieceCount, rawPieceRate, form, effectiveFeeRate]);
 
-      // 도핑 자동 계산 로직
       const isDopingCategory = form.currency === "meso" && form.type === "expense" && form.category === "도핑";
       const dopingTotalAmount = useMemo(() => {
         if (!isDopingCategory) return 0;
@@ -1129,7 +1310,6 @@
         return s + a + c + h;
       }, [isDopingCategory, dopingCounts]);
 
-      // 도핑 자동 메모 생성
       const dopingMemoString = useMemo(() => {
         if (!isDopingCategory) return "";
         const parts = [];
@@ -1140,7 +1320,6 @@
         return parts.join(", ");
       }, [isDopingCategory, dopingCounts]);
 
-      // 사용자 제공 공식 적용 + 100의 자리 내림 및 잔여 금액 파티장 귀속
       const salePrice = Number(splitInput.salePrice.replace(/,/g, "")) || 0;
       const memberCount = Number(splitInput.partyCount) || 1;
       const feeRate = (Number(splitInput.feePercent) || 0) / 100;
@@ -1253,7 +1432,8 @@
                         value={summary.mesoIncome - summary.mesoExpense} 
                         unit="메소" 
                         tone={(summary.mesoIncome - summary.mesoExpense) >= 0 ? "income" : "expense"} 
-                        isMeso={true} 
+                        isMeso={true}
+                        mesoSettlement={true}
                       />
                     </div>
 
@@ -1383,8 +1563,43 @@
                     </div>
 
                     <div className="ml-form-row" style={{ marginBottom: "16px" }}>
-                      <label>기록 날짜 ({selectedChar})</label>
+                      <label>기록 날짜 ({selectedChar}) - 주간 초기화 기준: 목요일 00시 ~ 수요일 ({currentWeekRange.start} ~ {currentWeekRange.end})</label>
                       <input type="date" value={bossDate} onChange={e => setBossDate(e.target.value)} />
+                    </div>
+
+                    <div style={{ background: "#F3ECDD", padding: "10px 12px", borderRadius: "3px", marginBottom: "14px", border: "1px solid var(--line)" }}>
+                      <div style={{ fontSize: "12px", fontWeight: "700", marginBottom: "8px" }}>
+                        🔁 [{selectedChar}] 마지막 등록 기록 불러오기
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <button
+                          className="ml-calc-apply"
+                          onClick={loadLastBossesAndParties}
+                          disabled={!lastBossDataPerChar[selectedChar]?.length}
+                          style={{ padding: "6px 10px", fontSize: "12px" }}
+                        >
+                          보스 + 인원수
+                        </button>
+                        <button
+                          className="ml-calc-apply"
+                          onClick={loadLastBosses}
+                          disabled={!lastBossDataPerChar[selectedChar]?.length}
+                          style={{ padding: "6px 10px", fontSize: "12px" }}
+                        >
+                          보스만
+                        </button>
+                        <button
+                          className="ml-calc-apply"
+                          onClick={loadLastPartyCounts}
+                          disabled={!lastBossDataPerChar[selectedChar]?.length || Object.keys(currentSelections).length === 0}
+                          style={{ padding: "6px 10px", fontSize: "12px" }}
+                        >
+                          인원수만
+                        </button>
+                      </div>
+                      <div style={{ marginTop: "7px", fontSize: "11px", color: "var(--ink-soft)" }}>
+                        마지막으로 장부에 등록한 보스와 파티원 수를 캐릭터별로 저장해 다음 주에도 다시 불러올 수 있습니다.
+                      </div>
                     </div>
 
                     <div className="ml-boss-total-bar" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
@@ -1395,7 +1610,7 @@
                         </button>
                       </div>
                       <div style={{ fontSize: "12px", color: "var(--ink-soft)" }}>
-                        📌 [{selectedChar}] 일반 보스 선택 수: <strong style={{ color: currentNormalBossCount >= 12 ? "var(--expense)" : "var(--income)" }}>{currentNormalBossCount}</strong> / 12개 (검은마법사 별도)
+                        📌 이번 주({currentWeekRange.start} ~ {currentWeekRange.end}) 이미 기록된 보스는 자동으로 제외되고 기록됩니다.
                       </div>
                     </div>
 
@@ -1404,55 +1619,102 @@
                         <thead>
                           <tr>
                             <th>보스</th>
-                            <th>난이도 선택</th>
-                            <th style={{ width: "70px" }}>파티원</th>
+                            <th>난이도 선택 (보스당 1개)</th>
+                            <th style={{ width: "110px" }}>
+                              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: "5px" }}>
+                                <span>파티원</span>
+                                {Object.keys(currentSelections).length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={handleClearAllSelections}
+                                    style={{
+                                      padding: "3px 7px",
+                                      fontSize: "10px",
+                                      fontWeight: 600,
+                                      border: "1px solid var(--expense)",
+                                      borderRadius: "3px",
+                                      background: "#FBF7EC",
+                                      color: "var(--expense)",
+                                      cursor: "pointer",
+                                      whiteSpace: "nowrap"
+                                    }}
+                                    title="선택된 모든 보스/난이도를 해제합니다"
+                                  >
+                                    전체해제
+                                  </button>
+                                )}
+                              </div>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {BOSS_CONFIGS.map((b) => {
                             const activeItem = Object.values(currentSelections).find(item => item.bossName === b.name);
-                            const isThisBossChecked = !!activeItem;
-                            const isLimitReached = !b.isBlackMage && currentNormalBossCount >= 12 && !isThisBossChecked;
 
                             return (
-                              <tr key={b.name} style={{ opacity: isLimitReached ? 0.5 : 1 }}>
+                              <tr key={b.name}>
                                 <td style={{ fontWeight: 600 }}>
-                                  {b.name} {b.isBlackMage && <span style={{ fontSize: "10px", color: "var(--expense)", fontWeight: 700 }}>(별도)</span>}
+                                  {b.name}
                                 </td>
                                 <td>
                                   <div className="ml-boss-diffs">
                                     {b.diffs.map(d => {
                                       const id = `${b.name}_${d.key}`;
                                       const isChecked = !!currentSelections[id];
+                                      const isAlreadyRecorded = alreadyRecordedBossesThisWeek.has(`${b.name}_${d.label}`);
+                                      const isAnotherDifficultySelected = !!activeItem && !isChecked;
+                                      const isDisabled = isAlreadyRecorded || isBossAlreadyRecordedThisWeek(b.name) || isAnotherDifficultySelected;
+
                                       return (
-                                        <label key={d.key} className={`ml-boss-diff-label ${isLimitReached && !isChecked ? "disabled" : ""}`} style={{ borderColor: isChecked ? "var(--gold)" : "var(--line)" }}>
+                                        <label key={d.key} className={`ml-boss-diff-label ${isDisabled ? "disabled" : ""}`} style={{ borderColor: isChecked ? "var(--gold)" : "var(--line)" }}>
                                           <input 
                                             type="checkbox" 
                                             checked={isChecked} 
-                                            disabled={isLimitReached && !isChecked}
+                                            disabled={isDisabled}
                                             onChange={() => handleBossCheck(b.name, d.key)} 
                                           />
-                                          <span>{d.label}</span>
+                                          <span>{d.label} {isAlreadyRecorded && "(이번 주 기록 완료)"}</span>
                                         </label>
                                       );
                                     })}
                                   </div>
                                 </td>
                                 <td>
-                                  <select 
-                                    className="ml-boss-party-select" 
-                                    value={activeItem?.party || 1}
-                                    onChange={e => {
-                                      if (activeItem) {
-                                        handleBossPartyChange(b.name, activeItem.diffKey, e.target.value);
-                                      }
-                                    }}
-                                    disabled={!activeItem}
-                                  >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                    <select 
+                                      className="ml-boss-party-select" 
+                                      value={activeItem?.party || 1}
+                                      onChange={e => {
+                                        if (activeItem) {
+                                          handleBossPartyChange(b.name, activeItem.diffKey, e.target.value);
+                                        }
+                                      }}
+                                      disabled={!activeItem}
+                                    >
                                     {Array.from({ length: b.maxParty }, (_, i) => i + 1).map(n => (
                                       <option key={n} value={n}>{n}인</option>
                                     ))}
-                                  </select>
+                                    </select>
+                                    {activeItem && !isBossAlreadyRecordedThisWeek(b.name) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleBossCheck(b.name, activeItem.diffKey)}
+                                        style={{
+                                          padding: "3px 7px",
+                                          fontSize: "10px",
+                                          border: "1px solid var(--line)",
+                                          borderRadius: "3px",
+                                          background: "#FBF7EC",
+                                          color: "var(--ink)",
+                                          cursor: "pointer",
+                                          whiteSpace: "nowrap"
+                                        }}
+                                        title="선택한 난이도를 해제합니다"
+                                      >
+                                        선택해제
+                                      </button>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -1509,7 +1771,6 @@
                       </div>
                     )}
 
-                    {/* 도핑 선택 시 나타나는 수량 입력 UI */}
                     {isDopingCategory && (
                       <div className="ml-calc" style={{ background: "#E6DCC4", padding: "12px", borderRadius: "3px", marginBottom: "10px" }}>
                         <div className="ml-calc-title"><span>🧪 도핑 품목별 수량 설정</span></div>
@@ -1909,7 +2170,6 @@
             </button>
           </div>
 
-          {/* 우측 하단 플로팅 고정 영역 */}
           <div className="ml-sidebar-calc-container">
             {showSplitCalc && (
               <div className="ml-sidebar-calc">
@@ -1958,7 +2218,6 @@
                   </div>
                 </div>
 
-                {/* 캡처 대상 영역 */}
                 <div id="split-result-capture-area" style={{ background: "#FBF7EC", border: "1px solid var(--line)", borderRadius: "3px", padding: "8px 10px", marginBottom: "8px", wordBreak: "break-all", overflowWrap: "break-word" }}>
                   <div style={{ fontSize: "11px", color: "var(--ink-soft)", borderBottom: "1px solid var(--line)", paddingBottom: "6px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                     <div>
@@ -1984,7 +2243,6 @@
                   </div>
                 </div>
 
-                {/* 클립보드 복사 버튼 */}
                 <button className="ml-calc-apply" style={{ width: "100%", padding: "6px", textAlign: "center" }} onClick={handleCaptureSplitResult} disabled={salePrice <= 0}>
                   📋 결과 이미지 복사하기 (Ctrl+V)
                 </button>
