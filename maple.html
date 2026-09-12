@@ -411,6 +411,54 @@
     function todayStr() { return toDateStr(new Date()); }
     function firstDayOfThisMonth() { const d = new Date(); return toDateStr(new Date(d.getFullYear(), d.getMonth(), 1)); }
     function lastDayOfThisMonth() { const d = new Date(); return toDateStr(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
+
+    // 보스 결정석 가격 변경 적용 기준
+    // 일반 보스: 2026-09-17 04:00 이후 변경가격
+    // 검은마법사: 2026-10-01 00:00 이후 변경가격
+    const BOSS_PRICE_CHANGE_DATE = "2026-09-17";
+    const BOSS_PRICE_CHANGE_AT = new Date("2026-09-17T04:00:00+09:00");
+    const BLACK_MAGE_PRICE_CHANGE_DATE = "2026-10-01";
+    const BLACK_MAGE_PRICE_CHANGE_AT = new Date("2026-10-01T00:00:00+09:00");
+
+    const BOSS_UPDATED_PRICES = {
+      "스우": { normal: 8350000, hard: 48900000, extreme: 545000000 },
+      "데미안": { normal: 8750000, hard: 46400000 },
+      "가엔슬": { normal: 12700000, chaos: 71300000 },
+      "루시드": { easy: 14900000, normal: 17800000, hard: 59700000 },
+      "윌": { easy: 16100000, normal: 20500000, hard: 73200000 },
+      "더스크": { normal: 22000000, chaos: 66300000 },
+      "진힐라": { normal: 67600000, hard: 100000000 },
+      "듄켈": { normal: 23700000, hard: 89600000 },
+      "세렌": { normal: 167000000, hard: 302000000, extreme: 1840000000 },
+      "칼로스": { easy: 238000000, normal: 479000000, chaos: 1230000000 },
+      "대적자": { easy: 261000000, normal: 532000000, hard: 1390000000 },
+      "카링": { easy: 320000000, normal: 576000000, hard: 1560000000 },
+      "흉성": { normal: 593000000 },
+      "벨로나": { easy: 396000000, normal: 824000000 },
+      "림보": { normal: 995000000 },
+      "발드릭스": { normal: 1320000000 },
+      "유피테르": { normal: 1560000000 },
+      "검은마법사": { hard: 465000000, extreme: 5680000000 }
+    };
+
+    function getBossPrice(cfg, diff, dateStr, currentTime = Date.now()) {
+      const isBlackMage = cfg && cfg.isBlackMage;
+      const changeDate = isBlackMage ? BLACK_MAGE_PRICE_CHANGE_DATE : BOSS_PRICE_CHANGE_DATE;
+      const changeAt = isBlackMage ? BLACK_MAGE_PRICE_CHANGE_AT : BOSS_PRICE_CHANGE_AT;
+
+      let useUpdatedPrice = false;
+      if (dateStr > changeDate) {
+        useUpdatedPrice = true;
+      } else if (dateStr === changeDate) {
+        // 변경일 당일에는 실제 한국시간 기준으로 변경 시각을 넘었을 때만 적용
+        useUpdatedPrice = currentTime >= changeAt.getTime();
+      }
+
+      if (useUpdatedPrice && BOSS_UPDATED_PRICES[cfg.name] && BOSS_UPDATED_PRICES[cfg.name][diff.key] != null) {
+        return BOSS_UPDATED_PRICES[cfg.name][diff.key];
+      }
+      return diff.price;
+    }
     
     function getThursdayToWednesdayRange(dateStr) {
       const d = new Date(dateStr + "T00:00:00");
@@ -564,6 +612,13 @@
       
       const [bossDate, setBossDate] = useState(todayStr());
       const [showToast, setShowToast] = useState(false);
+      const [currentTime, setCurrentTime] = useState(Date.now());
+
+      // 가격 변경 시각(9/17 04:00, 10/1 00:00)을 페이지를 열어둔 상태에서도 자동 반영
+      useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+        return () => clearInterval(timer);
+      }, []);
 
       const [showGoalBox, setShowGoalBox] = useState(false);
       const [goals, setGoals] = useState({ cash: "", meso: "", piece: "" });
@@ -772,6 +827,33 @@
         return recorded;
       }, [transactions, selectedChar, currentWeekRange]);
 
+      // 이번 주에 이미 장부에 기록된 일반 보스 수 (검은마법사는 주간 12개 제한에서 제외)
+      const weeklyBossCount = useMemo(() => {
+        let count = 0;
+        transactions.forEach(t => {
+          if (t.category === "보스" && t.date >= currentWeekRange.start && t.date <= currentWeekRange.end) {
+            if (t.memo && t.memo.startsWith(`[${selectedChar}]`)) {
+              const match = t.memo.match(/\]\s+([^\s(]+)\s+\(([^)]+)\)/);
+              if (match && match[1] !== "검은마법사") count++;
+            }
+          }
+        });
+        return count;
+      }, [transactions, selectedChar, currentWeekRange]);
+
+      const monthlyBossRange = useMemo(() => ({
+        start: firstDayOfThisMonth(),
+        end: lastDayOfThisMonth()
+      }), [bossDate]);
+
+      const isBlackMageAlreadyRecordedThisMonth = useMemo(() => {
+        return transactions.some(t => {
+          if (t.category !== "보스" || !t.memo || !t.memo.startsWith(`[${selectedChar}]`)) return false;
+          if (t.date < monthlyBossRange.start || t.date > monthlyBossRange.end) return false;
+          const match = t.memo.match(/\]\s+([^\s(]+)\s+\(([^)]+)\)/);
+          return match && match[1] === "검은마법사";
+        });
+      }, [transactions, selectedChar, monthlyBossRange]);
 
       const isBossAlreadyRecordedThisWeek = (bossName) => {
         // 해당 보스가 이번 주에 어떤 난이도로든 기록되어 있으면
@@ -784,11 +866,26 @@
         const diffLabelMap = { normal: "NORMAL", hard: "HARD", extreme: "EXTREME", chaos: "CHAOS", easy: "EASY" };
         const dLabel = diffLabelMap[diffKey] || diffKey.toUpperCase();
         
+        const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
+        if (!cfg) return;
+
         if (alreadyRecordedBossesThisWeek.has(`${bossName}_${dLabel}`) || isBossAlreadyRecordedThisWeek(bossName)) {
           return;
         }
+        if (cfg.isBlackMage && isBlackMageAlreadyRecordedThisMonth) return;
 
-        const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
+        // 이미 기록된 일반 보스 + 현재 선택된 일반 보스가 12개를 넘지 않도록 제한
+        if (!cfg.isBlackMage) {
+          const selectedOrdinaryCount = Object.values(currentSelections).filter(item => {
+            const itemCfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+            return itemCfg && !itemCfg.isBlackMage;
+          }).length;
+          if (!currentSelections[id] && weeklyBossCount + selectedOrdinaryCount >= 12) {
+            alert("보스 기록 횟수가 초과되었습니다.");
+            return;
+          }
+        }
+
         if (!cfg) return;
 
         setBossSelectionsPerChar(prev => {
@@ -836,12 +933,12 @@
           if (cfg) {
             const diff = cfg.diffs.find(d => d.key === item.diffKey);
             if (diff) {
-              total += Math.floor(diff.price / item.party);
+              total += Math.floor(getBossPrice(cfg, diff, bossDate, currentTime) / item.party);
             }
           }
         });
         return total;
-      }, [currentSelections]);
+      }, [currentSelections, bossDate, currentTime]);
 
       const getLastBossData = () => lastBossDataPerChar[selectedChar] || [];
 
@@ -858,6 +955,8 @@
             const diff = cfg.diffs.find(d => d.key === item.diffKey);
             if (!diff) return;
             if (isBossAlreadyRecordedThisWeek(item.bossName)) return;
+            if (cfg.isBlackMage && isBlackMageAlreadyRecordedThisMonth) return;
+            if (!cfg.isBlackMage && weeklyBossCount >= 12) return;
 
             const id = `${item.bossName}_${item.diffKey}`;
             charSel[id] = { bossName: item.bossName, diffKey: item.diffKey, party: 1 };
@@ -901,6 +1000,8 @@
             const diff = cfg.diffs.find(d => d.key === item.diffKey);
             if (!diff) return;
             if (isBossAlreadyRecordedThisWeek(item.bossName)) return;
+            if (cfg.isBlackMage && isBlackMageAlreadyRecordedThisMonth) return;
+            if (!cfg.isBlackMage && weeklyBossCount >= 12) return;
 
             const id = `${item.bossName}_${item.diffKey}`;
             charSel[id] = {
@@ -919,13 +1020,49 @@
         if (Object.keys(currentSelections).length === 0) return;
         const newTxs = [];
         const nowTime = Date.now();
+        let weeklyNewCount = weeklyBossCount;
+        let blackMageWillBeRecorded = isBlackMageAlreadyRecordedThisMonth;
 
-        const validSelections = Object.values(currentSelections).filter(item => {
+        const selectedItems = Object.values(currentSelections);
+        const selectedOrdinaryCount = selectedItems.filter(item => {
+          const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+          return cfg && !cfg.isBlackMage;
+        }).length;
+        if (weeklyBossCount + selectedOrdinaryCount > 12) {
+          alert("보스 기록 횟수가 초과되었습니다.");
+          const allowedOrdinary = Math.max(0, 12 - weeklyBossCount);
+          let ordinaryKept = 0;
+          const trimmedSelections = {};
+          selectedItems.forEach(item => {
+            const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+            if (!cfg) return;
+            if (cfg.isBlackMage || ordinaryKept < allowedOrdinary) {
+              trimmedSelections[`${item.bossName}_${item.diffKey}`] = item;
+              if (!cfg.isBlackMage) ordinaryKept++;
+            }
+          });
+          setBossSelectionsPerChar(prev => {
+            const nextState = { ...prev, [selectedChar]: trimmedSelections };
+            try { localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState)); } catch(e) {}
+            return nextState;
+          });
+          return;
+        }
+
+        const validSelections = selectedItems.filter(item => {
           const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
           if (!cfg) return false;
           const diff = cfg.diffs.find(d => d.key === item.diffKey);
           if (!diff) return false;
-          return !alreadyRecordedBossesThisWeek.has(`${item.bossName}_${diff.label}`);
+          if (alreadyRecordedBossesThisWeek.has(`${item.bossName}_${diff.label}`)) return false;
+          if (cfg.isBlackMage) {
+            if (blackMageWillBeRecorded) return false;
+            blackMageWillBeRecorded = true;
+            return true;
+          }
+          if (weeklyNewCount >= 12) return false;
+          weeklyNewCount++;
+          return true;
         });
 
         if (validSelections.length === 0) return;
@@ -936,7 +1073,7 @@
           const diff = cfg.diffs.find(d => d.key === item.diffKey);
           if (!diff) return;
 
-          const finalPrice = Math.floor(diff.price / item.party);
+          const finalPrice = Math.floor(getBossPrice(cfg, diff, bossDate, nowTime) / item.party);
           const memoStr = `[${selectedChar}] ${item.bossName} (${diff.label})${item.party > 1 ? ` / ${item.party}인 파티` : ""}`;
 
           newTxs.push({
@@ -1609,8 +1746,10 @@
                           [{selectedChar}] 장부에 기록 ➕
                         </button>
                       </div>
-                      <div style={{ fontSize: "12px", color: "var(--ink-soft)" }}>
-                        📌 이번 주({currentWeekRange.start} ~ {currentWeekRange.end}) 이미 기록된 보스는 자동으로 제외되고 기록됩니다.
+                      <div style={{ fontSize: "12px", color: "var(--ink-soft)", lineHeight: 1.5 }}>
+                        📌 이번 주({currentWeekRange.start} ~ {currentWeekRange.end}) 일반 보스 {weeklyBossCount}/12개 기록 · 검은마법사는 매월 1회({monthlyBossRange.start} ~ {monthlyBossRange.end}) 기록 가능합니다.<br/>
+                        💰 일반 보스 변경가격: 2026-09-17 10:00 이후 적용 · 검은마법사 변경가격: 2026-10-01 00:00 이후 적용<br/>
+                        기록 한도에 도달하면 남은 일반 보스는 자동으로 비활성화됩니다.
                       </div>
                     </div>
 
@@ -1661,19 +1800,32 @@
                                     {b.diffs.map(d => {
                                       const id = `${b.name}_${d.key}`;
                                       const isChecked = !!currentSelections[id];
-                                      const isAlreadyRecorded = alreadyRecordedBossesThisWeek.has(`${b.name}_${d.label}`);
+                                      const isAlreadyRecorded = b.isBlackMage
+                                        ? isBlackMageAlreadyRecordedThisMonth
+                                        : alreadyRecordedBossesThisWeek.has(`${b.name}_${d.label}`);
                                       const isAnotherDifficultySelected = !!activeItem && !isChecked;
-                                      const isDisabled = isAlreadyRecorded || isBossAlreadyRecordedThisWeek(b.name) || isAnotherDifficultySelected;
+                                      const selectedOrdinaryCount = Object.values(currentSelections).filter(item => {
+                                        const itemCfg = BOSS_CONFIGS.find(x => x.name === item.bossName);
+                                        return itemCfg && !itemCfg.isBlackMage;
+                                      }).length;
+                                      // 장부에 이미 기록된 수 + 현재 선택 수가 12개가 되면 남은 일반 보스는 즉시 비활성화
+                                      const isWeeklyLimitReached = !b.isBlackMage && (weeklyBossCount + selectedOrdinaryCount) >= 12 && !isChecked;
+                                      const isDisabled = isAlreadyRecorded || isBossAlreadyRecordedThisWeek(b.name) || isAnotherDifficultySelected || isWeeklyLimitReached;
 
                                       return (
-                                        <label key={d.key} className={`ml-boss-diff-label ${isDisabled ? "disabled" : ""}`} style={{ borderColor: isChecked ? "var(--gold)" : "var(--line)" }}>
+                                        <label key={d.key} className={`ml-boss-diff-label ${isDisabled ? "disabled" : ""}`} style={{ borderColor: isChecked ? "var(--gold)" : "var(--line)" }} onClick={(e) => {
+                                          if (isWeeklyLimitReached && !isChecked) {
+                                            e.preventDefault();
+                                            alert("보스 기록 횟수가 초과되었습니다.");
+                                          }
+                                        }}>
                                           <input 
                                             type="checkbox" 
                                             checked={isChecked} 
                                             disabled={isDisabled}
                                             onChange={() => handleBossCheck(b.name, d.key)} 
                                           />
-                                          <span>{d.label} {isAlreadyRecorded && "(이번 주 기록 완료)"}</span>
+                                          <span>{d.label} {b.isBlackMage ? (isAlreadyRecorded && "(이번 달 기록 완료)") : (isAlreadyRecorded && "(이번 주 기록 완료)")}</span>
                                         </label>
                                       );
                                     })}
