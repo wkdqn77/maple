@@ -614,6 +614,12 @@
       const [bossDate, setBossDate] = useState(todayStr());
       const [showToast, setShowToast] = useState(false);
       const [currentTime, setCurrentTime] = useState(Date.now());
+      const [bossStatsPeriod, setBossStatsPeriod] = useState("week");
+      const [bossStatsOpen, setBossStatsOpen] = useState({});
+      const [bossStatsCustomRange, setBossStatsCustomRange] = useState(() => {
+        const r = getThursdayToWednesdayRange(todayStr());
+        return { start: r.start, end: r.end };
+      });
 
       // 재획 전/후 메소·조각 자동 정산
       const [grindSnapshotPerChar, setGrindSnapshotPerChar] = useState({});
@@ -923,9 +929,56 @@
         }
       }, [selectedChar, grindSnapshotPerChar]);
 
+      const parseBossCharacter = (memo) => {
+        if (!memo) return null;
+        const match = String(memo).match(/^\[([^\]]+)\]\s+/);
+        return match ? match[1] : null;
+      };
+
       const currentWeekRange = useMemo(() => {
         return getThursdayToWednesdayRange(bossDate);
       }, [bossDate]);
+
+      const bossStatsRange = useMemo(() => {
+        const now = new Date(currentTime);
+        const today = toDateStr(now);
+        if (bossStatsPeriod === "week") return getThursdayToWednesdayRange(today);
+        if (bossStatsPeriod === "prevWeek") {
+          const d = new Date(now);
+          d.setDate(d.getDate() - 7);
+          return getThursdayToWednesdayRange(toDateStr(d));
+        }
+        if (bossStatsPeriod === "month") return { start: firstDayOfThisMonth(), end: lastDayOfThisMonth() };
+        if (bossStatsPeriod === "custom") return bossStatsCustomRange;
+        return { start: "0000-01-01", end: "9999-12-31" };
+      }, [bossStatsPeriod, currentTime, bossStatsCustomRange]);
+
+      const bossStatsByCharacter = useMemo(() => {
+        const result = {};
+        characters.forEach(c => { result[c] = { total: 0, count: 0, bosses: {} }; });
+        transactions.forEach(t => {
+          if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return;
+          if (t.date < bossStatsRange.start || t.date > bossStatsRange.end) return;
+          const char = parseBossCharacter(t.memo);
+          if (!char) return;
+          if (!result[char]) result[char] = { total: 0, count: 0, bosses: {} };
+          const amount = Number(t.amount) || 0;
+          result[char].total += amount; result[char].count += 1;
+          const m = String(t.memo || "").match(/^\[[^\]]+\]\s+([^\(]+)\s+\(([^)]+)\)/);
+          const bossName = m ? m[1].trim() : "기타 보스";
+          result[char].bosses[bossName] = (result[char].bosses[bossName] || 0) + amount;
+        });
+        return result;
+      }, [transactions, characters, bossStatsRange]);
+
+      const formatCountdown = (target) => {
+        const diff = Math.max(0, target.getTime() - currentTime);
+        const mins = Math.floor(diff / 60000);
+        const days = Math.floor(mins / 1440);
+        const hours = Math.floor((mins % 1440) / 60);
+        const minutes = mins % 60;
+        return days ? `${days}일 ${hours}시간 ${minutes}분` : `${hours}시간 ${minutes}분`;
+      };
 
       const alreadyRecordedBossesThisWeek = useMemo(() => {
         const recorded = new Set();
@@ -1642,7 +1695,7 @@
             </header>
 
             <nav className="ml-tabs">
-              {[["dashboard", "메인"], ["char", "캐릭터 검색"], ["boss", "보스 정산"], ["add", "기록하기"], ["history", "전체 내역"]].map(([k, l]) => (
+              {[["dashboard", "메인"], ["char", "캐릭터 검색"], ["boss", "보스 정산"], ["add", "기록하기"], ["stats", "통계"], ["history", "전체 내역"]].map(([k, l]) => (
                 <button key={k} className={`ml-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>{l}</button>
               ))}
             </nav>
@@ -2282,6 +2335,45 @@
                 </section>
               )}
 
+              {tab === "stats" && (
+                <section className="ml-page">
+                  <div className="ml-panel">
+                    <h2>📊 보스 수익 통계</h2>
+                    <div className="ml-seg ml-view-toggle" style={{ marginBottom: "8px", flexWrap: "wrap" }}>
+                      <button className={bossStatsPeriod === "prevWeek" ? "active" : ""} onClick={() => setBossStatsPeriod("prevWeek")}>지난 주</button>
+                      <button className={bossStatsPeriod === "month" ? "active" : ""} onClick={() => setBossStatsPeriod("month")}>이번 달</button>
+                      <button className={bossStatsPeriod === "custom" ? "active" : ""} onClick={() => setBossStatsPeriod("custom")}>직접 설정</button>
+                    </div>
+                    <div style={{fontSize:"12px",color:"var(--ink-soft)",marginBottom:"8px"}}>기본 설정은 이번 주로 표시됩니다.</div>
+                    {bossStatsPeriod === "custom" && (
+                      <div className="ml-range-row" style={{ marginBottom: "10px" }}>
+                        <input type="date" value={bossStatsCustomRange.start} onChange={e => setBossStatsCustomRange(r => ({ ...r, start: e.target.value }))} />
+                        <span>~</span>
+                        <input type="date" value={bossStatsCustomRange.end} onChange={e => setBossStatsCustomRange(r => ({ ...r, end: e.target.value }))} />
+                      </div>
+                    )}
+                    <div style={{fontSize:"12px",color:"var(--ink-soft)",marginBottom:"12px"}}>
+                      조회 기간: {bossStatsRange.start} ~ {bossStatsRange.end}
+                    </div>
+                    {characters.map(char => {
+                      const data = bossStatsByCharacter[char] || {total:0,count:0,bosses:{}};
+                      const rows = Object.entries(data.bosses).sort((a,b)=>b[1]-a[1]);
+                      const isOpen = !!bossStatsOpen[char];
+                      return <div key={char} style={{border:"1px solid var(--line)",borderRadius:"8px",padding:"12px",marginBottom:"10px",background:"#FBF7EC"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"8px"}}>
+                          <strong>{char}</strong>
+                          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                            <strong style={{color:"var(--income)"}}>{formatDetailedUnit(data.total,"메소")}</strong>
+                            {rows.length > 0 && <button type="button" onClick={() => setBossStatsOpen(prev => ({...prev, [char]: !prev[char]}))} style={{padding:"3px 7px",fontSize:"10px",border:"1px solid var(--line)",borderRadius:"3px",background:"#FBF7EC",color:"var(--ink)",cursor:"pointer"}}>{isOpen ? "▲ 닫기" : "▼ 보스 보기"}</button>}
+                          </div>
+                        </div>
+                        <div style={{fontSize:"11px",color:"var(--ink-soft)",margin:"5px 0 0"}}>보스 기록 {data.count}회 · 보스 수익만 집계</div>
+                        {isOpen && (rows.length ? <div style={{marginTop:"8px"}}>{rows.map(([boss,amount])=><div key={boss} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderTop:"1px solid rgba(0,0,0,.06)",fontSize:"12px"}}><span>{boss}</span><span>{formatDetailedUnit(amount,"메소")}</span></div>)}</div> : <div style={{fontSize:"12px",color:"var(--ink-soft)",marginTop:"8px"}}>해당 기간의 보스 기록이 없습니다.</div>)}
+                      </div>;
+                    })}
+                  </div>
+                </section>
+              )}
               {tab === "history" && (
                 <section className="ml-page">
                   <div className="ml-panel">
