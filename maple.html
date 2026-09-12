@@ -7,7 +7,14 @@
   
   <link rel="icon" href="https://i.ibb.co/JwZ0B8C4/favicon.jpg" type="image/jpeg">
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js">
+function getMvpDefaultFee(mvpGrade) {
+  if (mvpGrade === 'RED') return 3;
+  if (mvpGrade === 'DIAMOND') return 3;
+  if (mvpGrade === 'GOLD') return 3;
+  return 0;
+}
+</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -375,6 +382,11 @@
     .grind-settlement-toggle:hover { opacity: .9; }
 </style>
 </head>
+
+<!-- MVP fee behavior:
+     MVP grade sets the fee to 3% by default for RED, but the fee selector
+     remains editable so the user can choose 0%, 3%, or 5%.
+-->
 <body>
   <div id="root"></div>
 
@@ -700,6 +712,8 @@
 
       const handleMvpChange = (val) => {
         setMvpGrade(val);
+        const defaultFee = ["실버", "골드", "다이아", "레드", "블랙"].includes(val) ? 3 : 0;
+        setForm(f => ({ ...f, feeRate: defaultFee }));
         try { localStorage.setItem(STORAGE_KEYS.MVP, val); } catch(e) {}
       };
 
@@ -734,11 +748,8 @@
 
       const effectiveFeeRate = useMemo(() => {
         if (!isFeeApplicableCategory) return 0;
-        if (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)) {
-          return 3;
-        }
         return form.feeRate;
-      }, [isFeeApplicableCategory, mvpGrade, form.feeRate]);
+      }, [isFeeApplicableCategory, form.feeRate]);
 
       const saveGoals = (nextGoals) => {
         setGoals(nextGoals);
@@ -1432,11 +1443,11 @@
         };
         persistTransactions([tx, ...transactions]);
         
-        setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
+        setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
         setCalc({ mesoEok: "", rate: "" });
         setPieceCalc({ count: "", rate: "" });
         setDopingCounts({ seiram: "", aleria: "", collector: "", honor: "" });
-      }, [form, transactions, persistTransactions, isFeeApplicableCategory, effectiveFeeRate]);
+      }, [form, transactions, persistTransactions, isFeeApplicableCategory, effectiveFeeRate, mvpGrade]);
 
       const registerCalcTransaction = useCallback(() => {
         const mesoEokNum = Number(calc.mesoEok.replace(/,/g, "")) || 0;
@@ -1479,9 +1490,9 @@
           persistTransactions([cashTx, mesoTx, ...transactions]);
         }
 
-        setForm(f => ({ ...f, memo: "", feeRate: 0 }));
+        setForm(f => ({ ...f, memo: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
         setCalc({ mesoEok: "", rate: "" });
-      }, [form, calc, transactions, persistTransactions, effectiveFeeRate]);
+      }, [form, calc, transactions, persistTransactions, effectiveFeeRate, mvpGrade]);
 
       const deleteTransaction = useCallback((id) => {
         persistTransactions(transactions.filter((t) => t.id !== id));
@@ -2108,35 +2119,35 @@
                     <div className="ml-form-row">
                       <label>통화</label>
                       <div className="ml-seg">
-                        <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "", feeRate: 0 }))}>💳 현금</button>
-                        <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "", feeRate: 0 }))}>💰 메소</button>
-                        <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "", feeRate: 0 }))}>🧩 조각</button>
+                        <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>💳 현금</button>
+                        <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>💰 메소</button>
+                        <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>🧩 조각</button>
                       </div>
                     </div>
 
                     <div className="ml-form-row">
                       <label>유형</label>
                       <div className="ml-seg">
-                        <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "", feeRate: 0 }))}>지출</button>
-                        <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "", feeRate: 0 }))}>수입</button>
+                        <button className={form.type === "expense" ? "active expense" : ""} onClick={() => setForm(f => ({ ...f, type: "expense", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>지출</button>
+                        <button className={form.type === "income" ? "active income" : ""} onClick={() => setForm(f => ({ ...f, type: "income", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>수입</button>
                       </div>
                     </div>
 
                     <div className="ml-form-row">
                       <label>카테고리</label>
-                      <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value, feeRate: 0 }))} />
+                      <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value, feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))} />
                     </div>
                     <div className="ml-chips">
-                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s, feeRate: 0 }))}>{s}</button>)}
+                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s, feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>{s}</button>)}
                     </div>
 
                     {isFeeApplicableCategory && (
                       <div className="ml-form-row">
-                        <label>⚙️ 수수료 설정 {["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) && <span style={{ color: "var(--gold)" }}>(MVP {mvpGrade} 3% 고정 적용됨)</span>}</label>
+                        <label>⚙️ 수수료 설정 {["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) && <span style={{ color: "var(--gold)" }}>(MVP {mvpGrade} 3% 기본값)</span>}</label>
                         <div className="ml-seg">
-                          <button className={effectiveFeeRate === 0 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 0 }))} disabled={["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)}>수수료 없음</button>
-                          <button className={effectiveFeeRate === 3 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 3 }))} disabled={["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)}>3% 차감</button>
-                          <button className={effectiveFeeRate === 5 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 5 }))} disabled={["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade)}>5% 차감</button>
+                          <button className={effectiveFeeRate === 0 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 0 }))}>수수료 없음</button>
+                          <button className={effectiveFeeRate === 3 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 3 }))}>3% 차감</button>
+                          <button className={effectiveFeeRate === 5 ? "active" : ""} onClick={() => setForm(f => ({ ...f, feeRate: 5 }))}>5% 차감</button>
                         </div>
                       </div>
                     )}
@@ -2266,7 +2277,7 @@
                               };
 
                               persistTransactions([mesoTx, pieceTx, ...transactions]);
-                              setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
+                              setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
                               setPieceCalc({ count: "", rate: "" });
                             }
                           }} disabled={pieceCalcResult == null || rawPieceCount <= 0}>메소 및 조각 장부에 동시 기록</button>
@@ -2324,7 +2335,7 @@
                             category: "도핑", amount: dopingTotalAmount, memo: dopingMemoString,
                           };
                           persistTransactions([tx, ...transactions]);
-                          setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: 0 }));
+                          setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
                           setDopingCounts({ seiram: "", aleria: "", collector: "", honor: "" });
                         } else {
                           addTransaction();
