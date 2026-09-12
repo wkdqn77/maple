@@ -447,16 +447,13 @@
 
     function getBossPrice(cfg, diff, dateStr, currentTime = Date.now()) {
       const isBlackMage = cfg && cfg.isBlackMage;
-      const changeDate = isBlackMage ? BLACK_MAGE_PRICE_CHANGE_DATE : BOSS_PRICE_CHANGE_DATE;
       const changeAt = isBlackMage ? BLACK_MAGE_PRICE_CHANGE_AT : BOSS_PRICE_CHANGE_AT;
 
-      let useUpdatedPrice = false;
-      if (dateStr > changeDate) {
-        useUpdatedPrice = true;
-      } else if (dateStr === changeDate) {
-        // 변경일 당일에는 실제 한국시간 기준으로 변경 시각을 넘었을 때만 적용
-        useUpdatedPrice = currentTime >= changeAt.getTime();
-      }
+      // 변경일 당일에는 실제 한국시간 변경 시각부터 적용하고, 그 이후 날짜는 항상 변경가격 적용
+      const recordDateStart = new Date(`${dateStr}T00:00:00+09:00`).getTime();
+      const recordDateEnd = recordDateStart + 24 * 60 * 60 * 1000;
+      const useUpdatedPrice = recordDateStart >= changeAt.getTime()
+        || (recordDateStart < changeAt.getTime() && recordDateEnd > changeAt.getTime() && currentTime >= changeAt.getTime());
 
       if (useUpdatedPrice && BOSS_UPDATED_PRICES[cfg.name] && BOSS_UPDATED_PRICES[cfg.name][diff.key] != null) {
         return BOSS_UPDATED_PRICES[cfg.name][diff.key];
@@ -869,7 +866,7 @@
         }
 
         const now = Date.now();
-        const memo = `[${selectedChar}] 재획 정산 (시작 ${formatDetailedUnit(startMeso, "메소")} / 종료 ${formatDetailedUnit(endMeso, "메소")})`;
+        const memo = `재획 정산 (시작 ${formatDetailedUnit(startMeso, "메소")} / 종료 ${formatDetailedUnit(endMeso, "메소")})`;
         const newTxs = [];
 
         if (mesoDelta !== 0) {
@@ -892,7 +889,7 @@
             type: pieceDelta > 0 ? "income" : "expense",
             category: "재획",
             amount: Math.abs(pieceDelta),
-            memo: `[${selectedChar}] 재획 정산 (시작 ${startPiece.toLocaleString("ko-KR")}개 / 종료 ${endPiece.toLocaleString("ko-KR")}개)`
+            memo: `재획 정산 (시작 ${startPiece.toLocaleString("ko-KR")}개 / 종료 ${endPiece.toLocaleString("ko-KR")}개)`
           });
         }
 
@@ -1866,7 +1863,7 @@
                       </div>
                       <div style={{ fontSize: "12px", color: "var(--ink-soft)", lineHeight: 1.5 }}>
                         📌 이번 주({currentWeekRange.start} ~ {currentWeekRange.end}) 일반 보스 {weeklyBossCount}/12개 기록 · 검은마법사는 매월 1회({monthlyBossRange.start} ~ {monthlyBossRange.end}) 기록 가능합니다.<br/>
-                        💰 일반 보스 변경가격: 2026-09-17 04:00 이후 적용 · 검은마법사 변경가격: 2026-10-01 00:00 이후 적용<br/>
+                        💰 일반 보스 변경가격: 2026-09-17 04:00 이후 적용 · 검은마법사 변경가격: 2026-10-01부터 즉시 적용<br/>
                         기록 한도에 도달하면 남은 일반 보스는 자동으로 비활성화됩니다.
                       </div>
                     </div>
@@ -2003,7 +2000,7 @@
 
                     <div className="grind-settlement-box">
   <button type="button" className="grind-settlement-toggle" onClick={() => setShowGrindSettlement(v => !v)}>
-    <span>⏱️ [{selectedChar}] 재획 전·후 메소 / 조각 자동 정산</span>
+    <span>⏱️ 재획 전·후 메소 / 조각 자동 정산</span>
     <span>{showGrindSettlement ? "▲ 닫기" : "▼ 열기"}</span>
   </button>
   {showGrindSettlement && (
