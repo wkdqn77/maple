@@ -172,6 +172,32 @@ function getMvpDefaultFee(mvpGrade) {
       color: var(--paper);
       font-weight: 600;
     }
+    .ml-backup-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: #FBF7EC;
+      color: var(--ink);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .ml-backup-btn:hover { border-color: var(--gold); }
+    .ml-backup-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ml-backup-help {
+      font-size: 10px;
+      color: #B8C4B3;
+      margin-top: 3px;
+      line-height: 1.2;
+      text-align: right;
+      white-space: nowrap;
+    }
     .ml-mvp-box select {
       font-family: 'Inter', sans-serif;
       font-size: 12px;
@@ -393,7 +419,7 @@ function getMvpDefaultFee(mvpGrade) {
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -611,7 +637,7 @@ function getMvpDefaultFee(mvpGrade) {
       const [splitInput, setSplitInput] = useState({ salePrice: "", partyCount: "3", feePercent: "3" });
 
       const [transactions, setTransactions] = useState([]);
-      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0 });
+      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0, tradeType: "교환거래" });
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       
@@ -1158,6 +1184,91 @@ function getMvpDefaultFee(mvpGrade) {
         return Array.from(dataMap.values());
       };
 
+      // 주간이 바뀌면 이전 주 보스 기록을 자동으로 현재 선택 목록에 반영합니다.
+      // 한 주에 한 번만 실행되며, 페이지를 계속 열어둔 상태에서도 주간 전환을 감지합니다.
+      useEffect(() => {
+        if (!transactions.length || !characters.length) return;
+
+        const today = toDateStr(new Date(currentTime));
+        const activeRange = getThursdayToWednesdayRange(today);
+        const weekKey = activeRange.start;
+        const savedWeekKey = localStorage.getItem(STORAGE_KEYS.AUTO_BOSS_WEEK);
+
+        // 최초 실행은 현재 주를 기준으로만 저장하고, 다음 주부터 자동 불러오기를 시작합니다.
+        if (!savedWeekKey) {
+          localStorage.setItem(STORAGE_KEYS.AUTO_BOSS_WEEK, weekKey);
+          return;
+        }
+        if (savedWeekKey === weekKey) return;
+
+        const previousRange = (() => {
+          const d = new Date(`${activeRange.start}T00:00:00`);
+          d.setDate(d.getDate() - 7);
+          return getThursdayToWednesdayRange(toDateStr(d));
+        })();
+
+        const nextState = { ...bossSelectionsPerChar };
+
+        characters.forEach(char => {
+          const dataMap = new Map();
+
+          transactions.forEach(t => {
+            if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return;
+            if (t.date < previousRange.start || t.date > previousRange.end) return;
+            if (parseBossCharacter(t.memo) !== char) return;
+
+            const match = String(t.memo || "").match(/^\[[^\]]+\]\s+(.+?)\s+\(([^)]+)\)/);
+            if (!match) return;
+
+            const bossName = match[1].trim();
+            const diffLabel = match[2].trim();
+            const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
+            if (!cfg) return;
+            const diff = cfg.diffs.find(d => d.label === diffLabel);
+            if (!diff) return;
+
+            const partyMatch = String(t.memo || "").match(/\/\s+(\d+)인 파티/);
+            const party = partyMatch ? Number(partyMatch[1]) || 1 : 1;
+            const key = `${bossName}_${diff.key}`;
+            if (!dataMap.has(key)) dataMap.set(key, { bossName, diffKey: diff.key, party });
+          });
+
+          let ordinaryCount = 0;
+          const charSel = {};
+          Array.from(dataMap.values()).forEach(item => {
+            const cfg = BOSS_CONFIGS.find(b => b.name === item.bossName);
+            if (!cfg) return;
+            if (cfg.isBlackMage) {
+              // 검은마법사는 월 1회 제한을 기존 규칙대로 적용
+              const alreadyThisMonth = transactions.some(t => {
+                if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return false;
+                if (parseBossCharacter(t.memo) !== char) return false;
+                if (t.date < firstDayOfThisMonth() || t.date > lastDayOfThisMonth()) return false;
+                const m = String(t.memo || "").match(/^\[[^\]]+\]\s+([^\(]+)\s+\(([^)]+)\)/);
+                return m && m[1].trim() === "검은마법사";
+              });
+              if (!alreadyThisMonth) {
+                charSel[`${item.bossName}_${item.diffKey}`] = { ...item };
+              }
+              return;
+            }
+            if (ordinaryCount < 12) {
+              charSel[`${item.bossName}_${item.diffKey}`] = { ...item };
+              ordinaryCount++;
+            }
+          });
+
+          nextState[char] = charSel;
+        });
+
+        setBossSelectionsPerChar(nextState);
+        try {
+          localStorage.setItem(STORAGE_KEYS.BOSS_STATE, JSON.stringify(nextState));
+          localStorage.setItem(STORAGE_KEYS.AUTO_BOSS_WEEK, weekKey);
+        } catch (e) {}
+        setBossDate(today);
+      }, [currentTime, transactions, characters]);
+
       // 지난주 기록에서 보스만 불러오기
       const loadLastBosses = () => {
         const lastData = getPreviousWeekBossData();
@@ -1464,23 +1575,104 @@ function getMvpDefaultFee(mvpGrade) {
         try { localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(next)); } catch (e) {}
       }, []);
 
+      // 장부 전체 데이터를 JSON 파일로 백업/복원합니다.
+      // 백업 시 저장 위치와 파일명을 사용자가 직접 선택합니다.
+      const exportBackup = useCallback(async () => {
+        try {
+          const backup = { version: 1, exportedAt: new Date().toISOString(), data: {} };
+          Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
+            const value = localStorage.getItem(key);
+            if (value !== null) backup.data[name] = value;
+          });
+
+          const fileName = `장부_백업_${toDateStr(new Date())}.json`;
+          const jsonText = JSON.stringify(backup, null, 2);
+
+          // Chrome/Edge 등 File System Access API 지원 브라우저에서는
+          // 사용자가 직접 저장 위치와 파일명을 선택합니다.
+          if (window.showSaveFilePicker) {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: fileName,
+              types: [{
+                description: "장부 백업 파일",
+                accept: { "application/json": [".json"] }
+              }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(jsonText);
+            await writable.close();
+          } else {
+            // 미지원 브라우저는 기존 다운로드 방식으로 저장
+            const blob = new Blob([jsonText], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+          }
+
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 1500);
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+          console.error(e);
+          alert("백업 파일 저장에 실패했습니다.");
+        }
+      }, []);
+
+      const importBackup = useCallback(() => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json,application/json";
+        input.onchange = async (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+          try {
+            const backup = JSON.parse(await file.text());
+            if (!backup || backup.version !== 1 || !backup.data || typeof backup.data !== "object") throw new Error("invalid backup");
+            if (!confirm("현재 장부 데이터를 백업 파일의 데이터로 교체합니다. 계속할까요?")) return;
+            Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
+              if (Object.prototype.hasOwnProperty.call(backup.data, name)) localStorage.setItem(key, backup.data[name]);
+              else localStorage.removeItem(key);
+            });
+            alert("백업 복원이 완료되었습니다. 페이지를 새로고침합니다.");
+            window.location.reload();
+          } catch (e) {
+            console.error(e);
+            alert("올바른 장부 백업 파일이 아닙니다.");
+          }
+        };
+        input.click();
+      }, []);
+
       const addTransaction = useCallback(() => {
         const rawAmt = Number(form.amount);
         if (!rawAmt || rawAmt <= 0) return;
 
-        let finalAmt = rawAmt;
+        const isMesoTradeCategory = form.currency === "meso" && form.type === "income" && (form.category.trim() === "아이템 판매" || form.category.trim() === "대출");
+        const isMesoItemSaleIncome = form.currency === "meso" && form.type === "income" && form.category.trim() === "아이템 판매";
+        const auctionDeposit = isMesoTradeCategory && form.tradeType === "경매장 거래" ? 2000 : 0;
+
+        let finalAmt = rawAmt + auctionDeposit;
+        // 경매장 거래의 2,000메소 보증금은 수수료 차감 대상이 아닙니다.
         if (isFeeApplicableCategory && effectiveFeeRate > 0) {
-          finalAmt = Math.round(rawAmt * (1 - effectiveFeeRate / 100));
+          finalAmt = Math.round(rawAmt * (1 - effectiveFeeRate / 100)) + auctionDeposit;
         }
 
         const tx = {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           date: form.date, currency: form.currency, type: form.type,
-          category: form.category.trim() || "기타", amount: finalAmt, memo: form.memo.trim(),
+          category: form.category.trim() || "기타", amount: finalAmt,
+          memo: isMesoTradeCategory
+            ? `${form.memo.trim()}${form.memo.trim() ? " · " : ""}${form.tradeType}${auctionDeposit ? " · 보증금 +2,000 메소" : ""}`
+            : form.memo.trim(),
         };
         persistTransactions([tx, ...transactions]);
         
-        setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
+        setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0), tradeType: "교환거래" }));
         setCalc({ mesoEok: "", rate: "" });
         setPieceCalc({ count: "", rate: "" });
         setDopingCounts({ seiram: "", aleria: "", collector: "", honor: "" });
@@ -1534,6 +1726,22 @@ function getMvpDefaultFee(mvpGrade) {
       const deleteTransaction = useCallback((id) => {
         persistTransactions(transactions.filter((t) => t.id !== id));
       }, [transactions, persistTransactions]);
+
+      const previousWeekStatsByCharacter = useMemo(() => {
+        const d = new Date(currentTime);
+        d.setDate(d.getDate() - 7);
+        const range = getThursdayToWednesdayRange(toDateStr(d));
+        const result = {};
+        characters.forEach(c => { result[c] = 0; });
+        transactions.forEach(t => {
+          if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return;
+          if (t.date < range.start || t.date > range.end) return;
+          const char = parseBossCharacter(t.memo);
+          if (!char) return;
+          result[char] = (result[char] || 0) + (Number(t.amount) || 0);
+        });
+        return result;
+      }, [transactions, characters, currentTime]);
 
       const [range, setRange] = useState({ start: firstDayOfThisMonth(), end: lastDayOfThisMonth() });
       const rangeTx = useMemo(() => transactions.filter(t => t.date >= range.start && t.date <= range.end), [transactions, range]);
@@ -1727,17 +1935,26 @@ function getMvpDefaultFee(mvpGrade) {
                     <h1>장부</h1>
                   </div>
                 </div>
-                <div className="ml-mvp-box">
-                  <label>MVP</label>
-                  <select value={mvpGrade} onChange={e => handleMvpChange(e.target.value)}>
-                    <option value="없음">없음</option>
-                    <option value="브론즈">브론즈</option>
-                    <option value="실버">실버</option>
-                    <option value="골드">골드</option>
-                    <option value="다이아">다이아</option>
-                    <option value="레드">레드</option>
-                    <option value="블랙">블랙</option>
-                  </select>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <div>
+                    <div className="ml-backup-actions">
+                      <button type="button" className="ml-backup-btn" onClick={exportBackup} title="현재 장부 데이터를 JSON 파일로 저장합니다." aria-label="데이터 백업">💾 백업</button>
+                      <button type="button" className="ml-backup-btn" onClick={importBackup} title="저장한 JSON 백업 파일로 장부 데이터를 복원합니다." aria-label="데이터 복원">📂 복원</button>
+                    </div>
+                    <div className="ml-backup-help">(데이터 저장 및 복원)</div>
+                  </div>
+                  <div className="ml-mvp-box">
+                    <label>MVP</label>
+                    <select value={mvpGrade} onChange={e => handleMvpChange(e.target.value)}>
+                      <option value="없음">없음</option>
+                      <option value="브론즈">브론즈</option>
+                      <option value="실버">실버</option>
+                      <option value="골드">골드</option>
+                      <option value="다이아">다이아</option>
+                      <option value="레드">레드</option>
+                      <option value="블랙">블랙</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </header>
@@ -1762,6 +1979,7 @@ function getMvpDefaultFee(mvpGrade) {
                       <input type="date" value={range.end} onChange={e => setRange(r => ({ ...r, end: e.target.value }))} />
                     </div>
                   </div>
+
 
                   <div className="ml-stat-grid">
                     <StatCard icon="💳" label="현금 총수입" value={summary.cashIncome} unit="원" tone="income" />
@@ -1803,11 +2021,7 @@ function getMvpDefaultFee(mvpGrade) {
                     </div>
                   </div>
 
-                  <div className="ml-panel">
-                    <h2>최근 거래</h2>
-                    {transactions.length === 0 && <p className="ml-empty">첫 거래를 기록해보세요.</p>}
-                    {transactions.slice(0, 5).map(t => <TxRow key={t.id} t={t} />)}
-                  </div>
+
                 </section>
               )}
 
@@ -2175,8 +2389,29 @@ function getMvpDefaultFee(mvpGrade) {
                       <input type="text" placeholder="예: 스킬강화" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value, feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))} />
                     </div>
                     <div className="ml-chips">
-                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s, feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>{s}</button>)}
+                      {suggestions.map(s => <button key={s} className="ml-chip" onClick={() => setForm(f => ({ ...f, category: s, feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0, tradeType: s === "아이템 판매" ? f.tradeType : "교환거래" }))}>{s}</button>)}
                     </div>
+
+                    {form.currency === "meso" && form.type === "income" && (form.category.trim() === "아이템 판매" || form.category.trim() === "대출") && (
+                      <div className="ml-form-row">
+                        <label>거래 방식</label>
+                        <div className="ml-seg">
+                          <button type="button" className={form.tradeType === "교환거래" ? "active" : ""} onClick={() => setForm(f => ({ ...f, tradeType: "교환거래" }))}>교환거래</button>
+                          <button type="button" className={form.tradeType === "경매장 거래" ? "active" : ""} onClick={() => setForm(f => ({ ...f, tradeType: "경매장 거래" }))}>경매장 거래</button>
+                        </div>
+                        {form.tradeType === "경매장 거래" && (
+                          <div style={{ marginTop: "5px", fontSize: "11px", color: "var(--ink-soft)" }}>
+                            경매장 보증금 2,000메소가 자동으로 추가됩니다. 보증금에는 수수료가 적용되지 않습니다.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {form.currency === "meso" && form.type === "income" && (form.category.trim() === "아이템 판매" || form.category.trim() === "대출") && form.tradeType === "경매장 거래" && form.amount && (
+                      <div className="ml-korean-amount">
+                        {form.category.trim() === "대출" ? "대출금액" : "판매금액"} {formatKoreanCurrency(form.amount, "meso")} + 보증금 2,000메소 = 실질 수령 {formatKoreanCurrency(String(Number(form.amount.replace(/,/g, "")) + 2000), "meso")}
+                      </div>
+                    )}
 
                     {isFeeApplicableCategory && (
                       <div className="ml-form-row">
@@ -2314,7 +2549,7 @@ function getMvpDefaultFee(mvpGrade) {
                               };
 
                               persistTransactions([mesoTx, pieceTx, ...transactions]);
-                              setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
+                              setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0), tradeType: "교환거래" }));
                               setPieceCalc({ count: "", rate: "" });
                             }
                           }} disabled={pieceCalcResult == null || rawPieceCount <= 0}>메소 및 조각 장부에 동시 기록</button>
@@ -2372,7 +2607,7 @@ function getMvpDefaultFee(mvpGrade) {
                             category: "도핑", amount: dopingTotalAmount, memo: dopingMemoString,
                           };
                           persistTransactions([tx, ...transactions]);
-                          setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0) }));
+                          setForm(f => ({ ...f, amount: "", memo: "", category: "", feeRate: (["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0), tradeType: "교환거래" }));
                           setDopingCounts({ seiram: "", aleria: "", collector: "", honor: "" });
                         } else {
                           addTransaction();
@@ -2388,6 +2623,7 @@ function getMvpDefaultFee(mvpGrade) {
                   <div className="ml-panel">
                     <h2>📊 보스 수익 통계</h2>
                     <div className="ml-seg ml-view-toggle" style={{ marginBottom: "8px", flexWrap: "wrap" }}>
+                      <button className={bossStatsPeriod === "week" ? "active" : ""} onClick={() => setBossStatsPeriod("week")}>이번 주</button>
                       <button className={bossStatsPeriod === "prevWeek" ? "active" : ""} onClick={() => setBossStatsPeriod("prevWeek")}>지난 주</button>
                       <button className={bossStatsPeriod === "month" ? "active" : ""} onClick={() => setBossStatsPeriod("month")}>이번 달</button>
                       <button className={bossStatsPeriod === "custom" ? "active" : ""} onClick={() => setBossStatsPeriod("custom")}>직접 설정</button>
@@ -2416,6 +2652,11 @@ function getMvpDefaultFee(mvpGrade) {
                           </div>
                         </div>
                         <div style={{fontSize:"11px",color:"var(--ink-soft)",margin:"5px 0 0"}}>보스 기록 {data.count}회 · 보스 수익만 집계</div>
+                        {bossStatsPeriod === "week" && (() => {
+                          const previous = previousWeekStatsByCharacter[char] || 0;
+                          const diff = data.total - previous;
+                          return <div style={{fontSize:"11px",marginTop:"4px",color: diff >= 0 ? "var(--income)" : "var(--expense)"}}>지난주 {formatDetailedUnit(previous,"메소")} · {diff >= 0 ? "▲" : "▼"} {formatDetailedUnit(Math.abs(diff),"메소")}</div>;
+                        })()}
                         {isOpen && (rows.length ? <div style={{marginTop:"8px"}}>{rows.map(([boss,amount])=><div key={boss} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderTop:"1px solid rgba(0,0,0,.06)",fontSize:"12px"}}><span>{boss}</span><span>{formatDetailedUnit(amount,"메소")}</span></div>)}</div> : <div style={{fontSize:"12px",color:"var(--ink-soft)",marginTop:"8px"}}>해당 기간의 보스 기록이 없습니다.</div>)}
                       </div>;
                     })}
