@@ -1119,11 +1119,48 @@ function getMvpDefaultFee(mvpGrade) {
         return total;
       }, [currentSelections, bossDate, currentTime]);
 
-      const getLastBossData = () => lastBossDataPerChar[selectedChar] || [];
+      // 지난주(목요일 00시 ~ 수요일 23:59) 보스 기록을 현재 캐릭터 기준으로 불러오기
+      const getPreviousWeekBossRange = () => {
+        const currentRange = getThursdayToWednesdayRange(bossDate);
+        const d = new Date(`${currentRange.start}T00:00:00`);
+        d.setDate(d.getDate() - 7);
+        return getThursdayToWednesdayRange(toDateStr(d));
+      };
 
-      // 마지막 등록 기록에서 보스만 불러오기
+      const getPreviousWeekBossData = () => {
+        const range = getPreviousWeekBossRange();
+        const dataMap = new Map();
+
+        transactions.forEach(t => {
+          if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return;
+          if (t.date < range.start || t.date > range.end) return;
+          if (parseBossCharacter(t.memo) !== selectedChar) return;
+
+          const match = String(t.memo || "").match(/^\[[^\]]+\]\s+(.+?)\s+\(([^)]+)\)/);
+          if (!match) return;
+
+          const bossName = match[1].trim();
+          const diffLabel = match[2].trim();
+          const cfg = BOSS_CONFIGS.find(b => b.name === bossName);
+          if (!cfg) return;
+          const diff = cfg.diffs.find(d => d.label === diffLabel);
+          if (!diff) return;
+
+          const partyMatch = String(t.memo || "").match(/\/\s+(\d+)인 파티/);
+          const party = partyMatch ? Number(partyMatch[1]) || 1 : 1;
+          const key = `${bossName}_${diff.key}`;
+
+          if (!dataMap.has(key)) {
+            dataMap.set(key, { bossName, diffKey: diff.key, party });
+          }
+        });
+
+        return Array.from(dataMap.values());
+      };
+
+      // 지난주 기록에서 보스만 불러오기
       const loadLastBosses = () => {
-        const lastData = getLastBossData();
+        const lastData = getPreviousWeekBossData();
         if (!lastData.length) return;
 
         setBossSelectionsPerChar(prev => {
@@ -1146,9 +1183,9 @@ function getMvpDefaultFee(mvpGrade) {
         });
       };
 
-      // 현재 선택된 보스에 한해 마지막 등록 때 사용한 인원수만 불러오기
+      // 현재 선택된 보스에 한해 지난주 기록에서 사용한 인원수 불러오기
       const loadLastPartyCounts = () => {
-        const lastData = getLastBossData();
+        const lastData = getPreviousWeekBossData();
         if (!lastData.length || !Object.keys(currentSelections).length) return;
 
         setBossSelectionsPerChar(prev => {
@@ -1166,9 +1203,9 @@ function getMvpDefaultFee(mvpGrade) {
         });
       };
 
-      // 마지막 등록 보스와 인원수를 한 번에 불러오기
+      // 지난주 기록의 보스와 인원수를 한 번에 불러오기
       const loadLastBossesAndParties = () => {
-        const lastData = getLastBossData();
+        const lastData = getPreviousWeekBossData();
         if (!lastData.length) return;
 
         setBossSelectionsPerChar(prev => {
@@ -1885,13 +1922,13 @@ function getMvpDefaultFee(mvpGrade) {
 
                     <div style={{ background: "#F3ECDD", padding: "10px 12px", borderRadius: "3px", marginBottom: "14px", border: "1px solid var(--line)" }}>
                       <div style={{ fontSize: "12px", fontWeight: "700", marginBottom: "8px" }}>
-                        🔁 [{selectedChar}] 마지막 등록 기록 불러오기
+                        🔁 [{selectedChar}] 지난주 보스 기록 불러오기
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                         <button
                           className="ml-calc-apply"
                           onClick={loadLastBossesAndParties}
-                          disabled={!lastBossDataPerChar[selectedChar]?.length}
+                          disabled={!getPreviousWeekBossData().length}
                           style={{ padding: "6px 10px", fontSize: "12px" }}
                         >
                           보스 + 인원수
@@ -1899,7 +1936,7 @@ function getMvpDefaultFee(mvpGrade) {
                         <button
                           className="ml-calc-apply"
                           onClick={loadLastBosses}
-                          disabled={!lastBossDataPerChar[selectedChar]?.length}
+                          disabled={!getPreviousWeekBossData().length}
                           style={{ padding: "6px 10px", fontSize: "12px" }}
                         >
                           보스만
@@ -1907,14 +1944,14 @@ function getMvpDefaultFee(mvpGrade) {
                         <button
                           className="ml-calc-apply"
                           onClick={loadLastPartyCounts}
-                          disabled={!lastBossDataPerChar[selectedChar]?.length || Object.keys(currentSelections).length === 0}
+                          disabled={!getPreviousWeekBossData().length || Object.keys(currentSelections).length === 0}
                           style={{ padding: "6px 10px", fontSize: "12px" }}
                         >
                           인원수만
                         </button>
                       </div>
                       <div style={{ marginTop: "7px", fontSize: "11px", color: "var(--ink-soft)" }}>
-                        마지막으로 장부에 등록한 보스와 파티원 수를 캐릭터별로 저장해 다음 주에도 다시 불러올 수 있습니다.
+                        지난주에 장부에 기록한 보스와 파티원 수를 캐릭터별로 불러올 수 있습니다.
                       </div>
                     </div>
 
