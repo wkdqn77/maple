@@ -2621,7 +2621,26 @@ function getMvpDefaultFee(mvpGrade) {
                       <button className={bossStatsPeriod === "month" ? "active" : ""} onClick={() => setBossStatsPeriod("month")}>이번 달</button>
                       <button className={bossStatsPeriod === "custom" ? "active" : ""} onClick={() => setBossStatsPeriod("custom")}>직접 설정</button>
                     </div>
-                    <div style={{fontSize:"12px",color:"var(--ink-soft)",marginBottom:"10px"}}>조회 기간: {bossStatsRange.start} ~ {bossStatsRange.end}</div>
+                    {bossStatsPeriod === "custom" && (
+                      <div className="ml-range-row" style={{ marginBottom: "10px", alignItems: "center" }}>
+                        <input
+                          type="date"
+                          value={bossStatsCustomRange.start}
+                          onChange={e => setBossStatsCustomRange(r => ({ ...r, start: e.target.value }))}
+                          aria-label="통계 시작일"
+                        />
+                        <span>~</span>
+                        <input
+                          type="date"
+                          value={bossStatsCustomRange.end}
+                          onChange={e => setBossStatsCustomRange(r => ({ ...r, end: e.target.value }))}
+                          aria-label="통계 종료일"
+                        />
+                      </div>
+                    )}
+                    <div style={{fontSize:"12px",color:"var(--ink-soft)",marginBottom:"10px"}}>
+                      조회 기간: {bossStatsRange.start} ~ {bossStatsRange.end}
+                    </div>
 
                     <div className="ml-stat-grid" style={{marginBottom:"14px"}}>
                       <div className="ml-stat-card income">
