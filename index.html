@@ -1093,6 +1093,36 @@ function getMvpDefaultFee(mvpGrade) {
         return result;
       }, [transactions, characters, bossStatsRange]);
 
+      // 이번 달 기준 보스 수익을 주간 보스 / 월간 보스(검은마법사)로 분리합니다.
+      const monthlyBossSummary = useMemo(() => {
+        const start = firstDayOfThisMonth();
+        const end = lastDayOfThisMonth();
+        const result = { weekly: 0, monthly: 0, total: 0, weeklyCount: 0, monthlyCount: 0, byCharacter: {} };
+        transactions.forEach(t => {
+          if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return;
+          if (t.date < start || t.date > end) return;
+          const amount = Number(t.amount) || 0;
+          const char = parseBossCharacter(t.memo);
+          const m = String(t.memo || "").match(/^\[[^\]]+\]\s+([^\(]+)\s+\(([^)]+)\)/);
+          const bossName = m ? m[1].trim() : "기타 보스";
+          if (bossName === "검은마법사") {
+            result.monthly += amount;
+            result.monthlyCount += 1;
+          } else {
+            result.weekly += amount;
+            result.weeklyCount += 1;
+          }
+          result.total += amount;
+          if (char) {
+            if (!result.byCharacter[char]) result.byCharacter[char] = { weekly: 0, monthly: 0, total: 0 };
+            if (bossName === "검은마법사") result.byCharacter[char].monthly += amount;
+            else result.byCharacter[char].weekly += amount;
+            result.byCharacter[char].total += amount;
+          }
+        });
+        return result;
+      }, [transactions, currentTime]);
+
       const alreadyRecordedBossesThisWeek = useMemo(() => {
         const recorded = new Set();
         transactions.forEach(t => {
@@ -2592,6 +2622,28 @@ function getMvpDefaultFee(mvpGrade) {
                       <button className={bossStatsPeriod === "custom" ? "active" : ""} onClick={() => setBossStatsPeriod("custom")}>직접 설정</button>
                     </div>
                     <div style={{fontSize:"12px",color:"var(--ink-soft)",marginBottom:"10px"}}>조회 기간: {bossStatsRange.start} ~ {bossStatsRange.end}</div>
+
+                    <div className="ml-stat-grid" style={{marginBottom:"14px"}}>
+                      <div className="ml-stat-card income">
+                        <div className="ml-stat-icon">🟢</div>
+                        <div className="ml-stat-label">주간 보스 수익</div>
+                        <div className="ml-stat-value">{formatDetailedUnit(monthlyBossSummary.weekly, "메소")}</div>
+                        <div style={{fontSize:"11px",color:"var(--ink-soft)",marginTop:"5px"}}>이번 달 기록 {monthlyBossSummary.weeklyCount}회</div>
+                      </div>
+                      <div className="ml-stat-card" style={{borderLeftColor:"#7B61A8"}}>
+                        <div className="ml-stat-icon">🟣</div>
+                        <div className="ml-stat-label">월간 보스 수익 · 검은마법사</div>
+                        <div className="ml-stat-value" style={{color:"#7B61A8"}}>{formatDetailedUnit(monthlyBossSummary.monthly, "메소")}</div>
+                        <div style={{fontSize:"11px",color:"var(--ink-soft)",marginTop:"5px"}}>이번 달 기록 {monthlyBossSummary.monthlyCount}회</div>
+                      </div>
+                      <div className="ml-stat-card" style={{gridColumn:"1 / -1",borderLeftColor:"var(--gold)"}}>
+                        <div className="ml-stat-icon">🏆</div>
+                        <div className="ml-stat-label">한달 총 수익</div>
+                        <div className="ml-stat-value" style={{color:"var(--gold)",fontSize:"24px"}}>{formatDetailedUnit(monthlyBossSummary.total, "메소")}</div>
+                        <div style={{fontSize:"11px",color:"var(--ink-soft)",marginTop:"5px"}}>주간 보스 + 월간 보스(검은마법사)</div>
+                      </div>
+                    </div>
+
                     {characters.map(char => {
                       const data = bossStatsByCharacter[char] || {total:0,count:0,bosses:{}};
                       const rows = Object.entries(data.bosses).sort((a,b)=>b[1]-a[1]);
