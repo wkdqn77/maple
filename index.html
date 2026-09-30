@@ -510,7 +510,7 @@ function getMvpDefaultFee(mvpGrade) {
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot", MONTHLY_MESO_CARRYOVER: "ledger:monthly_meso_carryover" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -790,8 +790,58 @@ function getMvpDefaultFee(mvpGrade) {
           if (savedKey) setNexonApiKey(savedKey);
           const savedMvp = localStorage.getItem(STORAGE_KEYS.MVP);
           if (savedMvp) setMvpGrade(savedMvp);
+
+          // 매월 1일 00:00 이후 앱을 열면 지난달 메소 정산 금액을
+          // 이번 달 1일의 "메소 이월" 내역으로 자동 추가한다.
+          // localStorage에 처리한 월을 기록해 중복 이월을 방지한다.
+          let loadedTransactions = [];
           const txData = localStorage.getItem(STORAGE_KEYS.TX);
-          if (txData) setTransactions(JSON.parse(txData));
+          if (txData) {
+            loadedTransactions = JSON.parse(txData);
+            if (!Array.isArray(loadedTransactions)) loadedTransactions = [];
+          }
+
+          const now = new Date();
+          const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const isFirstDay = now.getDate() === 1;
+          const currentMonthKey = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
+
+          if (isFirstDay && now.getTime() >= currentMonthStart.getTime()) {
+            const processedMonth = localStorage.getItem(STORAGE_KEYS.MONTHLY_MESO_CARRYOVER);
+
+            if (processedMonth !== currentMonthKey) {
+              const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+              const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
+
+              const previousMonthMesoNet = loadedTransactions
+                .filter(t =>
+                  t.currency === "meso" &&
+                  t.date >= toDateStr(previousMonthStart) &&
+                  t.date < toDateStr(previousMonthEnd)
+                )
+                .reduce((sum, t) => sum + (t.type === "income" ? (Number(t.amount) || 0) : -(Number(t.amount) || 0)), 0);
+
+              if (previousMonthMesoNet !== 0) {
+                const carryoverTx = {
+                  id: `${Date.now()}-meso-carryover-${currentMonthKey}`,
+                  date: toDateStr(currentMonthStart),
+                  currency: "meso",
+                  type: previousMonthMesoNet > 0 ? "income" : "expense",
+                  category: "메소 이월",
+                  amount: Math.abs(previousMonthMesoNet),
+                  memo: `지난달 메소 정산 이월 (${formatDetailedUnit(Math.abs(previousMonthMesoNet), "메소")})`
+                };
+
+                loadedTransactions = [carryoverTx, ...loadedTransactions];
+                localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(loadedTransactions));
+              }
+
+              localStorage.setItem(STORAGE_KEYS.MONTHLY_MESO_CARRYOVER, currentMonthKey);
+            }
+          }
+
+          setTransactions(loadedTransactions);
+
           const goalsSaved = localStorage.getItem(STORAGE_KEYS.GOALS);
           if (goalsSaved) setGoals(JSON.parse(goalsSaved));
           const charsSaved = localStorage.getItem(STORAGE_KEYS.CHARACTERS);
