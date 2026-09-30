@@ -646,7 +646,7 @@ function getMvpDefaultFee(mvpGrade) {
       return formatDetailedUnit(n, unit);
     }
 
-    function StatCard({ icon, label, value, carryoverValue = 0, unit, tone, isMeso, mesoSettlement }) {
+    function StatCard({ icon, label, value, unit, tone, isMeso, mesoSettlement }) {
       const cleanVal = (Number(value) || 0) === 0 ? 0 : value;
       const [mesoValueInput, setMesoValueInput] = useState("");
 
@@ -667,14 +667,8 @@ function getMvpDefaultFee(mvpGrade) {
         <div className={`ml-stat-card ${tone}`}>
           <div className="ml-stat-icon">{icon}</div>
           <div className="ml-stat-label">{label}</div>
-          {carryoverValue !== 0 && (
-            <div style={{ fontSize: "12px", color: "var(--ink-soft)", lineHeight: 1.7, marginTop: "2px", marginBottom: "2px", textAlign: "left" }}>
-              <div>이월{tone === "expense" ? "지출" : "수입"} : {formatDetailedUnit(carryoverValue, unit)}</div>
-              <div>이번 달 {tone === "expense" ? "지출" : "수입"} : {formatDetailedUnit(cleanVal, unit)}</div>
-            </div>
-          )}
           <div className="ml-stat-value" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "4px" }}>
-            <span>{formatDetailedUnit(carryoverValue !== 0 ? carryoverValue + cleanVal : cleanVal, unit)}</span>
+            <span>{formatDetailedUnit(cleanVal, unit)}</span>
             {mesoSettlement && (
               <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontFamily: "'Inter', sans-serif" }}>
                 <input 
@@ -804,60 +798,13 @@ function getMvpDefaultFee(mvpGrade) {
             if (!Array.isArray(loadedTransactions)) loadedTransactions = [];
           }
 
-          // 매월 1일 00:00 이후 앱을 열면 지난달의 현금/메소/조각 순정산액을
-          // 각각 "OO 이월" 내역으로 자동 추가한다.
-          // 이월 내역에는 carryover: true를 표시하여 목표 달성률 계산에서는 제외한다.
-          const now = new Date();
-          const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          const currentMonthKey = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
-          const processedMonth = localStorage.getItem("ledger:monthly_settlement_carryover");
-
-          if (now.getDate() === 1 && processedMonth !== currentMonthKey) {
-            const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
-            const prevStartStr = toDateStr(previousMonthStart);
-            const prevEndStr = toDateStr(previousMonthEnd);
-
-            const carryoverDefs = [
-              { currency: "cash", category: "현금 이월" },
-              { currency: "meso", category: "메소 이월" },
-              { currency: "piece", category: "조각 이월" }
-            ];
-
-            const carryoverTransactions = [];
-            carryoverDefs.forEach(def => {
-              const net = loadedTransactions
-                .filter(t => t.currency === def.currency && t.date >= prevStartStr && t.date < prevEndStr && !t.carryover)
-                .reduce((sum, t) => sum + (t.type === "income" ? (Number(t.amount) || 0) : -(Number(t.amount) || 0)), 0);
-
-              if (net !== 0) {
-                carryoverTransactions.push({
-                  id: `${Date.now()}-${def.currency}-carryover-${currentMonthKey}`,
-                  date: toDateStr(currentMonthStart),
-                  currency: def.currency,
-                  type: net > 0 ? "income" : "expense",
-                  category: def.category,
-                  amount: Math.abs(net),
-                  memo: "지난달 정산 자동 이월",
-                  carryover: true
-                });
-              }
-            });
-
-            if (carryoverTransactions.length > 0) {
-              loadedTransactions = [...carryoverTransactions, ...loadedTransactions];
-              localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(loadedTransactions));
-            }
-            localStorage.setItem("ledger:monthly_settlement_carryover", currentMonthKey);
-          }
-
-          // 이전 버전에서 만들어진 이월 내역도 자동 이월로 인식한다.
-          // 이월 내역은 수입/지출 내역에는 그대로 남기되, 정산 및 목표 계산에서는 제외한다.
-          loadedTransactions = loadedTransactions.map(t =>
-            (typeof t.category === "string" && t.category.endsWith(" 이월") && t.carryover !== true)
-              ? { ...t, carryover: true }
-              : t
-          );
+          // 기존 버전에서 생성된 자동 이월 항목은 더 이상 사용하지 않는다.
+          // 실제 거래 내역만 남기고, 현금/메소/조각 정산은 전체 누적값으로 계산한다.
+          loadedTransactions = loadedTransactions.filter(t => {
+            if (t && t.carryover === true) return false;
+            if (t && typeof t.category === "string" && t.category.endsWith(" 이월")) return false;
+            return true;
+          });
           localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(loadedTransactions));
 
           setTransactions(loadedTransactions);
@@ -1885,37 +1832,25 @@ function getMvpDefaultFee(mvpGrade) {
       const rangeTx = useMemo(() => transactions.filter(t => t.date >= range.start && t.date <= range.end), [transactions, range]);
       const sumFor = (list, currency, type) => list.filter(t => t.currency === currency && t.type === type).reduce((s, t) => s + (Number(t.amount) || 0), 0);
 
-      // 메인 탭에서는 이월금을 "이번 기간의 수입/지출"과 분리해서 표시한다.
-      // 따라서 9월 28일 ~ 10월 2일처럼 월이 걸치는 기간에서도
-      // 실제 10월 수입과 9월에서 넘어온 이월금을 합쳐서 "이번 달 수입"으로 보이지 않게 한다.
+      // 수입/지출은 선택한 기간 기준으로 표시한다.
+      // 이월 기능은 사용하지 않으므로 별도의 이월 금액을 만들거나 분리하지 않는다.
       const summary = {
-        cashIncome: sumFor(rangeTx.filter(t => !t.carryover), "cash", "income"),
-        cashExpense: sumFor(rangeTx.filter(t => !t.carryover), "cash", "expense"),
-        mesoIncome: sumFor(rangeTx.filter(t => !t.carryover), "meso", "income"),
-        mesoExpense: sumFor(rangeTx.filter(t => !t.carryover), "meso", "expense"),
-        pieceIncome: sumFor(rangeTx.filter(t => !t.carryover), "piece", "income"),
-        pieceExpense: sumFor(rangeTx.filter(t => !t.carryover), "piece", "expense"),
+        cashIncome: sumFor(rangeTx, "cash", "income"),
+        cashExpense: sumFor(rangeTx, "cash", "expense"),
+        mesoIncome: sumFor(rangeTx, "meso", "income"),
+        mesoExpense: sumFor(rangeTx, "meso", "expense"),
+        pieceIncome: sumFor(rangeTx, "piece", "income"),
+        pieceExpense: sumFor(rangeTx, "piece", "expense"),
       };
 
-      const carryoverSummary = {
-        cashIncome: sumFor(rangeTx, "cash", "income") - summary.cashIncome,
-        cashExpense: sumFor(rangeTx, "cash", "expense") - summary.cashExpense,
-        mesoIncome: sumFor(rangeTx, "meso", "income") - summary.mesoIncome,
-        mesoExpense: sumFor(rangeTx, "meso", "expense") - summary.mesoExpense,
-        pieceIncome: sumFor(rangeTx, "piece", "income") - summary.pieceIncome,
-        pieceExpense: sumFor(rangeTx, "piece", "expense") - summary.pieceExpense,
-      };
-
-      // 정산 금액은 실제 수입/지출만 계산한다.
-      // 자동 이월은 내역에는 표시되지만, 이미 지난달 정산에 포함됐던 금액이므로
-      // 이번 달 정산에서 다시 더해지지 않도록 제외한다.
-      const settlementTransactions = transactions.filter(t => !t.carryover);
+      // 현금/메소/조각 정산은 월이 바뀌어도 초기화하지 않고 전체 거래를 계속 누적한다.
+      const settlementTransactions = transactions;
       const totalCashNet = sumFor(settlementTransactions, "cash", "income") - sumFor(settlementTransactions, "cash", "expense");
       const totalMesoNet = sumFor(settlementTransactions, "meso", "income") - sumFor(settlementTransactions, "meso", "expense");
       const totalPieceNet = sumFor(settlementTransactions, "piece", "income") - sumFor(settlementTransactions, "piece", "expense");
 
-      // 목표 달성률은 일반 수입/지출만 반영하고, 자동 이월 내역은 제외한다.
-      const goalTransactions = transactions.filter(t => !t.carryover);
+      // 목표 달성률도 실제 거래 내역 전체를 기준으로 계산한다.
+      const goalTransactions = transactions;
       const goalCashNet = sumFor(goalTransactions, "cash", "income") - sumFor(goalTransactions, "cash", "expense");
       const goalMesoNet = sumFor(goalTransactions, "meso", "income") - sumFor(goalTransactions, "meso", "expense");
       const goalPieceNet = sumFor(goalTransactions, "piece", "income") - sumFor(goalTransactions, "piece", "expense");
@@ -2146,7 +2081,6 @@ function getMvpDefaultFee(mvpGrade) {
                       icon="💳" 
                       label="현금 총수입" 
                       value={summary.cashIncome} 
-                      carryoverValue={carryoverSummary.cashIncome}
                       unit="원" 
                       tone="income" 
                     />
@@ -2154,7 +2088,6 @@ function getMvpDefaultFee(mvpGrade) {
                       icon="💳" 
                       label="현금 총지출" 
                       value={summary.cashExpense} 
-                      carryoverValue={carryoverSummary.cashExpense}
                       unit="원" 
                       tone="expense" 
                     />
@@ -2172,7 +2105,6 @@ function getMvpDefaultFee(mvpGrade) {
                       icon="💰" 
                       label="메소 총수입" 
                       value={summary.mesoIncome} 
-                      carryoverValue={carryoverSummary.mesoIncome}
                       unit="메소" 
                       tone="income" 
                       isMeso={true} 
@@ -2181,7 +2113,6 @@ function getMvpDefaultFee(mvpGrade) {
                       icon="💰" 
                       label="메소 총지출" 
                       value={summary.mesoExpense} 
-                      carryoverValue={carryoverSummary.mesoExpense}
                       unit="메소" 
                       tone="expense" 
                       isMeso={true} 
@@ -2202,7 +2133,6 @@ function getMvpDefaultFee(mvpGrade) {
                       icon="🧩" 
                       label="조각 총수입" 
                       value={summary.pieceIncome} 
-                      carryoverValue={carryoverSummary.pieceIncome}
                       unit="개" 
                       tone="income" 
                     />
@@ -2210,7 +2140,6 @@ function getMvpDefaultFee(mvpGrade) {
                       icon="🧩" 
                       label="조각 총지출" 
                       value={summary.pieceExpense} 
-                      carryoverValue={carryoverSummary.pieceExpense}
                       unit="개" 
                       tone="expense" 
                     />
