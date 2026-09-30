@@ -1843,8 +1843,11 @@ function getMvpDefaultFee(mvpGrade) {
         pieceExpense: sumFor(rangeTx, "piece", "expense"),
       };
 
-      // 현금/메소/조각 정산은 월이 바뀌어도 초기화하지 않고 전체 거래를 계속 누적한다.
-      const settlementTransactions = transactions;
+      // 정산금액은 현재 날짜가 선택 기간에 포함되어 있으면 현재 누적값을 그대로 표시한다.
+      // 과거 기간만 선택하면 해당 기간의 거래내역만으로 정산금액을 계산한다.
+      const todayForSettlement = todayStr();
+      const includesToday = range.start <= todayForSettlement && todayForSettlement <= range.end;
+      const settlementTransactions = includesToday ? transactions : rangeTx;
       const totalCashNet = sumFor(settlementTransactions, "cash", "income") - sumFor(settlementTransactions, "cash", "expense");
       const totalMesoNet = sumFor(settlementTransactions, "meso", "income") - sumFor(settlementTransactions, "meso", "expense");
       const totalPieceNet = sumFor(settlementTransactions, "piece", "income") - sumFor(settlementTransactions, "piece", "expense");
