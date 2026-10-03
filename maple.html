@@ -246,39 +246,40 @@ function getMvpDefaultFee(mvpGrade) {
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
     .ml-panel-compact {
-      padding: 16px 18px;
+      padding: 10px 12px;
     }
     .ml-panel h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; margin: 0 0 14px; color: var(--ink); }
-    .ml-panel-compact h2 { font-size: 16px; margin: 0 0 10px; }
+    .ml-panel-compact h2 { display: none; }
 
     .ml-empty { font-size: 13px; color: var(--ink-soft); margin: 0; padding: 12px 0; }
 
-    .ml-range-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .ml-range-head { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 6px; min-height: 0; }
     .ml-range-reset {
-      font-size: 11px; font-weight: 600; color: var(--ink-soft); background: none;
-      border: 1px solid var(--line); border-radius: 14px; padding: 3px 10px; cursor: pointer;
+      font-size: 10px; font-weight: 600; color: var(--ink-soft); background: none;
+      border: 1px solid var(--line); border-radius: 12px; padding: 2px 8px; cursor: pointer;
       transition: all 0.2s ease;
     }
     .ml-range-reset:hover { border-color: var(--gold); color: var(--ink); background: #FFF; }
-    .ml-range-row { display: flex; align-items: center; gap: 10px; }
+    .ml-range-row { display: flex; align-items: center; gap: 7px; }
     .ml-range-row input {
-      flex: 1; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 12px;
-      border: 1px solid var(--line); border-radius: 10px; background: #FFF; color: var(--ink);
+      flex: 1; font-family: 'Inter', sans-serif; font-size: 12px; padding: 6px 9px;
+      border: 1px solid var(--line); border-radius: 9px; background: #FFF; color: var(--ink);
     }
 
     .ml-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .ml-stat-card {
       background: var(--paper); border: 1px solid var(--line);
-      border-left: 4px solid var(--ink-soft); border-radius: 14px; padding: 11px 14px;
+      border-left: 4px solid var(--ink-soft); border-radius: 16px; padding: 16px 18px;
+      min-height: 116px; height: 116px; box-sizing: border-box;
       box-shadow: 0 2px 10px rgba(0,0,0,0.04);
       transition: transform 0.2s ease;
     }
     .ml-stat-card:hover { transform: translateY(-2px); }
     .ml-stat-card.income { border-left-color: var(--income); }
     .ml-stat-card.expense { border-left-color: var(--expense); }
-    .ml-stat-icon { font-size: 18px; margin-bottom: 6px; }
-    .ml-stat-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
-    .ml-stat-value { font-family: 'Fraunces', serif; font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; }
+    .ml-stat-icon { font-size: 16px; margin-bottom: 7px; line-height: 1; }
+    .ml-stat-label { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
+    .ml-stat-value { font-family: 'Fraunces', serif; font-variant-numeric: tabular-nums; font-size: 21px; font-weight: 600; }
     .ml-stat-card.income .ml-stat-value { color: var(--income); }
     .ml-stat-card.expense .ml-stat-value { color: var(--expense); }
     .ml-stat-unit { font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; margin-left: 3px; color: var(--ink-soft); }
@@ -507,11 +508,6 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-backup-btn:hover {
       transform: translateY(-1px);
     }
-
-    .ml-mepo-input-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
-    .ml-mepo-input-grid > div { min-width:0; }
-    .ml-mepo-input-grid span { display:block; font-size:11px; color:var(--ink-soft); font-weight:600; margin-bottom:5px; }
-    .ml-mepo-input-grid input { width:100%; font-family:'Inter',sans-serif; font-size:13px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#FFF; color:var(--ink); }
   </style>
 </head>
 
@@ -529,8 +525,7 @@ function getMvpDefaultFee(mvpGrade) {
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
-      meso: { expense: ["메포구매", "강화", "아이템 구매", "도핑", "대출"], income: ["보스", "메포판매", "메소구매", "재획", "대출", "아이템 판매"] },
-      mepo: { expense: ["에픽던전", "몬스터파크", "기타"], income: [] },
+      meso: { expense: ["강화", "아이템 구매", "도핑", "대출", "메포구매"], income: ["보스", "메포판매", "재획", "대출", "아이템 판매"] },
       piece: { expense: ["스킬강화", "아이템 판매"], income: ["재획", "아이템 구매"] },
     };
 
@@ -658,7 +653,7 @@ function getMvpDefaultFee(mvpGrade) {
     function formatKoreanCurrency(numStr, currency) {
       const n = parseInt(numStr.replace(/,/g, ""), 10);
       if (isNaN(n) || n === 0) return "";
-      const unit = currency === "cash" ? "원" : currency === "meso" ? "메소" : currency === "mepo" ? "메포" : "개";
+      const unit = currency === "cash" ? "원" : currency === "meso" ? "메소" : "개";
       return formatDetailedUnit(n, unit);
     }
 
@@ -680,8 +675,17 @@ function getMvpDefaultFee(mvpGrade) {
         return mesoEokDisplay * rate;
       }, [mesoValueInput, mesoEokDisplay, mesoSettlement]);
 
+      const statIcon = label.startsWith("현금")
+        ? (label.includes("정산") ? "🧾" : "💳")
+        : label.startsWith("메소")
+          ? (label.includes("정산") ? "🧾" : "💰")
+          : label.startsWith("조각")
+            ? (label.includes("정산") ? "🧾" : "🧩")
+            : "📊";
+
       return (
         <div className={`ml-stat-card ${tone} ${statColorClass}`}>
+          <div className="ml-stat-icon">{statIcon}</div>
           <div className="ml-stat-label">{label}</div>
           <div className="ml-stat-value" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "4px" }}>
             <span>{formatDetailedUnit(cleanVal, unit)}</span>
@@ -710,7 +714,7 @@ function getMvpDefaultFee(mvpGrade) {
 
     function TxRow({ t, onDelete, compact }) {
       const isIncome = t.type === "income";
-      const unitLabel = t.currency === "cash" ? "원" : t.currency === "meso" ? "메소" : t.currency === "mepo" ? "메포" : "개";
+      const unitLabel = t.currency === "cash" ? "원" : t.currency === "meso" ? "메소" : "개";
       return (
         <div className={`ml-tx-row ${compact ? "ml-tx-row-compact" : ""}`}>
           <div className="ml-tx-icon">{isIncome ? "📈" : "📉"}</div>
@@ -741,7 +745,7 @@ function getMvpDefaultFee(mvpGrade) {
       const [splitInput, setSplitInput] = useState({ salePrice: "", partyCount: "3", feePercent: "3" });
 
       const [transactions, setTransactions] = useState([]);
-      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0, tradeType: "교환거래", mepoAmount: "" });
+      const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0, tradeType: "교환거래" });
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
       
@@ -895,6 +899,8 @@ function getMvpDefaultFee(mvpGrade) {
         if (!isFeeApplicableCategory) return 0;
         return form.feeRate;
       }, [isFeeApplicableCategory, form.feeRate]);
+
+      const isMepoTradeCategory = form.currency === "meso" && (form.category.trim() === "메포구매" || form.category.trim() === "메포판매");
 
       const saveGoals = (nextGoals) => {
         setGoals(nextGoals);
@@ -1752,28 +1758,12 @@ function getMvpDefaultFee(mvpGrade) {
       }, []);
 
       const addTransaction = useCallback(() => {
-        const rawAmt = Number(form.amount);
-        if (!rawAmt || rawAmt <= 0) return;
-
-        const rawMepo = Number(String(form.mepoAmount || "").replace(/,/g, ""));
+        const rawInputAmt = Number(form.amount);
+        if (!rawInputAmt || rawInputAmt <= 0) return;
         const tradeCategory = form.category.trim();
-        if ((form.currency === "meso" && form.type === "income" && tradeCategory === "메포판매") ||
-            (form.currency === "meso" && form.type === "expense" && tradeCategory === "메포구매")) {
-          if (rawAmt <= 0 || rawMepo <= 0) return;
-          const now = Date.now(), memo = form.memo.trim(), txs = [];
-          if (form.type === "income" && tradeCategory === "메포판매") {
-            // 메소 수입 + 메포 지출
-            txs.push({ id:`${now}-meso-${Math.random().toString(36).slice(2,7)}`, date:form.date, currency:"meso", type:"income", category:"메포판매", amount:rawAmt, memo:`${memo}${memo?" · ":""}${rawMepo.toLocaleString("ko-KR")} 메포 판매` });
-            txs.push({ id:`${now}-mepo-${Math.random().toString(36).slice(2,7)}`, date:form.date, currency:"mepo", type:"expense", category:"메포판매", amount:rawMepo, memo:`${memo}${memo?" · ":""}${rawAmt.toLocaleString("ko-KR")} 메소 수령` });
-          } else {
-            // 메소 지출 + 메포 수입
-            txs.push({ id:`${now}-meso-${Math.random().toString(36).slice(2,7)}`, date:form.date, currency:"meso", type:"expense", category:"메포구매", amount:rawAmt, memo:`${memo}${memo?" · ":""}${rawMepo.toLocaleString("ko-KR")} 메포 구매` });
-            txs.push({ id:`${now}-mepo-${Math.random().toString(36).slice(2,7)}`, date:form.date, currency:"mepo", type:"income", category:"메포구매", amount:rawMepo, memo:`${memo}${memo?" · ":""}${rawAmt.toLocaleString("ko-KR")} 메소 사용` });
-          }
-          persistTransactions([...txs, ...transactions]);
-          setForm(f=>({...f,amount:"",mepoAmount:"",memo:"",category:""}));
-          return;
-        }
+        const rawAmt = (form.currency === "meso" && (tradeCategory === "메포구매" || tradeCategory === "메포판매"))
+          ? rawInputAmt * 100000000
+          : rawInputAmt;
 
         const isMesoTradeCategory = form.currency === "meso" && form.type === "income" && (form.category.trim() === "아이템 판매" || form.category.trim() === "대출");
         const auctionDeposit = isMesoTradeCategory && form.tradeType === "경매장 거래" ? 2000 : 0;
@@ -1877,8 +1867,6 @@ function getMvpDefaultFee(mvpGrade) {
         mesoExpense: sumFor(rangeTx, "meso", "expense"),
         pieceIncome: sumFor(rangeTx, "piece", "income"),
         pieceExpense: sumFor(rangeTx, "piece", "expense"),
-        mepoIncome: sumFor(rangeTx, "mepo", "income"),
-        mepoExpense: sumFor(rangeTx, "mepo", "expense"),
       };
 
       // 정산금액은 현재 날짜가 선택 기간에 포함되어 있으면 현재 누적값을 그대로 표시한다.
@@ -1889,7 +1877,6 @@ function getMvpDefaultFee(mvpGrade) {
       const totalCashNet = sumFor(settlementTransactions, "cash", "income") - sumFor(settlementTransactions, "cash", "expense");
       const totalMesoNet = sumFor(settlementTransactions, "meso", "income") - sumFor(settlementTransactions, "meso", "expense");
       const totalPieceNet = sumFor(settlementTransactions, "piece", "income") - sumFor(settlementTransactions, "piece", "expense");
-      const totalMepoNet = sumFor(settlementTransactions, "mepo", "income") - sumFor(settlementTransactions, "mepo", "expense");
 
       // 목표 달성률도 실제 거래 내역 전체를 기준으로 계산한다.
       const goalTransactions = transactions;
@@ -1925,7 +1912,6 @@ function getMvpDefaultFee(mvpGrade) {
           cash: { name: "현금 (KRW)", currency: "cash", net: 0, categoryMap: {} },
           meso: { name: "메소", currency: "meso", net: 0, categoryMap: {} },
           piece: { name: "조각 (Pieces)", currency: "piece", net: 0, categoryMap: {} },
-          mepo: { name: "메포", currency: "mepo", net: 0, categoryMap: {} }
         };
 
         filteredHistory.forEach(t => {
@@ -2185,11 +2171,6 @@ function getMvpDefaultFee(mvpGrade) {
                         unit="개" 
                         tone={totalPieceNet >= 0 ? "income" : "expense"} 
                       />
-                    </div>
-                    <StatCard label="메포 총수입" value={summary.mepoIncome} unit="메포" tone="income" />
-                    <StatCard label="메포 총지출" value={summary.mepoExpense} unit="메포" tone="expense" />
-                    <div style={{ gridColumn: "1 / -1" }}>
-                      <StatCard label="메포 정산" value={totalMepoNet} unit="메포" tone={totalMepoNet >= 0 ? "income" : "expense"} />
                     </div>
                   </div>
                 </section>
@@ -2531,7 +2512,6 @@ function getMvpDefaultFee(mvpGrade) {
                       <div className="ml-seg">
                         <button className={form.currency === "cash" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "cash", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>💳 현금</button>
                         <button className={form.currency === "meso" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "meso", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>💰 메소</button>
-                        <button className={form.currency === "mepo" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "mepo", category: "", mepoAmount: "", feeRate: 0 }))}>🎟️ 메포</button>
                         <button className={form.currency === "piece" ? "active" : ""} onClick={() => setForm(f => ({ ...f, currency: "piece", category: "", feeRate: ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade) ? 3 : 0 }))}>🧩 조각</button>
                       </div>
                     </div>
@@ -2631,22 +2611,13 @@ function getMvpDefaultFee(mvpGrade) {
                         </div>
                       </div>
                     )}
-
-                    {((form.currency === "meso" && form.type === "income" && form.category.trim() === "메포판매") || (form.currency === "meso" && form.type === "expense" && form.category.trim() === "메포구매")) ? (
+                    {!(form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매")) && (
                       <div className="ml-form-row">
-                        <label>거래 금액</label>
-                        <div className="ml-mepo-input-grid">
-                          <div><span>금액 (메소)</span><input type="text" inputMode="numeric" placeholder="0" value={form.amount ? Number(form.amount).toLocaleString("ko-KR") : ""} onChange={e => { const v=e.target.value.replace(/,/g, ""); if (/^\d*$/.test(v)) setForm(f=>({...f,amount:v})); }} /></div>
-                          <div><span>메포</span><input type="text" inputMode="numeric" placeholder="0" value={form.mepoAmount ? Number(form.mepoAmount).toLocaleString("ko-KR") : ""} onChange={e => { const v=e.target.value.replace(/,/g, ""); if (/^\d*$/.test(v)) setForm(f=>({...f,mepoAmount:v})); }} /></div>
-                        </div>
-                      </div>
-                    ) : !(form.currency === "cash" && (form.category === "메소구매" || form.category === "메소판매")) && (
-                      <div className="ml-form-row">
-                        <label>금액 ({form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : form.currency === "mepo" ? "메포" : "개"})</label>
+                        <label>금액 ({isMepoTradeCategory ? "억 메소" : form.currency === "cash" ? "원" : form.currency === "meso" ? "메소" : "개"})</label>
                         <input 
                           type="text" 
                           inputMode="numeric" 
-                          placeholder="0" 
+                          placeholder={isMepoTradeCategory ? "예: 1 = 1억" : "0"} 
                           value={isDopingCategory ? dopingTotalAmount.toLocaleString("ko-KR") : (form.amount ? Number(form.amount).toLocaleString("ko-KR") : "")} 
                           readOnly={isDopingCategory}
                           onChange={e => {
@@ -2657,8 +2628,13 @@ function getMvpDefaultFee(mvpGrade) {
                         />
                         {(form.amount || isDopingCategory) && (
                           <div className="ml-korean-amount">
-                            {formatKoreanCurrency(isDopingCategory ? String(dopingTotalAmount) : form.amount, form.currency)}
+                            {isMepoTradeCategory
+                              ? `${formatDetailedUnit(Number(form.amount || 0) * 100000000, "메소")}`
+                              : formatKoreanCurrency(isDopingCategory ? String(dopingTotalAmount) : form.amount, form.currency)}
                           </div>
+                        )}
+                        {isMepoTradeCategory && (
+                          <div style={{ marginTop: "5px", fontSize: "11px", color: "var(--ink-soft)" }}>1 입력 = 1억 메소</div>
                         )}
                       </div>
                     )}
@@ -2758,7 +2734,7 @@ function getMvpDefaultFee(mvpGrade) {
 
                     <div className="ml-filter-row">
                       <select value={historyFilter.currency} onChange={e => setHistoryFilter(f => ({ ...f, currency: e.target.value }))}>
-                        <option value="all">전체 통화</option><option value="cash">현금</option><option value="meso">메소</option><option value="mepo">메포</option><option value="piece">조각</option>
+                        <option value="all">전체 통화</option><option value="cash">현금</option><option value="meso">메소</option><option value="piece">조각</option>
                       </select>
                       <select value={historyFilter.type} onChange={e => setHistoryFilter(f => ({ ...f, type: e.target.value }))}>
                         <option value="all">전체 유형</option><option value="expense">지출</option><option value="income">수입</option>
@@ -2777,7 +2753,7 @@ function getMvpDefaultFee(mvpGrade) {
                     {historyView === "category" && currencyRootGroupedHistory.map(root => {
                       const rootKey = root.currency;
                       const isRootCollapsed = !!collapsedCurrencyRoots[rootKey];
-                      const rootUnitLabel = root.currency === "cash" ? "원" : root.currency === "meso" ? "메소" : root.currency === "mepo" ? "메포" : "개";
+                      const rootUnitLabel = root.currency === "cash" ? "원" : root.currency === "meso" ? "메소" : "개";
 
                       return (
                         <div key={rootKey}>
