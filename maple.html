@@ -22,7 +22,7 @@ function getMvpDefaultFee(mvpGrade) {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
 
-    body { margin: 0; background: #243326; }
+    body { margin: 0; background: var(--ledger-bg, #243326); }
     
     .ml-root {
       --bg: #243326;
@@ -34,6 +34,8 @@ function getMvpDefaultFee(mvpGrade) {
       --income: #437A4B;
       --expense: #B84730;
       --gold: #D4A337;
+      --button-bg: #3F5241;
+      --button-text: #F7F3EB;
 
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -45,7 +47,7 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-root * { box-sizing: border-box; }
 
     .ml-content-area {
-      max-width: 680px;
+      max-width: 720px;
       width: 100%;
       margin: 0 auto;
     }
@@ -68,7 +70,7 @@ function getMvpDefaultFee(mvpGrade) {
       box-shadow: 0 8px 30px rgba(0,0,0,0.25);
     }
     .ml-calc-toggle-btn {
-      background: #3F5241; color: var(--paper); border: none;
+      background: var(--button-bg); color: var(--button-text); border: none;
       padding: 10px 14px; font-size: 13px; font-weight: 600; border-radius: 24px; cursor: pointer;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; width: 100%;
       transition: all 0.2s ease;
@@ -95,7 +97,7 @@ function getMvpDefaultFee(mvpGrade) {
       gap: 10px;
     }
     .ml-goal-toggle-btn {
-      background: #3F5241; color: var(--paper); border: none;
+      background: var(--button-bg); color: var(--button-text); border: none;
       padding: 10px 16px; font-size: 13px; font-weight: 600; border-radius: 24px; cursor: pointer;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; width: fit-content;
       transition: all 0.2s ease;
@@ -187,7 +189,7 @@ function getMvpDefaultFee(mvpGrade) {
       white-space: nowrap;
       transition: all 0.2s ease;
     }
-    .ml-backup-btn:hover { border-color: var(--gold); background: #FFF; }
+    .ml-backup-btn:hover { border-color: var(--gold); background: var(--paper); }
     .ml-backup-actions {
       display: flex;
       align-items: center;
@@ -236,7 +238,7 @@ function getMvpDefaultFee(mvpGrade) {
     }
     .ml-tab.active { color: var(--paper); border-bottom-color: var(--gold); background: rgba(255,255,255,0.05); }
 
-    .ml-page { display: flex; flex-direction: column; gap: 16px; }
+    .ml-page { display: flex; flex-direction: column; gap: 12px; }
 
     .ml-panel {
       background: var(--paper);
@@ -259,27 +261,51 @@ function getMvpDefaultFee(mvpGrade) {
       border: 1px solid var(--line); border-radius: 12px; padding: 2px 8px; cursor: pointer;
       transition: all 0.2s ease;
     }
-    .ml-range-reset:hover { border-color: var(--gold); color: var(--ink); background: #FFF; }
+    .ml-range-reset:hover { border-color: var(--gold); color: var(--ink); background: var(--paper); }
     .ml-range-row { display: flex; align-items: center; gap: 7px; }
     .ml-range-row input {
       flex: 1; font-family: 'Inter', sans-serif; font-size: 12px; padding: 6px 9px;
-      border: 1px solid var(--line); border-radius: 9px; background: #FFF; color: var(--ink);
+      border: 1px solid var(--line); border-radius: 9px; background: var(--paper); color: var(--ink);
     }
 
-    .ml-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    /* 메인 탭 요약 카드: 참고 이미지와 동일한 비율/간격 */
+    .ml-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
     .ml-stat-card {
-      background: var(--paper); border: 1px solid var(--line);
-      border-left: 4px solid var(--ink-soft); border-radius: 16px; padding: 16px 18px;
-      min-height: 116px; height: 116px; box-sizing: border-box;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--ink-soft);
+      border-radius: 14px;
+      padding: 12px 14px;
+      min-height: 100px;
+      height: 100px;
+      box-sizing: border-box;
       box-shadow: 0 2px 10px rgba(0,0,0,0.04);
       transition: transform 0.2s ease;
     }
     .ml-stat-card:hover { transform: translateY(-2px); }
     .ml-stat-card.income { border-left-color: var(--income); }
     .ml-stat-card.expense { border-left-color: var(--expense); }
-    .ml-stat-icon { font-size: 16px; margin-bottom: 7px; line-height: 1; }
-    .ml-stat-label { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
-    .ml-stat-value { font-family: 'Fraunces', serif; font-variant-numeric: tabular-nums; font-size: 21px; font-weight: 600; }
+    .ml-stat-icon {
+      font-size: 14px;
+      margin-bottom: 5px;
+      line-height: 1;
+    }
+    .ml-stat-label {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .ml-stat-value {
+      font-family: 'Fraunces', serif;
+      font-variant-numeric: tabular-nums;
+      font-size: 20px;
+      font-weight: 600;
+    }
     .ml-stat-card.income .ml-stat-value { color: var(--income); }
     .ml-stat-card.expense .ml-stat-value { color: var(--expense); }
     .ml-stat-unit { font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; margin-left: 3px; color: var(--ink-soft); }
@@ -299,7 +325,7 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-form-row label { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
     .ml-form-row input, .ml-filter-row select {
       font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px 12px;
-      border: 1px solid var(--line); border-radius: 10px; background: #FFF; color: var(--ink);
+      border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink);
       width: 100%; min-width: 0;
       transition: border-color 0.2s ease;
     }
@@ -310,7 +336,7 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-seg { display: flex; gap: 8px; }
     .ml-seg button {
       flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 10px; border: 1px solid var(--line); background: #FFF; color: var(--ink-soft);
+      padding: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft);
       border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -320,20 +346,20 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-seg button.active.expense { background: var(--expense); border-color: var(--expense); color: #FFF; }
     
     .ml-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 14px; }
-    .ml-chip { font-size: 12px; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--line); background: #FFF; color: var(--ink-soft); cursor: pointer; font-weight: 500; transition: all 0.2s ease; }
+    .ml-chip { font-size: 12px; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); cursor: pointer; font-weight: 500; transition: all 0.2s ease; }
     .ml-chip:hover { border-color: var(--gold); color: var(--ink); background: var(--paper-soft); }
 
-    .ml-calc { background: #EFE6D2; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 16px; }
+    .ml-calc { background: var(--paper-soft); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 16px; }
     .ml-calc-title { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 10px; }
     .ml-calc-row { display: flex; align-items: center; gap: 8px; width: 100%; }
-    .ml-calc-row input { flex: 1; min-width: 0; font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #FFF; }
+    .ml-calc-row input { flex: 1; min-width: 0; font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
     .ml-calc-result { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 13px; color: var(--ink); }
     .ml-calc-apply { font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
     .ml-calc-apply:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
     .ml-calc-apply:disabled { opacity: 0.4; cursor: default; }
 
     .ml-calc-screen {
-      background: #FFF; border: 1px solid var(--line); border-radius: 12px;
+      background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
       padding: 10px 14px; margin-bottom: 12px; text-align: right;
     }
     .ml-calc-expression {
@@ -346,25 +372,25 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-calc-keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .ml-calc-btn {
       padding: 11px; font-size: 14px; font-weight: 600; border: 1px solid var(--line);
-      background: #FFF; color: var(--ink); border-radius: 10px; cursor: pointer;
+      background: var(--paper); color: var(--ink); border-radius: 10px; cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease;
     }
-    .ml-calc-btn:hover { background: #F4EEDC; border-color: var(--gold); }
-    .ml-calc-btn.op { background: #E2D7C2; color: var(--ink); }
+    .ml-calc-btn:hover { background: var(--paper-soft); border-color: var(--gold); }
+    .ml-calc-btn.op { background: var(--paper-soft); color: var(--ink); }
     .ml-calc-btn.action { background: var(--ink); color: #F7F3EB; border-color: var(--ink); }
 
     .ml-filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .ml-filter-row select { flex: 1; }
     .ml-view-toggle { margin-bottom: 16px; }
 
-    .ml-currency-root-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #E5DCB8; border: 1px solid var(--line); border-radius: 12px; margin-top: 12px; cursor: pointer; user-select: none; font-weight: 700; transition: background 0.2s ease; }
+    .ml-currency-root-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--paper-soft); border: 1px solid var(--line); border-radius: 12px; margin-top: 12px; cursor: pointer; user-select: none; font-weight: 700; transition: background 0.2s ease; }
     .ml-currency-root-header:hover { background: #DDD3AC; }
     .ml-currency-root-name { font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
     .ml-currency-root-total { font-size: 15px; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
     .ml-currency-root-total.income { color: var(--income); }
     .ml-currency-root-total.expense { color: var(--expense); }
 
-    .ml-group-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px 12px 22px; background: #EFE6D2; border-top: 1px solid var(--line); cursor: pointer; user-select: none; border-radius: 8px; margin-top: 4px; }
+    .ml-group-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px 12px 22px; background: var(--paper-soft); border-top: 1px solid var(--line); cursor: pointer; user-select: none; border-radius: 8px; margin-top: 4px; }
     .ml-group-header:hover { background: #E5DCC6; }
     .ml-group-name { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
     .ml-group-total { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
@@ -380,7 +406,7 @@ function getMvpDefaultFee(mvpGrade) {
 
     .ml-tx-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-top: 1px solid #E6DCC4; }
     .ml-tx-row:first-child { border-top: none; }
-    .ml-tx-row-compact { padding: 8px 8px 8px 48px; border-top: none; background: #FFF; border-bottom: 1px solid #EFEADC; border-radius: 8px; margin-bottom: 2px; }
+    .ml-tx-row-compact { padding: 8px 8px 8px 48px; border-top: none; background: var(--paper); border-bottom: 1px solid #EFEADC; border-radius: 8px; margin-bottom: 2px; }
     .ml-tx-icon { font-size: 15px; flex-shrink: 0; }
     .ml-tx-main { flex: 1; min-width: 0; }
     .ml-tx-top { display: flex; justify-content: space-between; gap: 8px; }
@@ -404,17 +430,17 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-submit:hover { background: #3E3227; transform: translateY(-1px); }
 
     .ml-boss-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-    .ml-boss-table th { background: #EFE6D2; padding: 10px; text-align: left; border-bottom: 2px solid var(--line); color: var(--ink); font-weight: 600; }
+    .ml-boss-table th { background: var(--paper-soft); padding: 10px; text-align: left; border-bottom: 2px solid var(--line); color: var(--ink); font-weight: 600; }
     .ml-boss-table th:first-child { border-top-left-radius: 10px; }
     .ml-boss-table th:last-child { border-top-right-radius: 10px; }
-    .ml-boss-table td { padding: 10px; border-bottom: 1px solid #E6DCC4; vertical-align: middle; background: #FFF; }
+    .ml-boss-table td { padding: 10px; border-bottom: 1px solid #E6DCC4; vertical-align: middle; background: var(--paper); }
     .ml-boss-diffs { display: flex; flex-wrap: wrap; gap: 6px; }
-    .ml-boss-diff-label { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; cursor: pointer; background: #F7F3EB; padding: 5px 9px; border: 1px solid var(--line); border-radius: 8px; transition: all 0.2s ease; }
+    .ml-boss-diff-label { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--paper); padding: 5px 9px; border: 1px solid var(--line); border-radius: 8px; transition: all 0.2s ease; }
     .ml-boss-diff-label:hover { border-color: var(--gold); }
     .ml-boss-diff-label input { accent-color: var(--income); }
     .ml-boss-diff-label.disabled { opacity: 0.4; cursor: not-allowed; background: #EBE5D3; }
-    .ml-boss-party-select { padding: 6px 8px; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; background: #FFF; }
-    .ml-boss-total-bar { display: flex; justify-content: space-between; align-items: center; background: #EFE6D2; padding: 14px; border-radius: 12px; margin-bottom: 14px; font-weight: 700; flex-wrap: wrap; gap: 10px; border: 1px solid var(--line); }
+    .ml-boss-party-select { padding: 6px 8px; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+    .ml-boss-total-bar { display: flex; justify-content: space-between; align-items: center; background: var(--paper-soft); padding: 14px; border-radius: 12px; margin-bottom: 14px; font-weight: 700; flex-wrap: wrap; gap: 10px; border: 1px solid var(--line); }
 
     .ml-toast {
       position: fixed;
@@ -439,7 +465,7 @@ function getMvpDefaultFee(mvpGrade) {
     }
   
     .grind-settlement-box { margin-bottom: 16px; }
-    .grind-settlement-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: #EFE6D2; color: var(--ink); cursor: pointer; font-size: 13px; font-weight: 700; text-align: left; transition: background 0.2s; }
+    .grind-settlement-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-soft); color: var(--ink); cursor: pointer; font-size: 13px; font-weight: 700; text-align: left; transition: background 0.2s; }
     .grind-settlement-toggle:hover { background: #E5DCC6; }
 
 
@@ -508,6 +534,51 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-backup-btn:hover {
       transform: translateY(-1px);
     }
+
+    /* 사용자 테마 편집기 */
+    .ml-theme-wrap { position: relative; }
+    .ml-theme-btn {
+      font-family: 'Inter', sans-serif; font-size: 12px; padding: 7px 12px;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--paper);
+      color: var(--ink); font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: all .2s ease;
+    }
+    .ml-theme-btn:hover { border-color: var(--gold); transform: translateY(-1px); }
+    .ml-theme-popover {
+      position: absolute; top: calc(100% + 8px); right: 0; width: 330px; max-height: 75vh;
+      overflow-y: auto; padding: 15px; background: var(--paper); border: 1px solid var(--line);
+      border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 1500;
+    }
+    .ml-theme-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .ml-theme-subtitle { font-size: 10px; color: var(--ink-soft); margin-bottom: 12px; line-height: 1.45; }
+    .ml-theme-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 14px; }
+    .ml-theme-preset {
+      display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid var(--line);
+      border-radius: 10px; background: var(--paper); color: var(--ink); cursor: pointer; font-size: 10px; font-weight: 600;
+      text-align: left; transition: all .15s ease;
+    }
+    .ml-theme-preset:hover { border-color: var(--gold); transform: translateY(-1px); }
+    .ml-theme-preset.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(212,163,55,.14); }
+    .ml-theme-preset-preview { width: 24px; height: 24px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(0,0,0,.12); }
+    .ml-theme-section-title { font-size: 11px; font-weight: 700; color: var(--ink); margin: 10px 0 7px; }
+    .ml-theme-color-row {
+      display: grid; grid-template-columns: 74px 36px 1fr; align-items: center; gap: 7px;
+      padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.05);
+    }
+    .ml-theme-color-row:last-child { border-bottom: 0; }
+    .ml-theme-label { font-size: 10px; color: var(--ink-soft); font-weight: 600; }
+    .ml-theme-color-input { width: 34px; height: 30px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); cursor: pointer; }
+    .ml-theme-hex-input {
+      width: 100%; min-width: 0; font-family: 'Inter', sans-serif; font-size: 11px; padding: 7px 8px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); outline: none;
+    }
+    .ml-theme-hex-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,163,55,.12); }
+    .ml-theme-reset {
+      margin-top: 12px; width: 100%; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px;
+      background: transparent; color: var(--ink-soft); font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+    .ml-theme-reset:hover { border-color: var(--gold); color: var(--ink); background: var(--paper-soft); }
+    @media (max-width: 600px) { .ml-theme-popover { right: -6px; width: min(330px, calc(100vw - 24px)); } }
   </style>
 </head>
 
@@ -521,7 +592,7 @@ function getMvpDefaultFee(mvpGrade) {
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot", THEME_BG: "ledger:theme_bg", THEME_PALETTE: "ledger:theme_palette" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -737,8 +808,90 @@ function getMvpDefaultFee(mvpGrade) {
       );
     }
 
+    const DEFAULT_THEME = {
+      bg: "#243326", paper: "#F7F3EB", paperSoft: "#EFEAD9", ink: "#2C241D",
+      inkSoft: "#7A6D58", line: "#D8CEBC", income: "#437A4B", expense: "#B84730",
+      gold: "#D4A337", buttonBg: "#3F5241", buttonText: "#F7F3EB"
+    };
+
+    const THEME_PRESETS = [
+      { name: "기본", colors: DEFAULT_THEME },
+      { name: "밤하늘", colors: { bg:"#171A24", paper:"#232838", paperSoft:"#2E3447", ink:"#F2F4F8", inkSoft:"#AEB6C8", line:"#424A60", income:"#63C174", expense:"#F06A6A", gold:"#E7B84B", buttonBg:"#3A435A", buttonText:"#F2F4F8" } },
+      { name: "바다", colors: { bg:"#12313A", paper:"#EAF6F7", paperSoft:"#D8EEF0", ink:"#16343A", inkSoft:"#5B7D82", line:"#B9D9DC", income:"#238B74", expense:"#C84E55", gold:"#D6A83A", buttonBg:"#1C6572", buttonText:"#F4FFFF" } },
+      { name: "라벤더", colors: { bg:"#342B45", paper:"#F5F0FA", paperSoft:"#E9DFF2", ink:"#30263B", inkSoft:"#766781", line:"#D4C6DF", income:"#4C936B", expense:"#C95B68", gold:"#B995D1", buttonBg:"#665080", buttonText:"#FFF" } },
+      { name: "벚꽃", colors: { bg:"#4A2935", paper:"#FFF5F6", paperSoft:"#F9E2E7", ink:"#3C242A", inkSoft:"#80646B", line:"#E6C4CB", income:"#4D946B", expense:"#C94B64", gold:"#D29A62", buttonBg:"#8B4A5D", buttonText:"#FFF8FA" } },
+      { name: "민트", colors: { bg:"#203B37", paper:"#EFF8F3", paperSoft:"#DCEFE5", ink:"#20332E", inkSoft:"#60786F", line:"#C2DBCF", income:"#2F8C68", expense:"#C65353", gold:"#C4A34A", buttonBg:"#397466", buttonText:"#F3FFFA" } },
+    ];
+
+    const THEME_FIELDS = [
+      ["bg", "전체 배경"], ["paper", "카드 / 입력창"], ["paperSoft", "보조 배경"], ["ink", "기본 글씨"],
+      ["inkSoft", "보조 글씨"], ["line", "테두리"], ["income", "수입 색상"], ["expense", "지출 색상"],
+      ["gold", "강조 색상"], ["buttonBg", "버튼 배경"], ["buttonText", "버튼 글씨"]
+    ];
+
+    function ThemePicker({ colors, onChange }) {
+      const [open, setOpen] = useState(false);
+      const [hexes, setHexes] = useState(colors);
+      useEffect(() => setHexes(colors), [colors]);
+
+      const applyField = (key, value) => {
+        if (!/^#[0-9A-Fa-f]{6}$/.test(value)) return;
+        const next = { ...colors, [key]: value.toUpperCase() };
+        onChange(next);
+        setHexes(prev => ({ ...prev, [key]: value.toUpperCase() }));
+      };
+      const handleHex = (key, raw) => {
+        let value = raw.trim();
+        if (value && !value.startsWith("#")) value = "#" + value;
+        setHexes(prev => ({ ...prev, [key]: value }));
+        if (/^#[0-9A-Fa-f]{6}$/.test(value)) applyField(key, value);
+      };
+      const applyPreset = (preset) => onChange({ ...preset.colors });
+
+      return (
+        <div className="ml-theme-wrap">
+          <button type="button" className="ml-theme-btn" onClick={() => setOpen(v => !v)}>🎨 테마 편집</button>
+          {open && (
+            <div className="ml-theme-popover">
+              <div className="ml-theme-title">🎨 테마 편집기</div>
+              <div className="ml-theme-subtitle">원하는 색을 선택하거나 HEX 색상값을 직접 입력하세요. 변경 내용은 자동 저장됩니다.</div>
+
+              <div className="ml-theme-section-title">빠른 테마</div>
+              <div className="ml-theme-presets">
+                {THEME_PRESETS.map(preset => (
+                  <button key={preset.name} type="button"
+                    className={`ml-theme-preset ${JSON.stringify(colors) === JSON.stringify(preset.colors) ? "active" : ""}`}
+                    onClick={() => applyPreset(preset)}>
+                    <span className="ml-theme-preset-preview" style={{ background: preset.colors.bg, boxShadow: `inset 0 0 0 5px ${preset.colors.paper}` }} />
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="ml-theme-section-title">세부 색상</div>
+              {THEME_FIELDS.map(([key, label]) => (
+                <div className="ml-theme-color-row" key={key}>
+                  <span className="ml-theme-label">{label}</span>
+                  <input className="ml-theme-color-input" type="color" value={colors[key]} onChange={e => applyField(key, e.target.value)} aria-label={`${label} 색상`} />
+                  <input className="ml-theme-hex-input" value={hexes[key] || colors[key]} onChange={e => handleHex(key, e.target.value)} maxLength={7} placeholder="#000000" aria-label={`${label} HEX 값`} />
+                </div>
+              ))}
+
+              <button type="button" className="ml-theme-reset" onClick={() => applyPreset(THEME_PRESETS[0])}>기본 테마로 초기화</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     function MapleLedger() {
       const [tab, setTab] = useState("dashboard");
+      const [themeColors, setThemeColors] = useState(() => {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.THEME_PALETTE) || "null");
+          return saved ? { ...DEFAULT_THEME, ...saved } : DEFAULT_THEME;
+        } catch (e) { return DEFAULT_THEME; }
+      });
       const [showCalc, setShowCalc] = useState(true);
       const [showSplitCalc, setShowSplitCalc] = useState(false);
       
@@ -770,6 +923,25 @@ function getMvpDefaultFee(mvpGrade) {
       const [grindSnapshotPerChar, setGrindSnapshotPerChar] = useState({});
       const [grindCalc, setGrindCalc] = useState({ startMeso: "", startPiece: "", endMeso: "", endPiece: "" });
       const [showGrindSettlement, setShowGrindSettlement] = useState(false);
+
+      useEffect(() => {
+        const root = document.querySelector(".ml-root");
+        if (root) {
+          const vars = {
+            "--bg": themeColors.bg, "--paper": themeColors.paper, "--paper-soft": themeColors.paperSoft,
+            "--ink": themeColors.ink, "--ink-soft": themeColors.inkSoft, "--line": themeColors.line,
+            "--income": themeColors.income, "--expense": themeColors.expense, "--gold": themeColors.gold,
+            "--button-bg": themeColors.buttonBg, "--button-text": themeColors.buttonText
+          };
+          Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value));
+        }
+        document.documentElement.style.setProperty("--ledger-bg", themeColors.bg);
+        document.body.style.background = themeColors.bg;
+        try {
+          localStorage.setItem(STORAGE_KEYS.THEME_PALETTE, JSON.stringify(themeColors));
+          localStorage.setItem(STORAGE_KEYS.THEME_BG, themeColors.bg);
+        } catch (e) {}
+      }, [themeColors]);
 
       useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -2062,6 +2234,7 @@ function getMvpDefaultFee(mvpGrade) {
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                   <div>
                     <div className="ml-backup-actions">
+                      <ThemePicker colors={themeColors} onChange={setThemeColors} />
                       <button type="button" className="ml-backup-btn" onClick={exportBackup} title="현재 장부 데이터를 JSON 파일로 저장합니다." aria-label="데이터 백업">💾 백업</button>
                       <button type="button" className="ml-backup-btn" onClick={importBackup} title="저장한 JSON 백업 파일로 장부 데이터를 복원합니다." aria-label="데이터 복원">📂 복원</button>
                     </div>
