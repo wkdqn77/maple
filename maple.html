@@ -1004,7 +1004,57 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-root.dark-mode ::-webkit-scrollbar-thumb:hover {
       background: #4A5765;
     }
-  </style>
+  
+    /* 대시보드 편의 기능 */
+    .ml-dashboard-extra-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+    .ml-dashboard-card { background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+    .ml-dashboard-card-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
+    .ml-dashboard-card-head h3 { margin:0; font-size:15px; }
+    .ml-dashboard-link { border:0; background:transparent; color:var(--gold); font-weight:700; cursor:pointer; padding:3px 0; }
+    .ml-dashboard-date { font-size:11px; color:var(--ink-soft); }
+    .ml-recent-item { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:8px; align-items:center; padding:9px 0; border-top:1px solid var(--line); }
+    .ml-recent-main { min-width:0; }
+    .ml-recent-main > div { display:flex; gap:7px; align-items:center; }
+    .ml-recent-main span { font-size:10px; color:var(--ink-soft); }
+    .ml-recent-main small { display:block; color:var(--ink-soft); font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px; }
+    .ml-recent-amount { font-size:12px; font-weight:800; white-space:nowrap; }
+    .ml-recent-amount.income, .ml-today-grid strong.income { color:var(--income); }
+    .ml-recent-amount.expense, .ml-today-grid strong.expense { color:var(--expense); }
+    .ml-recent-actions { display:flex; gap:4px; }
+    .ml-recent-actions button { border:1px solid var(--line); border-radius:7px; background:var(--paper-soft); color:var(--ink); padding:4px 6px; cursor:pointer; font-size:11px; }
+    .ml-recent-actions .ml-recent-delete-btn { color:var(--expense); }
+    .ml-recent-edit { border-top:1px solid var(--line); padding:10px 0; }
+    .ml-recent-edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .ml-recent-edit-grid input { width:100%; box-sizing:border-box; padding:7px 8px; border:1px solid var(--line); border-radius:8px; background:var(--paper-soft); color:var(--ink); }
+    .ml-recent-edit-grid input::placeholder { color:var(--ink-soft); }
+    .ml-recent-save, .ml-recent-cancel { border:1px solid var(--line); border-radius:8px; padding:5px 9px !important; }
+    .ml-recent-save { background:var(--button-bg) !important; color:var(--button-text) !important; }
+    .ml-recent-cancel { background:var(--paper-soft) !important; }
+    .ml-today-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .ml-today-grid > div { background:var(--paper-soft); border:1px solid var(--line); border-radius:10px; padding:10px; min-width:0; }
+    .ml-today-grid span { display:block; color:var(--ink-soft); font-size:10px; margin-bottom:5px; }
+    .ml-today-grid strong { display:block; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ml-boss-dashboard-card { grid-column:1 / -1; }
+    .ml-today-dashboard-card { grid-column:1 / -1; }
+    .ml-boss-dashboard-total { display:flex; justify-content:space-between; align-items:center; background:var(--paper-soft); border:1px solid var(--line); border-radius:10px; padding:9px 11px; margin-bottom:10px; }
+    .ml-boss-dashboard-total span { font-size:10px; color:var(--ink-soft); }
+    .ml-boss-dashboard-total strong { color:var(--income); font-size:15px; }
+    .ml-boss-dashboard-row { display:block; margin:8px 0; }
+    .ml-boss-char { display:flex; align-items:center; justify-content:flex-start; gap:10px; font-size:11px; min-width:0; }
+    .ml-boss-char span { color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ml-boss-char strong { flex:0 0 auto; min-width:54px; max-width:8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ml-boss-dashboard-note { margin-top:9px; color:var(--ink-soft); font-size:10px; }
+    .ml-root.dark-mode .ml-dashboard-card { background:#1d242c; border-color:#35414e; }
+    .ml-root.dark-mode .ml-today-grid > div, .ml-root.dark-mode .ml-boss-dashboard-total, .ml-root.dark-mode .ml-recent-actions button { background:#202832; border-color:#394654; }
+    @media (max-width: 700px) {
+      .ml-dashboard-extra-grid { grid-template-columns:1fr; }
+      .ml-boss-dashboard-card { grid-column:auto; }
+      .ml-today-dashboard-card { grid-column:auto; }
+      .ml-recent-item { grid-template-columns:minmax(0,1fr) auto; }
+      .ml-recent-actions { grid-column:2; grid-row:1 / span 2; }
+      .ml-today-grid { grid-template-columns:1fr; }
+    }
+</style>
 </head>
 
 <!-- MVP fee behavior:
@@ -1246,6 +1296,8 @@ function getMvpDefaultFee(mvpGrade) {
       const [splitInput, setSplitInput] = useState({ salePrice: "", partyCount: "3", feePercent: "3" });
 
       const [transactions, setTransactions] = useState([]);
+      const [editingRecentId, setEditingRecentId] = useState(null);
+      const [recentEditForm, setRecentEditForm] = useState({ date: "", category: "", amount: "", memo: "" });
       const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0, tradeType: "교환거래" });
       const [calc, setCalc] = useState({ mesoEok: "", rate: "" });
       const [pieceCalc, setPieceCalc] = useState({ count: "", rate: "" });
@@ -2385,6 +2437,84 @@ function getMvpDefaultFee(mvpGrade) {
       const totalMesoNet = sumFor(settlementTransactions, "meso", "income") - sumFor(settlementTransactions, "meso", "expense");
       const totalPieceNet = sumFor(settlementTransactions, "piece", "income") - sumFor(settlementTransactions, "piece", "expense");
 
+      // 메인 화면용 오늘 요약 / 최근 기록 / 이번 주 보스 현황
+      const dashboardToday = todayStr();
+      const dashboardWeekRange = getThursdayToWednesdayRange(dashboardToday);
+      const todayTransactions = useMemo(() => transactions.filter(t => t.date === dashboardToday), [transactions, dashboardToday]);
+      const todaySummary = useMemo(() => ({
+        cash: sumFor(todayTransactions, "cash", "income"),
+        meso: sumFor(todayTransactions, "meso", "income"),
+        piece: sumFor(todayTransactions, "piece", "income")
+      }), [todayTransactions]);
+
+      const recentTransactions = useMemo(() => [...transactions].sort((a, b) => {
+        const ad = `${a.date || ""}-${a.id || ""}`;
+        const bd = `${b.date || ""}-${b.id || ""}`;
+        return bd.localeCompare(ad);
+      }).slice(0, 5), [transactions]);
+
+      // 메인 보스 현황: 일반 보스는 목~수 주간 12회 기준, 검은마법사는 별도로 1일~말일 월간 체크
+      const dashboardMonthRange = useMemo(() => ({
+        start: firstDayOfThisMonth(),
+        end: lastDayOfThisMonth()
+      }), [dashboardToday]);
+
+      const weeklyBossDashboard = useMemo(() => {
+        const result = {};
+        characters.forEach(c => { result[c] = { count: 0, total: 0, blackMage: false }; });
+        transactions.forEach(t => {
+          if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return;
+          const char = parseBossCharacter(t.memo);
+          if (!char) return;
+          if (!result[char]) result[char] = { count: 0, total: 0, blackMage: false };
+
+          const memoText = String(t.memo || "");
+          const isBlackMage = memoText.includes("검은마법사");
+          if (isBlackMage) {
+            // 검은마법사는 1일~말일 사이 기록 여부만 별도 표시하고 주간 12회/수익에는 포함하지 않음
+            if (t.date >= dashboardMonthRange.start && t.date <= dashboardMonthRange.end) {
+              result[char].blackMage = true;
+            }
+            return;
+          }
+
+          if (t.date < dashboardWeekRange.start || t.date > dashboardWeekRange.end) return;
+          result[char].count += 1;
+          result[char].total += Number(t.amount) || 0;
+        });
+        return result;
+      }, [transactions, characters, dashboardWeekRange, dashboardMonthRange]);
+
+      const weeklyBossTotalDashboard = useMemo(() =>
+        Object.values(weeklyBossDashboard).reduce((sum, v) => sum + (Number(v.total) || 0), 0),
+        [weeklyBossDashboard]
+      );
+
+      const startRecentEdit = (t) => {
+        setEditingRecentId(t.id);
+        setRecentEditForm({ date: t.date || "", category: t.category || "", amount: String(t.amount ?? ""), memo: t.memo || "" });
+      };
+
+      const cancelRecentEdit = () => {
+        setEditingRecentId(null);
+        setRecentEditForm({ date: "", category: "", amount: "", memo: "" });
+      };
+
+      const saveRecentEdit = () => {
+        if (!editingRecentId) return;
+        const amount = Number(String(recentEditForm.amount).replace(/,/g, ""));
+        if (!recentEditForm.date || !recentEditForm.category.trim() || !amount || amount <= 0) return;
+        const next = transactions.map(t => t.id === editingRecentId ? {
+          ...t,
+          date: recentEditForm.date,
+          category: recentEditForm.category.trim(),
+          amount,
+          memo: recentEditForm.memo.trim()
+        } : t);
+        persistTransactions(next);
+        cancelRecentEdit();
+      };
+
       // 목표 달성률도 실제 거래 내역 전체를 기준으로 계산한다.
       const goalTransactions = transactions;
       const goalCashNet = sumFor(goalTransactions, "cash", "income") - sumFor(goalTransactions, "cash", "expense");
@@ -2689,6 +2819,35 @@ function getMvpDefaultFee(mvpGrade) {
                       />
                     </div>
                   </div>
+
+                  <div className="ml-dashboard-extra-grid">
+                    <div className="ml-dashboard-card ml-today-dashboard-card">
+                      <div className="ml-dashboard-card-head"><h3>📅 오늘 수입</h3><span className="ml-dashboard-date">{dashboardToday}</span></div>
+                      <div className="ml-today-grid">
+                        <div><span>현금</span><strong className="income">+{fmtAmount(todaySummary.cash)}원</strong></div>
+                        <div><span>메소</span><strong className="income">+{fmtMeso(todaySummary.meso)}</strong></div>
+                        <div><span>조각</span><strong className="income">+{fmtAmount(todaySummary.piece)}개</strong></div>
+                      </div>
+                    </div>
+
+                    <div className="ml-dashboard-card ml-boss-dashboard-card">
+                      <div className="ml-dashboard-card-head"><h3>⚔️ 이번 주 보스 현황</h3><button type="button" className="ml-dashboard-link" onClick={() => setTab("boss")}>보스 정산 →</button></div>
+                      <div className="ml-boss-dashboard-total"><span>{dashboardWeekRange.start} ~ {dashboardWeekRange.end}</span><strong>{fmtMeso(weeklyBossTotalDashboard)}</strong></div>
+                      <div className="ml-boss-dashboard-list">
+                        {characters.map(char => {
+                          const d=weeklyBossDashboard[char] || {count:0,total:0,blackMage:false};
+                          const displayChar = String(char).slice(0, 8);
+                          return <div key={char} className="ml-boss-dashboard-row">
+                            <div className="ml-boss-char">
+                              <strong title={char}>{displayChar}</strong>
+                              <span>{d.count}/12 · {fmtMeso(d.total)} 메소{d.blackMage ? " · 검은마법사 ✓" : ""}</span>
+                            </div>
+                          </div>;
+                        })}
+                      </div>
+                      <div className="ml-boss-dashboard-note">보스 정산에서 기록하면 장부의 메소 수입에 자동으로 연결됩니다.</div>
+                    </div>
+                  </div>
                 </section>
               )}
 
@@ -2790,7 +2949,7 @@ function getMvpDefaultFee(mvpGrade) {
                           value={newCharName} 
                           onChange={e => setNewCharName(e.target.value)}
                           onKeyDown={e => { if (e.key === "Enter") addCharacter(); }}
-                          style={{ flex: 1, fontSize: "12px", padding: "8px 10px", background: "#FFF", border: "1px solid var(--line)", borderRadius: "10px" }}
+                          style={{ flex: 1, fontSize: "12px", padding: "8px 10px", background: "#FFF", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: "10px" }}
                         />
                         <button className="ml-calc-apply" onClick={addCharacter} style={{ padding: "8px 14px", fontSize: "12px" }}>캐릭터 추가 ➕</button>
                       </div>
