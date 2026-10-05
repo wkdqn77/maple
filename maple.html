@@ -535,50 +535,475 @@ function getMvpDefaultFee(mvpGrade) {
       transform: translateY(-1px);
     }
 
-    /* 사용자 테마 편집기 */
-    .ml-theme-wrap { position: relative; }
-    .ml-theme-btn {
-      font-family: 'Inter', sans-serif; font-size: 12px; padding: 7px 12px;
-      border: 1px solid var(--line); border-radius: 10px; background: var(--paper);
-      color: var(--ink); font-weight: 600; cursor: pointer; white-space: nowrap;
+    /* 다크모드 */
+    .ml-dark-toggle {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
       transition: all .2s ease;
     }
-    .ml-theme-btn:hover { border-color: var(--gold); transform: translateY(-1px); }
-    .ml-theme-popover {
-      position: absolute; top: calc(100% + 8px); right: 0; width: 330px; max-height: 75vh;
-      overflow-y: auto; padding: 15px; background: var(--paper); border: 1px solid var(--line);
-      border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 1500;
+    .ml-dark-toggle:hover {
+      border-color: var(--gold);
+      transform: translateY(-1px);
     }
-    .ml-theme-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-    .ml-theme-subtitle { font-size: 10px; color: var(--ink-soft); margin-bottom: 12px; line-height: 1.45; }
-    .ml-theme-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 14px; }
-    .ml-theme-preset {
-      display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid var(--line);
-      border-radius: 10px; background: var(--paper); color: var(--ink); cursor: pointer; font-size: 10px; font-weight: 600;
-      text-align: left; transition: all .15s ease;
+
+    .ml-root.dark-mode {
+      --bg: #11151A;
+      --paper: #1B2027;
+      --paper-soft: #242B34;
+      --ink: #EEF2F7;
+      --ink-soft: #AAB4C2;
+      --line: #39434F;
+      --income: #63C77A;
+      --expense: #F06A6A;
+      --gold: #E7B84B;
+      --button-bg: #303A46;
+      --button-text: #F4F7FA;
     }
-    .ml-theme-preset:hover { border-color: var(--gold); transform: translateY(-1px); }
-    .ml-theme-preset.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(212,163,55,.14); }
-    .ml-theme-preset-preview { width: 24px; height: 24px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(0,0,0,.12); }
-    .ml-theme-section-title { font-size: 11px; font-weight: 700; color: var(--ink); margin: 10px 0 7px; }
-    .ml-theme-color-row {
-      display: grid; grid-template-columns: 74px 36px 1fr; align-items: center; gap: 7px;
-      padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.05);
+
+    .ml-root.dark-mode {
+      background: var(--bg);
+      color: var(--ink);
     }
-    .ml-theme-color-row:last-child { border-bottom: 0; }
-    .ml-theme-label { font-size: 10px; color: var(--ink-soft); font-weight: 600; }
-    .ml-theme-color-input { width: 34px; height: 30px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); cursor: pointer; }
-    .ml-theme-hex-input {
-      width: 100%; min-width: 0; font-family: 'Inter', sans-serif; font-size: 11px; padding: 7px 8px;
-      border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); outline: none;
+    .ml-root.dark-mode .ml-header-title { color: var(--paper); }
+    .ml-root.dark-mode .ml-header-title,
+    .ml-root.dark-mode .ml-header-title h1 {
+      color: #EAF0F7 !important;
     }
-    .ml-theme-hex-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,163,55,.12); }
-    .ml-theme-reset {
-      margin-top: 12px; width: 100%; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px;
-      background: transparent; color: var(--ink-soft); font-size: 11px; font-weight: 600; cursor: pointer;
+    .ml-root.dark-mode .ml-header-title span.icon {
+      color: #EAF0F7 !important;
     }
-    .ml-theme-reset:hover { border-color: var(--gold); color: var(--ink); background: var(--paper-soft); }
-    @media (max-width: 600px) { .ml-theme-popover { right: -6px; width: min(330px, calc(100vw - 24px)); } }
+
+    /* 메인 탭 요약 카드의 기존 색상은 다크모드에서도 유지 */
+    .ml-root.dark-mode .ml-stat-card .ml-stat-label,
+    .ml-root.dark-mode .ml-stat-card .ml-stat-unit {
+      color: var(--ink-soft) !important;
+    }
+    .ml-root.dark-mode .ml-stat-card.income .ml-stat-value {
+      color: var(--income) !important;
+    }
+    .ml-root.dark-mode .ml-stat-card.expense .ml-stat-value {
+      color: var(--expense) !important;
+    }
+    .ml-root.dark-mode .ml-stat-card.total-income .ml-stat-label,
+    .ml-root.dark-mode .ml-stat-card.total-income .ml-stat-value,
+    .ml-root.dark-mode .ml-stat-card.total-income .ml-stat-unit {
+      color: #C63D3D !important;
+    }
+    .ml-root.dark-mode .ml-stat-card.total-expense .ml-stat-label,
+    .ml-root.dark-mode .ml-stat-card.total-expense .ml-stat-value,
+    .ml-root.dark-mode .ml-stat-card.total-expense .ml-stat-unit {
+      color: #3F6FB5 !important;
+    }
+    .ml-root.dark-mode .ml-stat-card.settlement .ml-stat-label,
+    .ml-root.dark-mode .ml-stat-card.settlement .ml-stat-value,
+    .ml-root.dark-mode .ml-stat-card.settlement .ml-stat-unit {
+      color: #C79A24 !important;
+    }
+    .ml-root.dark-mode .ml-mvp-box {
+      background: #202831;
+      border-color: #3B4652;
+    }
+    .ml-root.dark-mode .ml-mvp-box label {
+      color: #E8EDF3 !important;
+    }
+    .ml-root.dark-mode .ml-mvp-box select {
+      background: #202831 !important;
+      color: #F2F5F8 !important;
+      border-color: #46515E !important;
+    }
+    .ml-root.dark-mode .ml-tabs {
+      border-bottom-color: #303A45;
+    }
+    .ml-root.dark-mode .ml-tab {
+      color: #9CA8B7;
+    }
+    .ml-root.dark-mode .ml-tab.active {
+      color: #F2F5F8;
+      background: rgba(255,255,255,.06);
+    }
+
+    .ml-root.dark-mode .ml-panel,
+    .ml-root.dark-mode .ml-stat-card,
+    .ml-root.dark-mode .ml-sidebar-calc,
+    .ml-root.dark-mode .ml-goal-floating-box,
+    .ml-root.dark-mode .ml-mini-goal-widget,
+    .ml-root.dark-mode .ml-calc-screen,
+    .ml-root.dark-mode .ml-calc-btn,
+    .ml-root.dark-mode .ml-form-row input,
+    .ml-root.dark-mode .ml-filter-row select,
+    .ml-root.dark-mode .ml-range-row input,
+    .ml-root.dark-mode .ml-seg button,
+    .ml-root.dark-mode .ml-chip,
+    .ml-root.dark-mode .ml-backup-btn,
+    .ml-root.dark-mode .ml-boss-diff-label,
+    .ml-root.dark-mode .ml-boss-party-select,
+    .ml-root.dark-mode .ml-calc-apply {
+      background: var(--paper);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .ml-root.dark-mode .ml-calc,
+    .ml-root.dark-mode .ml-currency-root-header,
+    .ml-root.dark-mode .ml-group-header,
+    .ml-root.dark-mode .ml-chargroup-header,
+    .ml-root.dark-mode .ml-boss-total-bar,
+    .ml-root.dark-mode .grind-settlement-toggle {
+      background: var(--paper-soft);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .ml-root.dark-mode .ml-currency-root-header:hover,
+    .ml-root.dark-mode .ml-group-header:hover,
+    .ml-root.dark-mode .ml-chargroup-header:hover,
+    .ml-root.dark-mode .grind-settlement-toggle:hover {
+      background: #2D3640;
+    }
+
+    .ml-root.dark-mode .ml-chargroup-header {
+      border-top-color: var(--line);
+    }
+
+    .ml-root.dark-mode .ml-tx-row {
+      border-top-color: #303943;
+    }
+    .ml-root.dark-mode .ml-tx-row-compact {
+      background: var(--paper);
+      border-bottom-color: #303943;
+    }
+
+    .ml-root.dark-mode .ml-boss-table th {
+      background: var(--paper-soft);
+      color: var(--ink);
+      border-bottom-color: var(--line);
+    }
+    .ml-root.dark-mode .ml-boss-table td {
+      background: var(--paper);
+      color: var(--ink);
+      border-bottom-color: #303943;
+    }
+
+    .ml-root.dark-mode .ml-mini-bar-bg {
+      background: #303943;
+    }
+
+    .ml-root.dark-mode .ml-mvp-box select {
+      background: var(--paper);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .ml-root.dark-mode .ml-calc-btn.op {
+      background: var(--paper-soft);
+      color: var(--ink);
+    }
+    .ml-root.dark-mode .ml-calc-btn.action,
+    .ml-root.dark-mode .ml-seg button.active {
+      background: #E7EDF3;
+      color: #11151A;
+      border-color: #E7EDF3;
+    }
+    .ml-root.dark-mode .ml-seg button.active.income {
+      background: var(--income);
+      color: #0E1711;
+      border-color: var(--income);
+    }
+    .ml-root.dark-mode .ml-seg button.active.expense {
+      background: var(--expense);
+      color: #1A0D0D;
+      border-color: var(--expense);
+    }
+
+    .ml-root.dark-mode .ml-submit,
+    .ml-root.dark-mode .ml-calc-toggle-btn,
+    .ml-root.dark-mode .ml-goal-toggle-btn {
+      background: var(--button-bg);
+      color: var(--button-text);
+    }
+
+    .ml-root.dark-mode .ml-submit:hover,
+    .ml-root.dark-mode .ml-calc-toggle-btn:hover,
+    .ml-root.dark-mode .ml-goal-toggle-btn:hover {
+      background: #3A4653;
+    }
+
+    .ml-root.dark-mode .ml-backup-help {
+      color: #8996A5;
+    }
+
+    .ml-root.dark-mode input::placeholder,
+    .ml-root.dark-mode textarea::placeholder {
+      color: #778392;
+    }
+
+    .ml-root.dark-mode .ml-range-reset {
+      color: var(--ink-soft);
+      border-color: var(--line);
+    }
+    .ml-root.dark-mode .ml-range-reset:hover {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .ml-root.dark-mode .ml-chip:hover {
+      background: var(--paper-soft);
+    }
+
+    .ml-root.dark-mode .ml-toast {
+      background: #EEF2F7;
+      color: #11151A;
+    }
+
+    @media (max-width: 600px) {
+      .ml-dark-toggle { padding: 7px 10px; }
+    }
+
+    /* 다크모드: 인라인으로 지정된 캐릭터/보스 영역까지 보정 */
+    .ml-root.dark-mode div[style*="#EFE6D2"],
+    .ml-root.dark-mode div[style*="#EFE6D2"] > div {
+      background-color: var(--paper-soft) !important;
+      color: var(--ink) !important;
+    }
+    .ml-root.dark-mode div[style*="#FFF"],
+    .ml-root.dark-mode div[style*="#FFF5F6"],
+    .ml-root.dark-mode div[style*="#F0EAD9"] {
+      background-color: var(--paper) !important;
+      color: var(--ink) !important;
+    }
+    .ml-root.dark-mode button[style*="#FFF"],
+    .ml-root.dark-mode button[style*="#FFF5F6"] {
+      background-color: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .ml-root.dark-mode .ml-panel [style*="background: #EFE6D2"],
+    .ml-root.dark-mode .ml-panel [style*="background: "#EFE6D2""] {
+      background-color: var(--paper-soft) !important;
+    }
+
+    /* 다크모드: 캐릭터 선택/관리 영역의 인라인 배경 강제 보정 */
+    .ml-root.dark-mode .ml-panel > div[style],
+    .ml-root.dark-mode .ml-panel div[style*="EFE6D2"],
+    .ml-root.dark-mode .ml-panel div[style*="rgb(239, 230, 210)"],
+    .ml-root.dark-mode .ml-panel div[style*="rgb(239,230,210)"] {
+      background: var(--paper-soft) !important;
+      background-color: var(--paper-soft) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    /* 위 영역 안의 밝은 인라인 버튼/입력도 다크톤으로 통일 */
+    .ml-root.dark-mode .ml-panel > div[style] button[style],
+    .ml-root.dark-mode .ml-panel > div[style] input[style],
+    .ml-root.dark-mode .ml-panel > div[style] select[style] {
+      background: var(--paper) !important;
+      background-color: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    /* 다크모드: 하드코딩된 밝은 색상까지 최종 보정 */
+    .ml-root.dark-mode input,
+    .ml-root.dark-mode select,
+    .ml-root.dark-mode textarea {
+      background-color: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+      color-scheme: dark;
+    }
+
+    .ml-root.dark-mode option {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+    }
+
+    .ml-root.dark-mode button {
+      color: var(--ink);
+    }
+
+    .ml-root.dark-mode .ml-backup-btn,
+    .ml-root.dark-mode .ml-dark-toggle,
+    .ml-root.dark-mode .ml-range-reset,
+    .ml-root.dark-mode .ml-calc-apply,
+    .ml-root.dark-mode .ml-boss-diff-label,
+    .ml-root.dark-mode .ml-boss-party-select,
+    .ml-root.dark-mode .ml-chip {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    .ml-root.dark-mode .ml-calc-display,
+    .ml-root.dark-mode .ml-calc-expression {
+      color: var(--ink) !important;
+    }
+
+    .ml-root.dark-mode .ml-calc-btn {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    .ml-root.dark-mode .ml-calc-btn.op {
+      background: var(--paper-soft) !important;
+      color: var(--ink) !important;
+    }
+
+    .ml-root.dark-mode .ml-calc-btn.action {
+      background: #E8EDF2 !important;
+      color: #11151A !important;
+      border-color: #E8EDF2 !important;
+    }
+
+    .ml-root.dark-mode .ml-calc-screen {
+      background: #151A20 !important;
+      border-color: var(--line) !important;
+    }
+
+    .ml-root.dark-mode .ml-calc-row input,
+    .ml-root.dark-mode .ml-calc input {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+    }
+
+    .ml-root.dark-mode .ml-meso-value-input,
+    .ml-root.dark-mode input[placeholder="메소값"] {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    .ml-root.dark-mode .ml-korean-amount {
+      color: var(--income) !important;
+    }
+
+    .ml-root.dark-mode .ml-empty,
+    .ml-root.dark-mode .ml-stat-label,
+    .ml-root.dark-mode .ml-tx-date,
+    .ml-root.dark-mode .ml-tx-memo,
+    .ml-root.dark-mode .ml-tx-unit,
+    .ml-root.dark-mode .ml-theme-label {
+      color: var(--ink-soft) !important;
+    }
+
+    .ml-root.dark-mode .ml-currency-root-header,
+    .ml-root.dark-mode .ml-group-header,
+    .ml-root.dark-mode .ml-chargroup-header,
+    .ml-root.dark-mode .ml-boss-total-bar,
+    .ml-root.dark-mode .grind-settlement-toggle {
+      box-shadow: none !important;
+    }
+
+    /* 기존 인라인 흰색 배경을 사용하는 요소 보정 */
+    .ml-root.dark-mode [style*="background: #FFF"],
+    .ml-root.dark-mode [style*="background:#FFF"],
+    .ml-root.dark-mode [style*="background: '#FFF'"],
+    .ml-root.dark-mode [style*='background: "#FFF"'] {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+    }
+
+    /* 하드코딩된 밝은 인라인 배경 전체 보정 */
+    .ml-root.dark-mode [style*="background: #FFF"],
+    .ml-root.dark-mode [style*="background:#FFF"],
+    .ml-root.dark-mode [style*="background: #fff"],
+    .ml-root.dark-mode [style*="background:#fff"],
+    .ml-root.dark-mode [style*="background: rgb(255, 255, 255)"],
+    .ml-root.dark-mode [style*="background-color: #FFF"],
+    .ml-root.dark-mode [style*="background-color:#FFF"],
+    .ml-root.dark-mode [style*="background-color: #fff"],
+    .ml-root.dark-mode [style*="background-color:#fff"] {
+      background: var(--paper) !important;
+      color: var(--ink);
+    }
+
+    .ml-root.dark-mode [style*="background: #EFE6D2"],
+    .ml-root.dark-mode [style*="background:#EFE6D2"],
+    .ml-root.dark-mode [style*="background: #EFEAD9"],
+    .ml-root.dark-mode [style*="background:#EFEAD9"],
+    .ml-root.dark-mode [style*="background: #F0EAD9"],
+    .ml-root.dark-mode [style*="background:#F0EAD9"],
+    .ml-root.dark-mode [style*="background: #EAE0CD"],
+    .ml-root.dark-mode [style*="background:#EAE0CD"] {
+      background: var(--paper-soft) !important;
+      color: var(--ink);
+    }
+
+    /* 간편 계산기 결과 복사 버튼 - 인라인 style 직렬화 여부와 관계없이 강제 적용 */
+    .ml-root.dark-mode .ml-sidebar-calc .ml-calc-screen button {
+      background: #2A323C !important;
+      color: #F3F6FA !important;
+      border: 1px solid #4A5664 !important;
+      box-shadow: none !important;
+    }
+    .ml-root.dark-mode .ml-sidebar-calc .ml-calc-screen button:hover {
+      background: #36414D !important;
+      color: #FFFFFF !important;
+    }
+
+    .ml-root.dark-mode [style*="background: #F7F3EB"],
+    .ml-root.dark-mode [style*="background:#F7F3EB"],
+    .ml-root.dark-mode [style*="background: #f7f3eb"],
+    .ml-root.dark-mode [style*="background:#f7f3eb"] {
+      background: var(--paper) !important;
+      color: var(--ink);
+    }
+
+    /* 통계/목록의 밝은 결과 카드 */
+    .ml-root.dark-mode .ml-stat-card,
+    .ml-root.dark-mode .ml-stat-card > div,
+    .ml-root.dark-mode .ml-empty-card,
+    .ml-root.dark-mode .ml-record-card,
+    .ml-root.dark-mode .ml-result-card {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    /* 캡처 영역은 실제 화면과 달리 흰 배경이 필요한 경우가 있으므로
+       다크모드 화면 자체에서는 어둡게 보이도록 보정 */
+    .ml-root.dark-mode #split-result-capture-area {
+      background: var(--paper) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    .ml-root.dark-mode #split-result-capture-area * {
+      color: inherit;
+    }
+
+    .ml-root.dark-mode .ml-toast {
+      background: #E8EDF2 !important;
+      color: #11151A !important;
+    }
+
+    .ml-root.dark-mode ::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+
+    .ml-root.dark-mode ::-webkit-scrollbar-track {
+      background: #14191F;
+    }
+
+    .ml-root.dark-mode ::-webkit-scrollbar-thumb {
+      background: #3A4652;
+      border-radius: 10px;
+      border: 2px solid #14191F;
+    }
+
+    .ml-root.dark-mode ::-webkit-scrollbar-thumb:hover {
+      background: #4A5765;
+    }
   </style>
 </head>
 
@@ -592,7 +1017,7 @@ function getMvpDefaultFee(mvpGrade) {
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot", THEME_BG: "ledger:theme_bg", THEME_PALETTE: "ledger:theme_palette" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot", DARK_MODE: "ledger:dark_mode" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -808,89 +1233,12 @@ function getMvpDefaultFee(mvpGrade) {
       );
     }
 
-    const DEFAULT_THEME = {
-      bg: "#243326", paper: "#F7F3EB", paperSoft: "#EFEAD9", ink: "#2C241D",
-      inkSoft: "#7A6D58", line: "#D8CEBC", income: "#437A4B", expense: "#B84730",
-      gold: "#D4A337", buttonBg: "#3F5241", buttonText: "#F7F3EB"
-    };
-
-    const THEME_PRESETS = [
-      { name: "기본", colors: DEFAULT_THEME },
-      { name: "밤하늘", colors: { bg:"#171A24", paper:"#232838", paperSoft:"#2E3447", ink:"#F2F4F8", inkSoft:"#AEB6C8", line:"#424A60", income:"#63C174", expense:"#F06A6A", gold:"#E7B84B", buttonBg:"#3A435A", buttonText:"#F2F4F8" } },
-      { name: "바다", colors: { bg:"#12313A", paper:"#EAF6F7", paperSoft:"#D8EEF0", ink:"#16343A", inkSoft:"#5B7D82", line:"#B9D9DC", income:"#238B74", expense:"#C84E55", gold:"#D6A83A", buttonBg:"#1C6572", buttonText:"#F4FFFF" } },
-      { name: "라벤더", colors: { bg:"#342B45", paper:"#F5F0FA", paperSoft:"#E9DFF2", ink:"#30263B", inkSoft:"#766781", line:"#D4C6DF", income:"#4C936B", expense:"#C95B68", gold:"#B995D1", buttonBg:"#665080", buttonText:"#FFF" } },
-      { name: "벚꽃", colors: { bg:"#4A2935", paper:"#FFF5F6", paperSoft:"#F9E2E7", ink:"#3C242A", inkSoft:"#80646B", line:"#E6C4CB", income:"#4D946B", expense:"#C94B64", gold:"#D29A62", buttonBg:"#8B4A5D", buttonText:"#FFF8FA" } },
-      { name: "민트", colors: { bg:"#203B37", paper:"#EFF8F3", paperSoft:"#DCEFE5", ink:"#20332E", inkSoft:"#60786F", line:"#C2DBCF", income:"#2F8C68", expense:"#C65353", gold:"#C4A34A", buttonBg:"#397466", buttonText:"#F3FFFA" } },
-    ];
-
-    const THEME_FIELDS = [
-      ["bg", "전체 배경"], ["paper", "카드 / 입력창"], ["paperSoft", "보조 배경"], ["ink", "기본 글씨"],
-      ["inkSoft", "보조 글씨"], ["line", "테두리"], ["income", "수입 색상"], ["expense", "지출 색상"],
-      ["gold", "강조 색상"], ["buttonBg", "버튼 배경"], ["buttonText", "버튼 글씨"]
-    ];
-
-    function ThemePicker({ colors, onChange }) {
-      const [open, setOpen] = useState(false);
-      const [hexes, setHexes] = useState(colors);
-      useEffect(() => setHexes(colors), [colors]);
-
-      const applyField = (key, value) => {
-        if (!/^#[0-9A-Fa-f]{6}$/.test(value)) return;
-        const next = { ...colors, [key]: value.toUpperCase() };
-        onChange(next);
-        setHexes(prev => ({ ...prev, [key]: value.toUpperCase() }));
-      };
-      const handleHex = (key, raw) => {
-        let value = raw.trim();
-        if (value && !value.startsWith("#")) value = "#" + value;
-        setHexes(prev => ({ ...prev, [key]: value }));
-        if (/^#[0-9A-Fa-f]{6}$/.test(value)) applyField(key, value);
-      };
-      const applyPreset = (preset) => onChange({ ...preset.colors });
-
-      return (
-        <div className="ml-theme-wrap">
-          <button type="button" className="ml-theme-btn" onClick={() => setOpen(v => !v)}>🎨 테마 편집</button>
-          {open && (
-            <div className="ml-theme-popover">
-              <div className="ml-theme-title">🎨 테마 편집기</div>
-              <div className="ml-theme-subtitle">원하는 색을 선택하거나 HEX 색상값을 직접 입력하세요. 변경 내용은 자동 저장됩니다.</div>
-
-              <div className="ml-theme-section-title">빠른 테마</div>
-              <div className="ml-theme-presets">
-                {THEME_PRESETS.map(preset => (
-                  <button key={preset.name} type="button"
-                    className={`ml-theme-preset ${JSON.stringify(colors) === JSON.stringify(preset.colors) ? "active" : ""}`}
-                    onClick={() => applyPreset(preset)}>
-                    <span className="ml-theme-preset-preview" style={{ background: preset.colors.bg, boxShadow: `inset 0 0 0 5px ${preset.colors.paper}` }} />
-                    {preset.name}
-                  </button>
-                ))}
-              </div>
-
-              <div className="ml-theme-section-title">세부 색상</div>
-              {THEME_FIELDS.map(([key, label]) => (
-                <div className="ml-theme-color-row" key={key}>
-                  <span className="ml-theme-label">{label}</span>
-                  <input className="ml-theme-color-input" type="color" value={colors[key]} onChange={e => applyField(key, e.target.value)} aria-label={`${label} 색상`} />
-                  <input className="ml-theme-hex-input" value={hexes[key] || colors[key]} onChange={e => handleHex(key, e.target.value)} maxLength={7} placeholder="#000000" aria-label={`${label} HEX 값`} />
-                </div>
-              ))}
-
-              <button type="button" className="ml-theme-reset" onClick={() => applyPreset(THEME_PRESETS[0])}>기본 테마로 초기화</button>
-            </div>
-          )}
-        </div>
-      );
-    }
-
     function MapleLedger() {
       const [tab, setTab] = useState("dashboard");
-      const [themeColors, setThemeColors] = useState(() => {
+      const [darkMode, setDarkMode] = useState(() => {
         try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.THEME_PALETTE) || "null");
-          return saved ? { ...DEFAULT_THEME, ...saved } : DEFAULT_THEME;
-        } catch (e) { return DEFAULT_THEME; }
+          return localStorage.getItem(STORAGE_KEYS.DARK_MODE) === "true";
+        } catch (e) { return false; }
       });
       const [showCalc, setShowCalc] = useState(true);
       const [showSplitCalc, setShowSplitCalc] = useState(false);
@@ -925,23 +1273,10 @@ function getMvpDefaultFee(mvpGrade) {
       const [showGrindSettlement, setShowGrindSettlement] = useState(false);
 
       useEffect(() => {
-        const root = document.querySelector(".ml-root");
-        if (root) {
-          const vars = {
-            "--bg": themeColors.bg, "--paper": themeColors.paper, "--paper-soft": themeColors.paperSoft,
-            "--ink": themeColors.ink, "--ink-soft": themeColors.inkSoft, "--line": themeColors.line,
-            "--income": themeColors.income, "--expense": themeColors.expense, "--gold": themeColors.gold,
-            "--button-bg": themeColors.buttonBg, "--button-text": themeColors.buttonText
-          };
-          Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value));
-        }
-        document.documentElement.style.setProperty("--ledger-bg", themeColors.bg);
-        document.body.style.background = themeColors.bg;
         try {
-          localStorage.setItem(STORAGE_KEYS.THEME_PALETTE, JSON.stringify(themeColors));
-          localStorage.setItem(STORAGE_KEYS.THEME_BG, themeColors.bg);
+          localStorage.setItem(STORAGE_KEYS.DARK_MODE, String(darkMode));
         } catch (e) {}
-      }, [themeColors]);
+      }, [darkMode]);
 
       useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -2221,7 +2556,7 @@ function getMvpDefaultFee(mvpGrade) {
       };
 
       return (
-        <div className="ml-root">
+        <div className={`ml-root ${darkMode ? "dark-mode" : ""}`}>
           <div className="ml-content-area">
             <header className="ml-header">
               <div className="ml-header-top">
@@ -2234,7 +2569,15 @@ function getMvpDefaultFee(mvpGrade) {
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                   <div>
                     <div className="ml-backup-actions">
-                      <ThemePicker colors={themeColors} onChange={setThemeColors} />
+                      <button
+                        type="button"
+                        className="ml-dark-toggle"
+                        onClick={() => setDarkMode(v => !v)}
+                        title={darkMode ? "밝은 모드로 전환" : "다크모드로 전환"}
+                        aria-label={darkMode ? "밝은 모드로 전환" : "다크모드로 전환"}
+                      >
+                        {darkMode ? "☀️ 밝은 모드" : "🌙 다크모드"}
+                      </button>
                       <button type="button" className="ml-backup-btn" onClick={exportBackup} title="현재 장부 데이터를 JSON 파일로 저장합니다." aria-label="데이터 백업">💾 백업</button>
                       <button type="button" className="ml-backup-btn" onClick={importBackup} title="저장한 JSON 백업 파일로 장부 데이터를 복원합니다." aria-label="데이터 복원">📂 복원</button>
                     </div>
