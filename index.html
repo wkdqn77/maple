@@ -1046,6 +1046,57 @@ function getMvpDefaultFee(mvpGrade) {
     .ml-boss-dashboard-note { margin-top:9px; color:var(--ink-soft); font-size:10px; }
     .ml-root.dark-mode .ml-dashboard-card { background:#1d242c; border-color:#35414e; }
     .ml-root.dark-mode .ml-today-grid > div, .ml-root.dark-mode .ml-boss-dashboard-total, .ml-root.dark-mode .ml-recent-actions button { background:#202832; border-color:#394654; }
+
+    /* 휴지통 */
+    .ml-tx-edit {
+      border:1px solid var(--line); background:var(--button-bg); color:var(--button-text);
+      border-radius:8px; padding:5px 7px; font-size:11px; cursor:pointer;
+    }
+    .ml-tx-edit:hover { transform:translateY(-1px); }
+
+    .ml-trash-header {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:12px;
+    }
+    .ml-trash-count {
+      font-size:11px; color:var(--ink-soft); font-weight:600;
+      background:var(--paper-soft); border:1px solid var(--line);
+      border-radius:999px; padding:5px 9px;
+    }
+    .ml-trash-item {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 0; border-top:1px solid var(--line);
+    }
+    .ml-trash-item:first-child { border-top:none; }
+    .ml-trash-main { flex:1; min-width:0; }
+    .ml-trash-top {
+      display:flex; justify-content:space-between; gap:8px; align-items:center;
+    }
+    .ml-trash-category { font-size:13px; font-weight:700; color:var(--ink); }
+    .ml-trash-date { font-size:11px; color:var(--ink-soft); white-space:nowrap; }
+    .ml-trash-meta { font-size:11px; color:var(--ink-soft); margin-top:3px; }
+    .ml-trash-amount { font-size:13px; font-weight:700; white-space:nowrap; }
+    .ml-trash-amount.income { color:var(--income); }
+    .ml-trash-amount.expense { color:var(--expense); }
+    .ml-trash-actions { display:flex; gap:6px; flex-shrink:0; }
+    .ml-trash-restore {
+      border:1px solid var(--line); background:var(--button-bg); color:var(--button-text);
+      border-radius:9px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer;
+    }
+    .ml-trash-restore:hover { transform:translateY(-1px); }
+    .ml-trash-note {
+      margin:0 0 12px; padding:9px 11px; border-radius:10px;
+      background:var(--paper-soft); color:var(--ink-soft); font-size:11px; line-height:1.45;
+      border:1px solid var(--line);
+    }
+    .ml-root.dark-mode .ml-trash-count,
+    .ml-root.dark-mode .ml-trash-note { background:var(--paper-soft); color:var(--ink-soft); }
+    @media (max-width: 600px) {
+      .ml-trash-item { align-items:flex-start; }
+      .ml-trash-top { flex-direction:column; align-items:flex-start; gap:3px; }
+      .ml-trash-actions { align-self:center; }
+    }
+
     @media (max-width: 700px) {
       .ml-dashboard-extra-grid { grid-template-columns:1fr; }
       .ml-boss-dashboard-card { grid-column:auto; }
@@ -1067,7 +1118,7 @@ function getMvpDefaultFee(mvpGrade) {
   <script type="text/babel">
     const { useState, useCallback, useMemo, useEffect } = React;
 
-    const STORAGE_KEYS = { TX: "ledger:transactions", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot", DARK_MODE: "ledger:dark_mode" };
+    const STORAGE_KEYS = { TX: "ledger:transactions", TRASH: "ledger:trash", GOALS: "ledger:goals_data", API_KEY: "ledger:nexon_api_key", MVP: "ledger:mvp_grade", CHARACTERS: "ledger:characters", BOSS_STATE: "ledger:boss_selections", AUTO_BOSS_WEEK: "ledger:auto_boss_week", LAST_BOSS_DATA: "ledger:last_boss_data", GRIND_SNAPSHOT: "ledger:grind_snapshot", DARK_MODE: "ledger:dark_mode" };
 
     const CATEGORY_SUGGESTIONS = {
       cash: { expense: ["메소구매", "캐시구매", "아이템 구매"], income: ["메소판매", "아이템 판매"] },
@@ -1258,7 +1309,7 @@ function getMvpDefaultFee(mvpGrade) {
       );
     }
 
-    function TxRow({ t, onDelete, compact }) {
+    function TxRow({ t, onDelete, onEdit, compact }) {
       const isIncome = t.type === "income";
       const unitLabel = t.currency === "cash" ? "원" : t.currency === "meso" ? "메소" : "개";
       return (
@@ -1276,8 +1327,20 @@ function getMvpDefaultFee(mvpGrade) {
             {fmtAmount(t.amount)}
             <span className="ml-tx-unit">{unitLabel}</span>
           </div>
-          {onDelete && (
-            <button className="ml-tx-delete" onClick={onDelete} title="삭제">🗑️</button>
+          {(onEdit || onDelete) && (
+            <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
+              {onEdit && (
+                <button
+                  type="button"
+                  className="ml-tx-edit"
+                  onClick={onEdit}
+                  title="수정"
+                >✏️</button>
+              )}
+              {onDelete && (
+                <button className="ml-tx-delete" onClick={onDelete} title="삭제">🗑️</button>
+              )}
+            </div>
           )}
         </div>
       );
@@ -1296,6 +1359,7 @@ function getMvpDefaultFee(mvpGrade) {
       const [splitInput, setSplitInput] = useState({ salePrice: "", partyCount: "3", feePercent: "3" });
 
       const [transactions, setTransactions] = useState([]);
+      const [trashTransactions, setTrashTransactions] = useState([]);
       const [editingRecentId, setEditingRecentId] = useState(null);
       const [recentEditForm, setRecentEditForm] = useState({ date: "", category: "", amount: "", memo: "" });
       const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0, tradeType: "교환거래" });
@@ -1387,6 +1451,17 @@ function getMvpDefaultFee(mvpGrade) {
           localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(loadedTransactions));
 
           setTransactions(loadedTransactions);
+
+          let loadedTrash = [];
+          const trashData = localStorage.getItem(STORAGE_KEYS.TRASH);
+          if (trashData) {
+            loadedTrash = JSON.parse(trashData);
+            if (!Array.isArray(loadedTrash)) loadedTrash = [];
+          }
+          // 휴지통은 최신 삭제 항목 기준 최대 20개만 유지한다.
+          loadedTrash = loadedTrash.slice(0, 20);
+          localStorage.setItem(STORAGE_KEYS.TRASH, JSON.stringify(loadedTrash));
+          setTrashTransactions(loadedTrash);
 
           const goalsSaved = localStorage.getItem(STORAGE_KEYS.GOALS);
           if (goalsSaved) setGoals(JSON.parse(goalsSaved));
@@ -2239,13 +2314,27 @@ function getMvpDefaultFee(mvpGrade) {
       useEffect(() => {
         try {
           const txData = localStorage.getItem(STORAGE_KEYS.TX);
-          if (txData) setTransactions(JSON.parse(txData));
+          if (txData) {
+            const parsedTx = JSON.parse(txData);
+            if (Array.isArray(parsedTx)) setTransactions(parsedTx);
+          }
+          const trashData = localStorage.getItem(STORAGE_KEYS.TRASH);
+          if (trashData) {
+            const parsedTrash = JSON.parse(trashData);
+            if (Array.isArray(parsedTrash)) setTrashTransactions(parsedTrash.slice(0, 20));
+          }
         } catch (e) { console.error(e); }
       }, []);
 
       const persistTransactions = useCallback((next) => {
         setTransactions(next);
         try { localStorage.setItem(STORAGE_KEYS.TX, JSON.stringify(next)); } catch (e) {}
+      }, []);
+
+      const persistTrashTransactions = useCallback((next) => {
+        const limited = Array.isArray(next) ? next.slice(0, 20) : [];
+        setTrashTransactions(limited);
+        try { localStorage.setItem(STORAGE_KEYS.TRASH, JSON.stringify(limited)); } catch (e) {}
       }, []);
 
       const exportBackup = useCallback(async () => {
@@ -2393,9 +2482,78 @@ function getMvpDefaultFee(mvpGrade) {
         setCalc({ mesoEok: "", rate: "" });
       }, [form, calc, transactions, persistTransactions, effectiveFeeRate, mvpGrade]);
 
+      const startHistoryEdit = useCallback((t) => {
+        setEditingHistoryId(t.id);
+        setHistoryEditForm({
+          date: t.date || todayStr(),
+          currency: t.currency || "cash",
+          type: t.type || "expense",
+          category: t.category || "기타",
+          amount: String(t.amount ?? ""),
+          memo: t.memo || ""
+        });
+      }, []);
+
+      const cancelHistoryEdit = useCallback(() => {
+        setEditingHistoryId(null);
+        setHistoryEditForm({ date: "", currency: "cash", type: "expense", category: "", amount: "", memo: "" });
+      }, []);
+
+      const saveHistoryEdit = useCallback(() => {
+        if (!editingHistoryId) return;
+        const amount = Number(String(historyEditForm.amount).replace(/,/g, ""));
+        if (!historyEditForm.date || !historyEditForm.category.trim() || !amount || amount <= 0) {
+          alert("날짜, 카테고리, 금액을 올바르게 입력해주세요.");
+          return;
+        }
+        const next = transactions.map(t => t.id === editingHistoryId ? {
+          ...t,
+          date: historyEditForm.date,
+          currency: historyEditForm.currency,
+          type: historyEditForm.type,
+          category: historyEditForm.category.trim(),
+          amount,
+          memo: historyEditForm.memo.trim()
+        } : t);
+        persistTransactions(next);
+        cancelHistoryEdit();
+      }, [editingHistoryId, historyEditForm, transactions, persistTransactions, cancelHistoryEdit]);
+
       const deleteTransaction = useCallback((id) => {
-        persistTransactions(transactions.filter((t) => t.id !== id));
-      }, [transactions, persistTransactions]);
+        const target = transactions.find(t => t.id === id);
+        if (!target) return;
+
+        const trashItem = {
+          ...target,
+          deletedAt: new Date().toISOString()
+        };
+
+        // 같은 기록이 중복으로 휴지통에 들어가지 않도록 제거 후 맨 앞에 추가한다.
+        const nextTrash = [
+          trashItem,
+          ...trashTransactions.filter(t => t.id !== id)
+        ].slice(0, 20);
+
+        persistTransactions(transactions.filter(t => t.id !== id));
+        persistTrashTransactions(nextTrash);
+      }, [transactions, trashTransactions, persistTransactions, persistTrashTransactions]);
+
+      const restoreTransaction = useCallback((id) => {
+        const target = trashTransactions.find(t => t.id === id);
+        if (!target) return;
+
+        // 혹시 같은 ID가 이미 본문에 있으면 휴지통 항목만 제거한다.
+        const alreadyExists = transactions.some(t => t.id === id);
+        const restored = { ...target };
+        delete restored.deletedAt;
+
+        const nextTrash = trashTransactions.filter(t => t.id !== id);
+        persistTrashTransactions(nextTrash);
+
+        if (!alreadyExists) {
+          persistTransactions([...transactions, restored]);
+        }
+      }, [trashTransactions, transactions, persistTransactions, persistTrashTransactions]);
 
       const previousWeekStatsByCharacter = useMemo(() => {
         const d = new Date(currentTime);
@@ -2537,12 +2695,30 @@ function getMvpDefaultFee(mvpGrade) {
 
       const [historyFilter, setHistoryFilter] = useState({ currency: "all", type: "all" });
       const [historyView, setHistoryView] = useState("list");
+      const [historyPage, setHistoryPage] = useState(1);
+      const [editingHistoryId, setEditingHistoryId] = useState(null);
+      const [historyEditForm, setHistoryEditForm] = useState({ date: "", currency: "cash", type: "expense", category: "", amount: "", memo: "" });
+      const HISTORY_PAGE_SIZE = 10;
 
       const filteredHistory = useMemo(() => transactions.filter(t => 
         t.date >= historyRange.start && t.date <= historyRange.end &&
         (historyFilter.currency === "all" || t.currency === historyFilter.currency) && 
         (historyFilter.type === "all" || t.type === historyFilter.type)
       ), [transactions, historyRange, historyFilter]);
+
+      const historyTotalPages = Math.max(1, Math.ceil(filteredHistory.length / HISTORY_PAGE_SIZE));
+      const paginatedHistory = useMemo(() => {
+        const start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+        return filteredHistory.slice(start, start + HISTORY_PAGE_SIZE);
+      }, [filteredHistory, historyPage]);
+
+      useEffect(() => {
+        if (historyPage > historyTotalPages) setHistoryPage(historyTotalPages);
+      }, [historyPage, historyTotalPages]);
+
+      useEffect(() => {
+        setHistoryPage(1);
+      }, [historyRange.start, historyRange.end, historyFilter.currency, historyFilter.type, historyView]);
 
       const currencyRootGroupedHistory = useMemo(() => {
         const rootMap = {
@@ -2730,7 +2906,7 @@ function getMvpDefaultFee(mvpGrade) {
             </header>
 
             <nav className="ml-tabs">
-              {[["dashboard", "메인"], ["char", "캐릭터 검색"], ["boss", "보스 정산"], ["add", "기록하기"], ["stats", "통계"], ["history", "전체 내역"]].map(([k, l]) => (
+              {[["dashboard", "메인"], ["char", "캐릭터 검색"], ["boss", "보스 정산"], ["add", "기록하기"], ["stats", "통계"], ["history", "전체 내역"], ["trash", `🗑️ 휴지통${trashTransactions.length ? ` (${trashTransactions.length})` : ""}`]].map(([k, l]) => (
                 <button key={k} className={`ml-tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>{l}</button>
               ))}
             </nav>
@@ -3423,7 +3599,62 @@ function getMvpDefaultFee(mvpGrade) {
 
                     {filteredHistory.length === 0 && <p className="ml-empty">조건에 맞는 기록이 없어요.</p>}
 
-                    {historyView === "list" && filteredHistory.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} />)}
+                    {historyView === "list" && (
+                      <>
+                        {paginatedHistory.map(t => <TxRow key={t.id} t={t} onEdit={() => startHistoryEdit(t)} onDelete={() => deleteTransaction(t.id)} />)}
+
+                        {filteredHistory.length > 0 && historyTotalPages > 1 && (
+                          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", marginTop: "16px", flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              className="ml-backup-btn"
+                              onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                              disabled={historyPage === 1}
+                              style={{ opacity: historyPage === 1 ? 0.45 : 1, cursor: historyPage === 1 ? "default" : "pointer" }}
+                            >
+                              ‹ 이전
+                            </button>
+
+                            {Array.from({ length: historyTotalPages }, (_, i) => i + 1).map(page => (
+                              <button
+                                key={page}
+                                type="button"
+                                onClick={() => setHistoryPage(page)}
+                                style={{
+                                  minWidth: "34px",
+                                  height: "32px",
+                                  padding: "0 8px",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: "10px",
+                                  background: historyPage === page ? "var(--ink)" : "var(--paper)",
+                                  color: historyPage === page ? "var(--paper)" : "var(--ink)",
+                                  fontWeight: 700,
+                                  cursor: "pointer"
+                                }}
+                              >
+                                {page}
+                              </button>
+                            ))}
+
+                            <button
+                              type="button"
+                              className="ml-backup-btn"
+                              onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))}
+                              disabled={historyPage === historyTotalPages}
+                              style={{ opacity: historyPage === historyTotalPages ? 0.45 : 1, cursor: historyPage === historyTotalPages ? "default" : "pointer" }}
+                            >
+                              다음 ›
+                            </button>
+                          </div>
+                        )}
+
+                        {filteredHistory.length > 0 && (
+                          <div style={{ textAlign: "center", marginTop: "8px", fontSize: "11px", color: "var(--ink-soft)" }}>
+                            {historyPage} / {historyTotalPages} 페이지 · 총 {filteredHistory.length}개
+                          </div>
+                        )}
+                      </>
+                    )}
 
                     {historyView === "category" && currencyRootGroupedHistory.map(root => {
                       const rootKey = root.currency;
@@ -3479,7 +3710,7 @@ function getMvpDefaultFee(mvpGrade) {
                                               {rootUnitLabel}
                                             </span>
                                           </div>
-                                          {!isCgCollapsed && cg.items.map(t => <TxRow key={t.id} t={t} onDelete={() => deleteTransaction(t.id)} compact />)}
+                                          {!isCgCollapsed && cg.items.map(t => <TxRow key={t.id} t={t} onEdit={() => startHistoryEdit(t)} onDelete={() => deleteTransaction(t.id)} compact />)}
                                         </div>
                                       );
                                     })}
@@ -3494,8 +3725,159 @@ function getMvpDefaultFee(mvpGrade) {
                   </div>
                 </section>
               )}
+
+              {tab === "trash" && (
+                <section className="ml-page">
+                  <div className="ml-panel">
+                    <div className="ml-trash-header">
+                      <h2 style={{ margin: 0 }}>🗑️ 휴지통</h2>
+                      <span className="ml-trash-count">{trashTransactions.length} / 20</span>
+                    </div>
+
+                    <p className="ml-trash-note">
+                      전체 내역에서 삭제한 기록은 이곳에 보관됩니다. 최대 20개까지 보관되며,
+                      21번째 삭제부터 가장 오래된 휴지통 기록이 자동으로 삭제됩니다.
+                    </p>
+
+                    {trashTransactions.length === 0 ? (
+                      <p className="ml-empty">휴지통이 비어 있어요.</p>
+                    ) : (
+                      trashTransactions.map(t => {
+                        const isIncome = t.type === "income";
+                        const unitLabel = t.currency === "cash" ? "원" : t.currency === "meso" ? "메소" : "개";
+                        return (
+                          <div className="ml-trash-item" key={t.id}>
+                            <div className="ml-trash-main">
+                              <div className="ml-trash-top">
+                                <span className="ml-trash-category">
+                                  {isIncome ? "📈" : "📉"} {t.category}
+                                </span>
+                                <span className="ml-trash-date">{t.date}</span>
+                              </div>
+                              {t.memo && <div className="ml-trash-meta">{t.memo}</div>}
+                            </div>
+
+                            <div className={`ml-trash-amount ${isIncome ? "income" : "expense"}`}>
+                              {isIncome ? "+" : "−"}{fmtAmount(t.amount)} {unitLabel}
+                            </div>
+
+                            <div className="ml-trash-actions">
+                              <button
+                                type="button"
+                                className="ml-trash-restore"
+                                onClick={() => restoreTransaction(t.id)}
+                                title="기록을 복구합니다"
+                              >
+                                ↩️ 복구
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </section>
+              )}
+
             </main>
           </div>
+
+          {editingHistoryId && (
+            <div
+              onClick={cancelHistoryEdit}
+              style={{
+                position: "fixed", inset: 0, zIndex: 9999,
+                background: "rgba(0,0,0,.45)", display: "flex",
+                alignItems: "center", justifyContent: "center", padding: "18px"
+              }}
+            >
+              <div
+                onClick={e => e.stopPropagation()}
+                className="ml-panel"
+                style={{ width: "min(520px, 100%)", maxHeight: "90vh", overflowY: "auto", margin: 0 }}
+              >
+                <div className="ml-range-head" style={{ marginBottom: "14px" }}>
+                  <h2 style={{ margin: 0 }}>✏️ 내역 수정</h2>
+                  <button type="button" className="ml-range-reset" onClick={cancelHistoryEdit}>닫기</button>
+                </div>
+
+                <div style={{ display: "grid", gap: "10px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700 }}>날짜
+                    <input
+                      type="date" value={historyEditForm.date}
+                      onChange={e => setHistoryEditForm(f => ({ ...f, date: e.target.value }))}
+                      style={{ width: "100%", marginTop: "5px" }}
+                    />
+                  </label>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 700 }}>통화
+                      <select
+                        value={historyEditForm.currency}
+                        onChange={e => setHistoryEditForm(f => ({ ...f, currency: e.target.value }))}
+                        style={{ width: "100%", marginTop: "5px" }}
+                      >
+                        <option value="cash">현금</option>
+                        <option value="meso">메소</option>
+                        <option value="piece">조각</option>
+                      </select>
+                    </label>
+                    <label style={{ fontSize: "12px", fontWeight: 700 }}>유형
+                      <select
+                        value={historyEditForm.type}
+                        onChange={e => setHistoryEditForm(f => ({ ...f, type: e.target.value }))}
+                        style={{ width: "100%", marginTop: "5px" }}
+                      >
+                        <option value="income">수입</option>
+                        <option value="expense">지출</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label style={{ fontSize: "12px", fontWeight: 700 }}>카테고리
+                    <input
+                      type="text" value={historyEditForm.category}
+                      onChange={e => setHistoryEditForm(f => ({ ...f, category: e.target.value }))}
+                      style={{ width: "100%", marginTop: "5px" }}
+                      placeholder="카테고리"
+                    />
+                  </label>
+
+                  <label style={{ fontSize: "12px", fontWeight: 700 }}>금액
+                    <input
+                      type="text" inputMode="numeric" value={historyEditForm.amount ? Number(historyEditForm.amount).toLocaleString("ko-KR") : ""}
+                      onChange={e => {
+                        const v = e.target.value.replace(/,/g, "");
+                        if (/^\d*$/.test(v)) setHistoryEditForm(f => ({ ...f, amount: v }));
+                      }}
+                      style={{ width: "100%", marginTop: "5px" }}
+                      placeholder="금액"
+                    />
+                  </label>
+
+                  <label style={{ fontSize: "12px", fontWeight: 700 }}>메모
+                    <textarea
+                      value={historyEditForm.memo}
+                      onChange={e => setHistoryEditForm(f => ({ ...f, memo: e.target.value }))}
+                      rows="3"
+                      style={{ width: "100%", marginTop: "5px", resize: "vertical" }}
+                      placeholder="메모"
+                    />
+                  </label>
+
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "4px" }}>
+                    <button type="button" className="ml-backup-btn" onClick={cancelHistoryEdit}>취소</button>
+                    <button
+                      type="button"
+                      className="ml-calc-apply"
+                      onClick={saveHistoryEdit}
+                      style={{ border: "1px solid var(--line)" }}
+                    >저장</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showToast && (
             <div className="ml-toast">
