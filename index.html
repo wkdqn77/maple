@@ -1360,6 +1360,8 @@ function getMvpDefaultFee(mvpGrade) {
 
       const [transactions, setTransactions] = useState([]);
       const [trashTransactions, setTrashTransactions] = useState([]);
+      const [editingHistoryId, setEditingHistoryId] = useState(null);
+      const [historyEditForm, setHistoryEditForm] = useState({ date: "", currency: "cash", type: "expense", category: "", amount: "", memo: "" });
       const [editingRecentId, setEditingRecentId] = useState(null);
       const [recentEditForm, setRecentEditForm] = useState({ date: "", category: "", amount: "", memo: "" });
       const [form, setForm] = useState({ date: todayStr(), currency: "cash", type: "expense", category: "", amount: "", memo: "", feeRate: 0, tradeType: "교환거래" });
@@ -2500,24 +2502,38 @@ function getMvpDefaultFee(mvpGrade) {
       }, []);
 
       const saveHistoryEdit = useCallback(() => {
-        if (!editingHistoryId) return;
-        const amount = Number(String(historyEditForm.amount).replace(/,/g, ""));
-        if (!historyEditForm.date || !historyEditForm.category.trim() || !amount || amount <= 0) {
+        if (editingHistoryId === null || editingHistoryId === undefined || editingHistoryId === "") {
+          alert("수정할 기록을 찾을 수 없습니다. 다시 열어주세요.");
+          return;
+        }
+        const amount = Number(String(historyEditForm.amount).replace(/,/g, "").trim());
+        if (!historyEditForm.date || !String(historyEditForm.category || "").trim() || !Number.isFinite(amount) || amount <= 0) {
           alert("날짜, 카테고리, 금액을 올바르게 입력해주세요.");
           return;
         }
-        const next = transactions.map(t => t.id === editingHistoryId ? {
+        const targetIndex = transactions.findIndex(t => String(t.id) === String(editingHistoryId));
+        if (targetIndex < 0) {
+          alert("수정할 기록이 목록에서 사라졌습니다. 목록을 새로고침한 뒤 다시 시도해주세요.");
+          return;
+        }
+        const next = transactions.map(t => String(t.id) === String(editingHistoryId) ? {
           ...t,
           date: historyEditForm.date,
           currency: historyEditForm.currency,
           type: historyEditForm.type,
-          category: historyEditForm.category.trim(),
+          category: String(historyEditForm.category).trim(),
           amount,
-          memo: historyEditForm.memo.trim()
+          memo: String(historyEditForm.memo || "").trim()
         } : t);
-        persistTransactions(next);
-        cancelHistoryEdit();
-      }, [editingHistoryId, historyEditForm, transactions, persistTransactions, cancelHistoryEdit]);
+        try {
+          persistTransactions(next);
+          cancelHistoryEdit();
+          alert("기록이 수정되었습니다.");
+        } catch (error) {
+          console.error("기록 수정 저장 실패:", error);
+          alert("기록 저장에 실패했습니다. 브라우저 저장 공간이나 사이트 권한을 확인해주세요.");
+        }
+      }, [editingHistoryId, historyEditForm, transactions, cancelHistoryEdit, persistTransactions]);
 
       const deleteTransaction = useCallback((id) => {
         const target = transactions.find(t => t.id === id);
@@ -2696,8 +2712,6 @@ function getMvpDefaultFee(mvpGrade) {
       const [historyFilter, setHistoryFilter] = useState({ currency: "all", type: "all" });
       const [historyView, setHistoryView] = useState("list");
       const [historyPage, setHistoryPage] = useState(1);
-      const [editingHistoryId, setEditingHistoryId] = useState(null);
-      const [historyEditForm, setHistoryEditForm] = useState({ date: "", currency: "cash", type: "expense", category: "", amount: "", memo: "" });
       const HISTORY_PAGE_SIZE = 10;
 
       const filteredHistory = useMemo(() => transactions.filter(t => 
@@ -3608,14 +3622,17 @@ function getMvpDefaultFee(mvpGrade) {
                             <button
                               type="button"
                               className="ml-backup-btn"
-                              onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                              onClick={() => setHistoryPage(p => p % 10 === 1 ? Math.max(1, p - 10) : Math.max(1, p - 1))}
                               disabled={historyPage === 1}
                               style={{ opacity: historyPage === 1 ? 0.45 : 1, cursor: historyPage === 1 ? "default" : "pointer" }}
                             >
                               ‹ 이전
                             </button>
 
-                            {Array.from({ length: historyTotalPages }, (_, i) => i + 1).map(page => (
+                            {Array.from(
+                              { length: Math.min(10, historyTotalPages - Math.floor((historyPage - 1) / 10) * 10) },
+                              (_, i) => Math.floor((historyPage - 1) / 10) * 10 + i + 1
+                            ).map(page => (
                               <button
                                 key={page}
                                 type="button"
@@ -3639,9 +3656,9 @@ function getMvpDefaultFee(mvpGrade) {
                             <button
                               type="button"
                               className="ml-backup-btn"
-                              onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))}
-                              disabled={historyPage === historyTotalPages}
-                              style={{ opacity: historyPage === historyTotalPages ? 0.45 : 1, cursor: historyPage === historyTotalPages ? "default" : "pointer" }}
+                              onClick={() => setHistoryPage(p => Math.min(historyTotalPages, (Math.floor((p - 1) / 10) + 1) * 10 + 1))}
+                              disabled={historyPage === historyTotalPages || Math.floor((historyPage - 1) / 10) === Math.floor((historyTotalPages - 1) / 10)}
+                              style={{ opacity: (historyPage === historyTotalPages || Math.floor((historyPage - 1) / 10) === Math.floor((historyTotalPages - 1) / 10)) ? 0.45 : 1, cursor: (historyPage === historyTotalPages || Math.floor((historyPage - 1) / 10) === Math.floor((historyTotalPages - 1) / 10)) ? "default" : "pointer" }}
                             >
                               다음 ›
                             </button>
@@ -3870,8 +3887,8 @@ function getMvpDefaultFee(mvpGrade) {
                     <button
                       type="button"
                       className="ml-calc-apply"
-                      onClick={saveHistoryEdit}
-                      style={{ border: "1px solid var(--line)" }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveHistoryEdit(); }}
+                      style={{ border: "1px solid var(--line)", position: "relative", zIndex: 10001, pointerEvents: "auto", cursor: "pointer" }}
                     >저장</button>
                   </div>
                 </div>
