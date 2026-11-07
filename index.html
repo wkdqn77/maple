@@ -1845,7 +1845,7 @@
         }
 
         const now = Date.now();
-        const charPrefix = attachCharToRecord && selectedChar ? `[${selectedChar}] ` : "";
+        const charPrefix = selectedChar ? `[${selectedChar}] ` : "";
         const memo = `${charPrefix}재획 정산 (시작 ${formatDetailedUnit(startMeso, "메소")} / 종료 ${formatDetailedUnit(endMeso, "메소")})`;
         const newTxs = [];
 
