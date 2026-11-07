@@ -1384,8 +1384,8 @@
     function MapleLedger() {
       const [visualTheme, setVisualTheme] = useState(() => {
         try {
-          return localStorage.getItem(STORAGE_KEYS.THEME_MODE) || "cat";
-        } catch(e) { return "cat"; }
+          return localStorage.getItem(STORAGE_KEYS.THEME_MODE) || "green";
+        } catch(e) { return "green"; }
       });
 
       const [tab, setTab] = useState("dashboard");
