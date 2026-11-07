@@ -695,14 +695,21 @@
       --monitor-shadow: rgba(0, 0, 0, 0.45);
       --mint-ribbon: #284947;
       --mint-dot: #335E5B;
+      --paper: #231C2D;
+      --paper-soft: #1E1926;
+      --paper-cream: #2E253A;
       --ink: #F7EAF0;
       --ink-soft: #BFA8B5;
       --line: #463754;
       --line-dashed: #5C466E;
       --income: #5CE0B5;
       --expense: #FF7A95;
+      --gold: #FFD166;
       --strawberry: #FF7CA3;
       --strawberry-dark: #FFA6C1;
+      --butter: #3A3047;
+      --button-bg: #FF7CA3;
+      --button-text: #FFFFFF;
     }
     .theme-cat.dark-mode .ml-top-lace-bar,
     .theme-cat.dark-mode .ml-monitor-frame,
@@ -733,6 +740,129 @@
     .theme-cat.dark-mode .ml-chargroup-header,
     .theme-cat.dark-mode .ml-trash-note {
       background: #1E1926 !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode .ml-stat-card.settlement {
+      background: #262030 !important;
+      border-left-color: #F4B400 !important;
+    }
+
+    /* 고양이 다크모드 상단 바 및 드롭다운 */
+    .theme-cat.dark-mode .ml-theme-switch-btn,
+    .theme-cat.dark-mode .ml-dark-toggle,
+    .theme-cat.dark-mode .ml-backup-btn,
+    .theme-cat.dark-mode .ml-mvp-box,
+    .theme-cat.dark-mode .ml-mvp-box select {
+      background: #1E1926 !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode .ml-theme-switch-btn:hover,
+    .theme-cat.dark-mode .ml-dark-toggle:hover,
+    .theme-cat.dark-mode .ml-backup-btn:hover {
+      background: #2D2338 !important;
+      border-color: var(--strawberry) !important;
+    }
+
+    /* 고양이 다크모드 세그먼트 버튼 (통계 탭, 뷰 토글, 거래유형 등) */
+    .theme-cat.dark-mode .ml-seg button {
+      background: #1E1926 !important;
+      color: var(--ink-soft) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode .ml-seg button:hover {
+      background: #2D2338 !important;
+      color: var(--ink) !important;
+      border-color: var(--strawberry) !important;
+    }
+    .theme-cat.dark-mode .ml-seg button.active {
+      background: var(--strawberry) !important;
+      color: #FFFFFF !important;
+      border-color: var(--strawberry) !important;
+      box-shadow: 0 2px 8px rgba(255, 124, 163, 0.35) !important;
+    }
+    .theme-cat.dark-mode .ml-seg button.active.income {
+      background: var(--income) !important;
+      color: #FFFFFF !important;
+      border-color: var(--income) !important;
+      box-shadow: 0 2px 8px rgba(92, 224, 181, 0.35) !important;
+    }
+    .theme-cat.dark-mode .ml-seg button.active.expense {
+      background: var(--expense) !important;
+      color: #FFFFFF !important;
+      border-color: var(--expense) !important;
+      box-shadow: 0 2px 8px rgba(255, 122, 149, 0.35) !important;
+    }
+
+    /* 고양이 다크모드 모든 입력창 및 선택창 */
+    .theme-cat.dark-mode input,
+    .theme-cat.dark-mode select,
+    .theme-cat.dark-mode textarea {
+      background: #1E1926 !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode input:focus,
+    .theme-cat.dark-mode select:focus,
+    .theme-cat.dark-mode textarea:focus {
+      border-color: var(--strawberry) !important;
+      box-shadow: 0 0 0 3px rgba(255, 124, 163, 0.25) !important;
+    }
+
+    /* 고양이 다크모드 공통 버튼, 칩, 테이블, 카드 */
+    .theme-cat.dark-mode .ml-calc-apply,
+    .theme-cat.dark-mode .ml-chip,
+    .theme-cat.dark-mode .ml-tx-edit,
+    .theme-cat.dark-mode .ml-range-reset,
+    .theme-cat.dark-mode .ml-recent-actions button,
+    .theme-cat.dark-mode .ml-calc-btn,
+    .theme-cat.dark-mode .ml-tx-row-compact {
+      background: #1E1926 !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode .ml-calc-apply:hover:not(:disabled),
+    .theme-cat.dark-mode .ml-chip:hover,
+    .theme-cat.dark-mode .ml-recent-actions button:hover,
+    .theme-cat.dark-mode .ml-calc-btn:hover {
+      background: #2D2338 !important;
+      border-color: var(--strawberry) !important;
+    }
+    .theme-cat.dark-mode .ml-calc-btn.op {
+      background: #251D2F !important;
+    }
+    .theme-cat.dark-mode .ml-calc-btn.action {
+      background: var(--strawberry) !important;
+      color: #FFFFFF !important;
+      border-color: var(--strawberry) !important;
+    }
+
+    .theme-cat.dark-mode .ml-boss-table th {
+      background: #1E1926 !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode .ml-boss-table td {
+      background: #231C2D !important;
+      border-color: var(--line) !important;
+      color: var(--ink) !important;
+    }
+    .theme-cat.dark-mode .ml-boss-diff-label {
+      background: #1E1926 !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+    .theme-cat.dark-mode .ml-boss-diff-label.disabled {
+      background: #17121F !important;
+      opacity: 0.45 !important;
+    }
+
+    /* 패널 내부의 카드형 요소 (통계 캐릭터 카드, 검색 결과 등) */
+    .theme-cat.dark-mode .ml-panel div[style*="background: var(--paper)"],
+    .theme-cat.dark-mode .ml-panel div[style*="background: \"var(--paper)\""],
+    .theme-cat.dark-mode .ml-panel div[style*='background: "var(--paper)"'] {
+      background: #231C2D !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
     }
