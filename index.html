@@ -130,7 +130,6 @@
       white-space: nowrap;
     }
 
-    /* 본원 테마는 모니터 장식을 완전히 숨기고 깔끔한 카드형 구조로 렌더 */
     .theme-green .ml-monitor-frame {
       position: relative;
       background: transparent;
@@ -748,7 +747,6 @@
       border-left-color: #F4B400 !important;
     }
 
-    /* 고양이 다크모드 상단 바 및 드롭다운 */
     .theme-cat.dark-mode .ml-theme-switch-btn,
     .theme-cat.dark-mode .ml-dark-toggle,
     .theme-cat.dark-mode .ml-backup-btn,
@@ -765,7 +763,6 @@
       border-color: var(--strawberry) !important;
     }
 
-    /* 고양이 다크모드 세그먼트 버튼 (통계 탭, 뷰 토글, 거래유형 등) */
     .theme-cat.dark-mode .ml-seg button {
       background: #1E1926 !important;
       color: var(--ink-soft) !important;
@@ -795,7 +792,6 @@
       box-shadow: 0 2px 8px rgba(255, 122, 149, 0.35) !important;
     }
 
-    /* 고양이 다크모드 모든 입력창 및 선택창 */
     .theme-cat.dark-mode input,
     .theme-cat.dark-mode select,
     .theme-cat.dark-mode textarea {
@@ -810,7 +806,6 @@
       box-shadow: 0 0 0 3px rgba(255, 124, 163, 0.25) !important;
     }
 
-    /* 고양이 다크모드 공통 버튼, 칩, 테이블, 카드 */
     .theme-cat.dark-mode .ml-calc-apply,
     .theme-cat.dark-mode .ml-chip,
     .theme-cat.dark-mode .ml-tx-edit,
@@ -858,7 +853,6 @@
       opacity: 0.45 !important;
     }
 
-    /* 패널 내부의 카드형 요소 (통계 캐릭터 카드, 검색 결과 등) */
     .theme-cat.dark-mode .ml-panel div[style*="background: var(--paper)"],
     .theme-cat.dark-mode .ml-panel div[style*="background: \"var(--paper)\""],
     .theme-cat.dark-mode .ml-panel div[style*='background: "var(--paper)"'] {
@@ -1187,7 +1181,6 @@
       border: 1px solid var(--line);
     }
 
-    /* 통합 테마 토글 버튼 스타일 */
     .ml-theme-switch-btn {
       font-family: inherit;
       font-size: 11px;
@@ -1276,7 +1269,7 @@
       GRIND_SNAPSHOT: "ledger:grind_snapshot",
       DARK_MODE: "ledger:dark_mode",
       MESO_RATE: "ledger:meso_market_rate",
-      THEME_MODE: "ledger:visual_theme" // 'green' | 'cat'
+      THEME_MODE: "ledger:visual_theme"
     };
 
     const CATEGORY_SUGGESTIONS = {
@@ -1363,7 +1356,6 @@
       return { start: toDateStr(thursday), end: toDateStr(wednesday) };
     }
 
-    // 보스 메모 파서: [캐릭터명] 보스명 (난이도) / N인 파티 완벽 추출
     function parseBossMemo(memo) {
       if (!memo) return null;
       const match = String(memo).match(/^\[([^\]]+)\]\s+([^(]+)\s*\(([^)]+)\)(?:\s*\/\s*(\d+)인\s*파티)?/);
@@ -1903,7 +1895,6 @@
 
       const currentWeekRange = useMemo(() => getThursdayToWednesdayRange(bossDate), [bossDate]);
 
-      // bossDate에 따라 선택된 연/월의 1일~말일을 동적으로 계산
       const monthlyBossRange = useMemo(() => {
         const [y, m] = (bossDate || todayStr()).split("-").map(Number);
         const start = toDateStr(new Date(y, m - 1, 1));
@@ -1948,7 +1939,6 @@
         return Object.values(bossStatsByCharacter).reduce((acc, cur) => acc + (cur.total || 0), 0);
       }, [bossStatsByCharacter]);
 
-      // 통일된 파서 적용
       const alreadyRecordedBossesThisWeek = useMemo(() => {
         const recorded = new Set();
         transactions.forEach(t => {
@@ -1976,7 +1966,6 @@
         return count;
       }, [transactions, selectedChar, currentWeekRange]);
 
-      // 선택된 bossDate의 월간 범위(monthlyBossRange) 내 기록만 검사
       const isBlackMageAlreadyRecordedThisMonth = useMemo(() => {
         return transactions.some(t => {
           if (t.category !== "보스" || t.currency !== "meso" || t.type !== "income") return false;
@@ -2214,7 +2203,7 @@
         triggerToast(`[${selectedChar}] 보스 ${validSelections.length}종 정산 완료!`);
       };
 
-      // 간편 계산기
+      // 간편 계산기 상태
       const [stdCalc, setStdCalc] = useState({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
 
       const handleCopyStdResult = () => {
@@ -2231,12 +2220,12 @@
       const calculateStd = (a, b, op) => {
         if (op === "+") return a + b;
         if (op === "-") return a - b;
-        if (op === "×") return a * b;
-        if (op === "÷") return b === 0 ? 0 : a / b;
+        if (op === "×" || op === "*") return a * b;
+        if (op === "÷" || op === "/") return b === 0 ? 0 : a / b;
         return b;
       };
 
-      const handleStdNum = (numStr) => {
+      const handleStdNum = useCallback((numStr) => {
         setStdCalc(prev => {
           if (prev.waitingForOperand) {
             return { ...prev, display: numStr, expression: prev.expression + " " + numStr, waitingForOperand: false };
@@ -2251,32 +2240,53 @@
           }
           return { ...prev, display: newDisplay, expression: newExpr };
         });
-      };
+      }, []);
 
-      const handleStdOp = (op) => {
+      const handleStdDot = useCallback(() => {
+        setStdCalc(prev => {
+          if (prev.waitingForOperand) {
+            return { ...prev, display: "0.", expression: prev.expression + " 0.", waitingForOperand: false };
+          }
+          if (prev.display.includes(".")) return prev;
+          const newDisplay = prev.display + ".";
+          let newExpr = prev.expression;
+          if (newExpr === "" || newExpr === "0") newExpr = "0.";
+          else {
+            const parts = newExpr.split(" ");
+            parts[parts.length - 1] = newDisplay;
+            newExpr = parts.join(" ");
+          }
+          return { ...prev, display: newDisplay, expression: newExpr };
+        });
+      }, []);
+
+      const handleStdOp = useCallback((op) => {
+        const displayOp = (op === "*" ? "×" : op === "/" ? "÷" : op);
         setStdCalc(prev => {
           const currentVal = parseFloat(prev.display.replace(/,/g, "")) || 0;
           if (prev.pendingOp && !prev.waitingForOperand) {
             const result = calculateStd(prev.prevVal, currentVal, prev.pendingOp);
-            return { display: String(result), expression: prev.expression + " " + op, prevVal: result, pendingOp: op, waitingForOperand: true };
+            return { display: String(result), expression: prev.expression + " " + displayOp, prevVal: result, pendingOp: displayOp, waitingForOperand: true };
           }
           const baseExpr = prev.expression === "" ? prev.display : prev.expression;
-          return { ...prev, prevVal: currentVal, pendingOp: op, expression: baseExpr + " " + op, waitingForOperand: true };
+          return { ...prev, prevVal: currentVal, pendingOp: displayOp, expression: baseExpr + " " + displayOp, waitingForOperand: true };
         });
-      };
+      }, []);
 
-      const handleStdEquals = () => {
+      const handleStdEquals = useCallback(() => {
         setStdCalc(prev => {
           if (!prev.pendingOp || prev.prevVal === null) return prev;
           const currentVal = parseFloat(prev.display.replace(/,/g, "")) || 0;
           const result = calculateStd(prev.prevVal, currentVal, prev.pendingOp);
           return { display: String(result), expression: prev.expression + " = " + result, waitingForOperand: true, pendingOp: null, prevVal: null };
         });
-      };
+      }, []);
 
-      const handleStdClear = () => setStdCalc({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
+      const handleStdClear = useCallback(() => {
+        setStdCalc({ display: "0", expression: "", waitingForOperand: false, pendingOp: null, prevVal: null });
+      }, []);
 
-      const handleStdDelete = () => {
+      const handleStdDelete = useCallback(() => {
         setStdCalc(prev => {
           if (prev.waitingForOperand) return prev;
           let newDisplay = prev.display.length > 1 ? prev.display.slice(0, -1) : "0";
@@ -2290,7 +2300,43 @@
           }
           return { ...prev, display: newDisplay, expression: newExpr };
         });
-      };
+      }, []);
+
+      // 계산기 키보드 전역 리스너 (계산기가 켜져 있고 일반 input에 포커스가 없을 때 입력 지원)
+      useEffect(() => {
+        if (!showCalc) return;
+
+        const handleKeyDown = (e) => {
+          const tag = (e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "");
+          const isEditable = e.target && e.target.isContentEditable;
+          if (tag === "input" || tag === "textarea" || tag === "select" || isEditable) {
+            return;
+          }
+
+          if (e.key >= "0" && e.key <= "9") {
+            e.preventDefault();
+            handleStdNum(e.key);
+          } else if (e.key === ".") {
+            e.preventDefault();
+            handleStdDot();
+          } else if (["+", "-", "*", "/"].includes(e.key)) {
+            e.preventDefault();
+            handleStdOp(e.key);
+          } else if (e.key === "Enter" || e.key === "=") {
+            e.preventDefault();
+            handleStdEquals();
+          } else if (e.key === "Backspace") {
+            e.preventDefault();
+            handleStdDelete();
+          } else if (e.key === "Escape" || e.key.toLowerCase() === "c") {
+            e.preventDefault();
+            handleStdClear();
+          }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+      }, [showCalc, handleStdNum, handleStdDot, handleStdOp, handleStdEquals, handleStdDelete, handleStdClear]);
 
       const exportBackup = useCallback(async () => {
         try {
@@ -2781,7 +2827,6 @@
         { key: "trash", icon: "🗑️", en: "TRASH", ko: "휴지통", badge: trashTransactions.length }
       ];
 
-      // 메인 컨텐츠 렌더 함수
       const renderMainContent = () => (
         <main>
           {tab === "dashboard" && (
@@ -3679,7 +3724,6 @@
 
       return (
         <div className={`ml-root theme-${visualTheme} ${darkMode ? "dark-mode" : ""}`}>
-          {/* 상단 통합 레이스 상태바 */}
           <header className="ml-top-lace-bar">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <span style={{ fontWeight: 800, fontSize: "15px", color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
@@ -3715,7 +3759,6 @@
             </div>
           </header>
 
-          {/* 3단 스테이지 (좌측 탭 + 중앙 컨텐츠 + 우측 사이드 패널) */}
           <div className="ml-stage">
             <nav className="ml-left-nav" aria-label="장부 메뉴">
               {NAV_ITEMS.map(item => (
@@ -3735,7 +3778,6 @@
 
             <div>
               {visualTheme === "cat" ? (
-                /* 고양이 테마: 귀 달린 모니터 프레임 */
                 <div>
                   <div className="ml-monitor-frame">
                     <div className="ml-monitor-ear left"></div>
@@ -3777,14 +3819,12 @@
                   </div>
                 </div>
               ) : (
-                /* 본원 테마: 모니터 장식을 배제한 깔끔한 본원 양피지 패널 */
                 <div>
                   {renderMainContent()}
                 </div>
               )}
             </div>
 
-            {/* 우측 사이드 패널: 이번 주 수익 카드 + 오늘의 수입 요약 카드 + 정산 요약 카드 */}
             <aside className="ml-mascot-column">
               <div className="ml-mascot-card">
                 <div className="ml-mascot-speech" style={{ marginBottom: "10px" }}>
@@ -3812,7 +3852,6 @@
                 </div>
               </div>
 
-              {/* 이번 주 수익 카드 바로 밑에 배치된 '오늘의 수입 요약' 카드 */}
               <div className="ml-mascot-card" style={{ textAlign: "left" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <strong style={{ fontSize: "13px", color: "var(--gold)" }}>📅 오늘 수입 요약</strong>
@@ -3862,7 +3901,6 @@
             </aside>
           </div>
 
-          {/* 전체 내역 수정 모달 */}
           {editingHistoryId && (
             <div
               onClick={cancelHistoryEdit}
@@ -3939,7 +3977,6 @@
             </div>
           )}
 
-          {/* 좌측 하단 플로팅 목표 달성 위젯 */}
           <div className="ml-floating-goal-container">
             {(cashTargetNum > 0 || mesoTargetNum > 0 || pieceTargetNum > 0) && (
               <div className="ml-mini-goal-widget">
@@ -4006,7 +4043,6 @@
             </button>
           </div>
 
-          {/* 우측 하단 플로팅 분배금 계산기 & 간편 계산기 */}
           <div className="ml-sidebar-calc-container">
             {showSplitCalc && (
               <div className="ml-sidebar-calc">
@@ -4055,7 +4091,10 @@
 
             {showCalc && (
               <div className="ml-sidebar-calc">
-                <div className="ml-calc-title"><span>🧮 간편 계산기</span></div>
+                <div className="ml-calc-title">
+                  <span>🧮 간편 계산기</span>
+                  <span style={{ fontSize: "10px", color: "var(--ink-soft)", fontWeight: "normal" }}>⌨️ 키보드 입력 가능</span>
+                </div>
                 <div className="ml-calc-screen">
                   <div className="ml-calc-expression">{stdCalc.expression}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
@@ -4064,28 +4103,28 @@
                   </div>
                 </div>
                 <div className="ml-calc-keypad">
-                  <button className="ml-calc-btn" onClick={handleStdClear}>C</button>
-                  <button className="ml-calc-btn" onClick={handleStdDelete}>⌫</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("÷")}>÷</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("×")}>×</button>
+                  <button className="ml-calc-btn" onClick={handleStdClear} title="초기화 (Esc 또는 C)">C</button>
+                  <button className="ml-calc-btn" onClick={handleStdDelete} title="지우기 (Backspace)">⌫</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("÷")} title="나누기 (/)">÷</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("×")} title="곱하기 (*)">×</button>
 
                   <button className="ml-calc-btn" onClick={() => handleStdNum("7")}>7</button>
                   <button className="ml-calc-btn" onClick={() => handleStdNum("8")}>8</button>
                   <button className="ml-calc-btn" onClick={() => handleStdNum("9")}>9</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("-")}>-</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("-")} title="빼기 (-)">-</button>
 
                   <button className="ml-calc-btn" onClick={() => handleStdNum("4")}>4</button>
                   <button className="ml-calc-btn" onClick={() => handleStdNum("5")}>5</button>
                   <button className="ml-calc-btn" onClick={() => handleStdNum("6")}>6</button>
-                  <button className="ml-calc-btn op" onClick={() => handleStdOp("+")}>+</button>
+                  <button className="ml-calc-btn op" onClick={() => handleStdOp("+")} title="더하기 (+)">+</button>
 
                   <button className="ml-calc-btn" onClick={() => handleStdNum("1")}>1</button>
                   <button className="ml-calc-btn" onClick={() => handleStdNum("2")}>2</button>
                   <button className="ml-calc-btn" onClick={() => handleStdNum("3")}>3</button>
-                  <button className="ml-calc-btn action" style={{ gridRow: "span 2" }} onClick={handleStdEquals}>=</button>
+                  <button className="ml-calc-btn action" style={{ gridRow: "span 2" }} onClick={handleStdEquals} title="계산 (Enter 또는 =)">=</button>
 
                   <button className="ml-calc-btn" style={{ gridColumn: "span 2" }} onClick={() => handleStdNum("0")}>0</button>
-                  <button className="ml-calc-btn" onClick={() => setStdCalc(prev => ({ ...prev, display: prev.display.includes(".") ? prev.display : prev.display + "." }))}>.</button>
+                  <button className="ml-calc-btn" onClick={handleStdDot}>.</button>
                 </div>
               </div>
             )}
