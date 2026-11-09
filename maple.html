@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>메이플 장부 - 메계부</title>
+  <title>메이플 장부 - 메계부 (검은고양이 네로 에디션)</title>
   
   <link rel="icon" href="https://i.ibb.co/JwZ0B8C4/favicon.jpg" type="image/jpeg">
   
@@ -276,7 +276,7 @@
     }
 
     /* ========================================================
-       2. 고양이 (Cat / Pink Retro) 테마 스타일
+       2. 고양이 (Cat / Pink Retro) 테마 스타일 (라이트 모드)
        ======================================================== */
     .ml-root.theme-cat {
       --bg-pink: #FFEBF1;
@@ -688,36 +688,146 @@
       box-shadow: 0 5px 15px rgba(255, 107, 147, 0.28);
     }
 
-    /* 고양이 다크모드 (파스텔 나이트) */
+    /* ========================================================
+       2-1. [신규 적용] 고양이 다크모드: 검은고양이 네로 에디션
+       ======================================================== */
     .ml-root.theme-cat.dark-mode {
-      --bg-pink: #1D1824;
-      --bg-dot: #2A2234;
-      --cream-band: #251E2E;
-      --monitor-white: #262030;
-      --monitor-border: #4D3B5E;
-      --monitor-shadow: rgba(0, 0, 0, 0.45);
-      --mint-ribbon: #284947;
-      --mint-dot: #335E5B;
-      --paper: #231C2D;
-      --paper-soft: #1E1926;
-      --paper-cream: #2E253A;
-      --ink: #F7EAF0;
-      --ink-soft: #BFA8B5;
-      --line: #463754;
-      --line-dashed: #5C466E;
-      --income: #5CE0B5;
-      --expense: #FF7A95;
-      --gold: #FFD166;
-      --strawberry: #FF7CA3;
-      --strawberry-dark: #FFA6C1;
-      --butter: #3A3047;
-      --button-bg: #FF7CA3;
+      --bg-pink: #0C0C10;
+      --bg-dot: #171822;
+      --cream-band: #13141B;
+      --monitor-white: #141419;
+      --monitor-border: #282937;
+      --monitor-shadow: rgba(0, 0, 0, 0.85);
+      --mint-ribbon: #1E202A;
+      --mint-dot: #2C303E;
+      --paper: #1B1C24;
+      --paper-soft: #13141A;
+      --paper-cream: #22232E;
+      --ink: #F5F6FC;
+      --ink-soft: #9DA3B7;
+      --line: #2D3040;
+      --line-dashed: #41455B;
+      --income: #4ADE80;
+      --expense: #FB7185;
+      --gold: #FFD233;
+      --strawberry: #FF5E89;
+      --strawberry-dark: #FF3366;
+      --butter: #242217;
+      --button-bg: #FF5E89;
       --button-text: #FFFFFF;
     }
-    .theme-cat.dark-mode .ml-top-lace-bar,
-    .theme-cat.dark-mode .ml-monitor-frame,
-    .theme-cat.dark-mode .ml-monitor-ear,
-    .theme-cat.dark-mode .ml-monitor-foot,
+
+    .theme-cat.dark-mode::before {
+      background: #111218;
+      box-shadow: 0 0 0 6px rgba(20, 21, 28, 0.75);
+      border-top: 4px dotted #262938;
+      border-bottom: 4px dotted #262938;
+    }
+
+    /* 네로의 블랙 바디 & 프레임 */
+    .theme-cat.dark-mode .ml-top-lace-bar {
+      background: #161720 !important;
+      border-bottom: 3px dashed var(--line) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+    }
+    .theme-cat.dark-mode .ml-monitor-frame {
+      background: #141419 !important;
+      border: 3px solid #2B2D3B !important;
+      box-shadow: 0 18px 46px rgba(0,0,0,0.9), inset 0 0 0 5px #1C1E26 !important;
+    }
+    .theme-cat.dark-mode .ml-monitor-ear {
+      background: #141419 !important;
+      border: 3px solid #2B2D3B !important;
+      border-bottom: none !important;
+    }
+    .theme-cat.dark-mode .ml-monitor-ear::after {
+      background: #2D1A25 !important; /* 흑고양이 귓속 딥로즈 핑크 */
+      border: 1px solid rgba(255, 94, 137, 0.25);
+    }
+    .theme-cat.dark-mode .ml-monitor-foot {
+      background: #141419 !important;
+      border: 3px solid #2B2D3B !important;
+      border-top: none !important;
+    }
+
+    /* 🐱 고양이 다크모드의 살짝 더 연하고 화사해진 솔리드 블루 눈 */
+    .theme-cat.dark-mode .ml-cat-eye {
+      background: #25A5F5 !important; /* 이전보다 한 톤 더 밝고 맑은 미디엄 블루 단색 */
+      box-shadow: 0 0 10px rgba(37, 165, 245, 0.45), inset 0 -4px 0 #0284C7 !important;
+    }
+    .theme-cat.dark-mode .ml-cat-eye::before {
+      content: "♥";
+      color: #0A1424 !important; /* 딥 네이비 하트 동공 */
+      font-size: 10px !important;
+      top: 3px;
+      left: 3px;
+    }
+    .theme-cat.dark-mode .ml-cat-eye::after {
+      background: #FFFFFF !important;
+      box-shadow: 0 0 4px #BAE6FD;
+    }
+    .theme-cat.dark-mode .ml-blush {
+      background: #FF5E89 !important;
+      opacity: 0.6;
+      box-shadow: 0 0 10px rgba(255, 94, 137, 0.35);
+    }
+    .theme-cat.dark-mode .ml-cat-nose {
+      color: #FF8BAA !important;
+    }
+
+    /* 챠콜 리본 & 블루/골드 배지 & LED */
+    .theme-cat.dark-mode .ml-mint-ribbon {
+      background-color: #1A1C24 !important;
+      background-image: radial-gradient(#292E3C 26%, transparent 27%) !important;
+      border-color: #2D3242 !important;
+      color: #38BDF8 !important;
+    }
+    .theme-cat.dark-mode .ml-chin-badge {
+      background: #131B2B !important;
+      border: 2px solid #0284C7 !important;
+      color: #7DD3FC !important;
+    }
+    .theme-cat.dark-mode .ml-led {
+      background: #38BDF8 !important;
+      box-shadow: 0 0 8px #38BDF8 !important;
+    }
+    .theme-cat.dark-mode .ml-led.soft {
+      background: #0C4A6E !important;
+      box-shadow: none !important;
+    }
+
+    /* 모니터 내부 스크린 및 패널 공통 */
+    .theme-cat.dark-mode .ml-monitor-screen {
+      background: #171821 !important;
+      border: 2px solid #2B2E3D !important;
+      box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.55) !important;
+    }
+    .theme-cat.dark-mode .ml-pixel-tab {
+      background: #191B24 !important;
+      border-color: #2D3142 !important;
+      box-shadow: 0 4px 0 #12131A, 0 6px 14px rgba(0, 0, 0, 0.5) !important;
+    }
+    .theme-cat.dark-mode .ml-pixel-tab:hover {
+      border-color: #FF5E89 !important;
+      box-shadow: 0 5px 0 #9E2D4C, 0 8px 18px rgba(255, 94, 137, 0.25) !important;
+    }
+    .theme-cat.dark-mode .ml-pixel-tab.active {
+      background: linear-gradient(180deg, #25232F 0%, #1D1826 100%) !important;
+      border-color: #FF5E89 !important;
+      box-shadow: 0 3px 0 #FF5E89, 0 6px 14px rgba(255, 94, 137, 0.3) !important;
+    }
+    .theme-cat.dark-mode .ml-pixel-tab-icon {
+      background: #13141B !important;
+      border-color: #383B4D !important;
+    }
+    .theme-cat.dark-mode .ml-pixel-tab.active .ml-pixel-tab-icon {
+      background: #1E1F2A !important;
+      border-color: #FF5E89 !important;
+    }
+    .theme-cat.dark-mode .ml-pixel-tab-en {
+      color: #FF7CA1 !important;
+    }
+
     .theme-cat.dark-mode .ml-mascot-card,
     .theme-cat.dark-mode .ml-panel,
     .theme-cat.dark-mode .ml-stat-card,
@@ -725,14 +835,13 @@
     .theme-cat.dark-mode .ml-sidebar-calc,
     .theme-cat.dark-mode .ml-goal-floating-box,
     .theme-cat.dark-mode .ml-mini-goal-widget,
-    .theme-cat.dark-mode .ml-pixel-tab,
     .theme-cat.dark-mode .split-capture-box,
     .theme-cat.dark-mode .split-result-card {
-      background: #262030 !important;
+      background: #1D1E27 !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
     }
-    .theme-cat.dark-mode .ml-monitor-screen,
     .theme-cat.dark-mode .ml-mascot-speech,
     .theme-cat.dark-mode .ml-calc,
     .theme-cat.dark-mode .ml-calc-screen,
@@ -746,13 +855,26 @@
     .theme-cat.dark-mode .ml-trash-note,
     .theme-cat.dark-mode .split-ratio-panel,
     .theme-cat.dark-mode .split-info-note {
-      background: #1E1926 !important;
+      background: #13141A !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
     }
+    .theme-cat.dark-mode .ml-stat-card.income { border-left-color: var(--strawberry) !important; }
+    .theme-cat.dark-mode .ml-stat-card.expense { border-left-color: #60A5FA !important; }
     .theme-cat.dark-mode .ml-stat-card.settlement {
-      background: #262030 !important;
-      border-left-color: #F4B400 !important;
+      background: #20202B !important;
+      border-left-color: #FFD233 !important;
+    }
+    .theme-cat.dark-mode .ml-stat-card.total-income .ml-stat-label,
+    .theme-cat.dark-mode .ml-stat-card.total-income .ml-stat-value { color: #FF7092 !important; }
+    .theme-cat.dark-mode .ml-stat-card.total-expense .ml-stat-label,
+    .theme-cat.dark-mode .ml-stat-card.total-expense .ml-stat-value { color: #70B0FF !important; }
+    .theme-cat.dark-mode .ml-stat-card.settlement .ml-stat-label,
+    .theme-cat.dark-mode .ml-stat-card.settlement .ml-stat-value { color: #FFD233 !important; }
+
+    .theme-cat.dark-mode .ml-submit {
+      background: linear-gradient(180deg, #FF6690 0%, #E63C6D 100%) !important;
+      box-shadow: 0 4px 16px rgba(255, 94, 137, 0.4) !important;
     }
 
     /* ========================================================
@@ -789,7 +911,7 @@
       width: 100%; min-width: 0;
     }
     .ml-form-row input:focus, .ml-filter-row select:focus, .ml-filter-row input:focus, .ml-form-row select:focus {
-      outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,163,55,0.15);
+      outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,163,55,0.18);
     }
 
     .ml-korean-amount { font-size: 13px; color: var(--income); font-weight: 700; margin-top: 4px; text-align: right; }
@@ -828,7 +950,7 @@
     .ml-calc-apply:disabled { opacity: 0.45; cursor: default; }
 
     /* ========================================================
-       4. 신규 분배금 계산기 전용 스타일 (컴팩트 가로형 UI)
+       4. 신규 분배금 계산기 전용 스타일
        ======================================================== */
     .split-toggle-bar {
       display: flex;
@@ -854,7 +976,7 @@
     .split-toggle-pill {
       width: 44px;
       height: 24px;
-      background: #D1D5DB;
+      background: #505568;
       border-radius: 999px;
       padding: 2px;
       position: relative;
@@ -906,7 +1028,7 @@
       word-break: keep-all;
     }
     .split-info-banner strong {
-      color: #FF5A1F;
+      color: #FF7A45;
     }
     .split-cols-wrap {
       display: flex;
@@ -930,7 +1052,7 @@
       white-space: nowrap;
     }
     .split-col-role.leader {
-      color: #3B82F6;
+      color: #60A5FA;
     }
     .split-box-input {
       width: 56px;
@@ -976,7 +1098,7 @@
     }
     .split-result-card.leader {
       border-left: 4px solid var(--gold);
-      background: linear-gradient(90deg, rgba(230, 161, 0, 0.08) 0%, var(--paper-soft) 100%);
+      background: linear-gradient(90deg, rgba(255, 210, 51, 0.08) 0%, var(--paper-soft) 100%);
     }
     .split-info-note {
       background: var(--paper-soft);
@@ -1534,12 +1656,15 @@
 
     function MapleLedger() {
       const [visualTheme, setVisualTheme] = useState(() => {
-        try { return localStorage.getItem(STORAGE_KEYS.THEME_MODE) || "green"; } catch(e) { return "green"; }
+        try { return localStorage.getItem(STORAGE_KEYS.THEME_MODE) || "cat"; } catch(e) { return "cat"; }
       });
 
       const [tab, setTab] = useState("dashboard");
       const [darkMode, setDarkMode] = useState(() => {
-        try { return localStorage.getItem(STORAGE_KEYS.DARK_MODE) === "true"; } catch (e) { return false; }
+        try { 
+          const val = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
+          return val === null ? true : val === "true"; // 기본으로 검은고양이 네로 테마를 바로 볼 수 있게 true 권장
+        } catch (e) { return true; }
       });
       const [showCalc, setShowCalc] = useState(false);
 
@@ -1588,16 +1713,13 @@
       });
 
       // ==================== [분배금 계산기 독립 상태] ====================
-      const [splitMode, setSplitMode] = useState("ratio"); // 'ratio' | 'equal'
-      const [splitSalePriceStr, setSplitSalePriceStr] = useState("15555500000"); // 기본값
-      const [splitPartyCount, setSplitPartyCount] = useState(3); // 최대 6인
-      // 경매장 수수료: MVP 등급에 따라 기본값 연동 (실버 이상 3%, 그 외 5%), 수동 3% or 5% 변경 가능
+      const [splitMode, setSplitMode] = useState("ratio");
+      const [splitSalePriceStr, setSplitSalePriceStr] = useState("15555500000");
+      const [splitPartyCount, setSplitPartyCount] = useState(3);
       const isMvpDiscount = ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade);
       const [splitAuctionFee, setSplitAuctionFee] = useState(isMvpDiscount ? 3 : 5);
-      // 기본 1인당 비율 가중치 (기본 40:40:20 또는 1:1:1...)
       const [splitWeights, setSplitWeights] = useState([40, 40, 20, 1, 1, 1]);
 
-      // MVP 변경 시 경매장 수수료 동기화
       useEffect(() => {
         const fee = isMvpDiscount ? 3 : 5;
         setSplitAuctionFee(fee);
@@ -1611,7 +1733,7 @@
       const handleSwitchTheme = (themeName) => {
         setVisualTheme(themeName);
         try { localStorage.setItem(STORAGE_KEYS.THEME_MODE, themeName); } catch(e) {}
-        triggerToast(themeName === "cat" ? "🐱 고양이 레트로 테마로 변경되었어요!" : "🌲 본원 다크그린 테마로 변경되었습니다.");
+        triggerToast(themeName === "cat" ? (darkMode ? "🌙 고양이 다크모드가 켜졌어요!" : "🐱 고양이 테마로 변경되었어요!") : "🌲 본원 다크그린 테마로 변경되었습니다.");
       };
 
       const triggerToast = useCallback((msg) => {
@@ -2156,7 +2278,7 @@
         triggerToast(`[${selectedChar}] 보스 ${validSelections.length}종 정산 완료!`);
       };
 
-      // ==================== [분배금 계산기 세부 연산 로직] ====================
+      // 분배금 계산기
       const handleSplitPartyCountChange = (count) => {
         const c = Math.max(1, Math.min(6, Number(count) || 1));
         setSplitPartyCount(c);
@@ -2182,19 +2304,12 @@
         });
       }, [splitWeights, splitPartyCount]);
 
-      const totalWeightSum = useMemo(() => {
-        if (splitMode === "equal") return splitPartyCount;
-        const sum = activeWeights.reduce((acc, cur) => acc + cur, 0);
-        return sum > 0 ? sum : splitPartyCount;
-      }, [splitMode, activeWeights, splitPartyCount]);
-
       const splitCalculation = useMemo(() => {
         if (rawSplitSalePrice <= 0 || splitPartyCount <= 0) {
           return { actual: 0, members: [] };
         }
 
         const feeRate = splitAuctionFee / 100;
-        // 판매자(파티장)가 아이템을 팔고 수령한 경매장 실수령액
         const actual = Math.floor(rawSplitSalePrice * (1 - feeRate));
 
         if (splitPartyCount === 1) {
@@ -2213,31 +2328,26 @@
           };
         }
 
-        // 지분 가중치 및 정규화
         const weights = splitMode === "equal"
           ? Array(splitPartyCount).fill(1)
           : activeWeights;
         const totalW = weights.reduce((acc, cur) => acc + cur, 0) || splitPartyCount;
         const normRatios = weights.map(w => w / totalW);
 
-        // 사진 속 사이트 역산 분모: D = r_leader + sum_{i>=1}( r_i / (1 - feeRate) )
         let denom = normRatios[0] || 0;
         for (let i = 1; i < splitPartyCount; i++) {
           denom += (normRatios[i] || 0) / (1 - feeRate);
         }
 
-        // 기준 분배 상수 K
         const K = denom > 0 ? actual / denom : 0;
-
         let totalRegBought = 0;
         const memberCards = [];
 
-        // 파티원 1 ~ N 계산 (10원 단위 버림 처리)
         for (let i = 1; i < splitPartyCount; i++) {
           const r = normRatios[i] || 0;
           const rawReg = (K * r) / (1 - feeRate);
-          const regAmount = Math.floor(rawReg / 10) * 10; // 10원 단위 절사
-          const netAmount = Math.round(regAmount * (1 - feeRate)); // 수수료 차감 후 수령액
+          const regAmount = Math.floor(rawReg / 10) * 10;
+          const netAmount = Math.round(regAmount * (1 - feeRate));
           totalRegBought += regAmount;
 
           memberCards.push({
@@ -2250,7 +2360,6 @@
           });
         }
 
-        // 파티장 정산 후 보유 금액 = 경매장 수령액 - 파티원들 등록 아이템 구매액
         const leaderFinal = actual - totalRegBought;
 
         return {
@@ -2298,7 +2407,7 @@
         const area = document.getElementById("split-capture-board");
         if (!area || !window.html2canvas) return;
 
-        window.html2canvas(area, { backgroundColor: darkMode ? "#1B2027" : "#FAF6ED", scale: 2 }).then(canvas => {
+        window.html2canvas(area, { backgroundColor: darkMode ? "#1B1C24" : "#FAF6ED", scale: 2 }).then(canvas => {
           canvas.toBlob(blob => {
             if (navigator.clipboard && window.ClipboardItem) {
               const item = new ClipboardItem({ "image/png": blob });
@@ -2413,7 +2522,6 @@
         });
       }, []);
 
-      // 계산기 키보드 전역 리스너
       useEffect(() => {
         if (!showCalc) return;
 
@@ -2896,7 +3004,6 @@
         return parts.join(", ");
       }, [isDopingCategory, dopingCounts]);
 
-      // 탭 네비게이션: 캐릭터 탭을 지우고 분배금 계산기 탭을 배치
       const NAV_ITEMS = [
         { key: "dashboard", icon: "🍎", en: "MAIN", ko: "메인" },
         { key: "split", icon: "⚖️", en: "SPLIT", ko: "분배금 계산기" },
@@ -3031,7 +3138,6 @@
             </section>
           )}
 
-          {/* 캐릭터 탭 대체: 정밀 분배금 계산기 탭 */}
           {tab === "split" && (
             <section className="ml-page">
               <div className="ml-panel">
@@ -3042,7 +3148,6 @@
                   </span>
                 </div>
 
-                {/* 판매 금액, 인원수(최대 6인), 경매장 수수료 설정 */}
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "10px", marginBottom: "12px" }}>
                   <div className="ml-form-row" style={{ marginBottom: 0 }}>
                     <label>💰 경매장 총 판매액</label>
@@ -3085,7 +3190,6 @@
                   </div>
                 </div>
 
-                {/* 상단 토글 바 (상세 비율 설정 on/off & 분배 모드 뱃지) */}
                 <div className="split-toggle-bar">
                   <label
                     className="split-switch-label"
@@ -3102,7 +3206,6 @@
                   </div>
                 </div>
 
-                {/* 가로 한 줄형 파티원별 비율 입력 영역 (콜론 배치) */}
                 {splitMode === "ratio" && (
                   <div className="split-ratio-panel">
                     <div className="split-info-banner">
@@ -3135,7 +3238,6 @@
                   </div>
                 )}
 
-                {/* 캡처 & 복사용 분배 결과 카드 */}
                 <div className="split-capture-box" id="split-capture-board">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1.5px dashed var(--line)", paddingBottom: "10px", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
                     <div>
@@ -3160,7 +3262,6 @@
                         style={{ padding: "14px 16px", marginBottom: "10px" }}
                       >
                         {m.isLeader ? (
-                          /* 파티장 카드 (사진 속 UI 스타일) */
                           <div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                               <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 800 }}>
@@ -3185,7 +3286,6 @@
                             </div>
                           </div>
                         ) : (
-                          /* 파티원 카드 (사진 속 UI 스타일) */
                           <div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                               <span style={{ fontSize: "14px", fontWeight: 800 }}>
@@ -3947,7 +4047,7 @@
           <header className="ml-top-lace-bar">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <span style={{ fontWeight: 800, fontSize: "15px", color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                🍁 {visualTheme === "cat" ? "메계부" : "장부"}
+                🍁 메이플 장부
               </span>
               <div className="ml-mvp-box">
                 <label>MVP</label>
@@ -4015,8 +4115,8 @@
                       </div>
                     </div>
 
-                    <div className="ml-mint-ribbon">
-                      <span>🍁 장부 모니터</span>
+                    <div class="ml-mint-ribbon">
+                      <span>장부</span>
                       <span>총 기록 {transactions.length.toLocaleString()}건</span>
                     </div>
 
@@ -4029,7 +4129,7 @@
                         <span className="ml-led"></span>
                         <span className="ml-led soft"></span>
                       </div>
-                      <div className="ml-chin-badge">메계부</div>
+                      <div className="ml-chin-badge">장부</div>
                       <div style={{ fontSize: "11px", fontFamily: "'DungGeunMo', monospace", color: "var(--ink-soft)" }}>ON</div>
                     </div>
                   </div>
@@ -4126,7 +4226,7 @@
               onClick={cancelHistoryEdit}
               style={{
                 position: "fixed", inset: 0, zIndex: 9999,
-                background: "rgba(0,0,0,.45)", display: "flex",
+                background: "rgba(0,0,0,.6)", display: "flex",
                 alignItems: "center", justifyContent: "center", padding: "18px"
               }}
             >
