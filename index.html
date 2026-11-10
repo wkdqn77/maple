@@ -1352,7 +1352,7 @@
     .ml-recent-actions { display: flex; gap: 4px; }
     .ml-recent-actions button {
       border: 1px solid var(--line); border-radius: 8px; background: var(--paper-soft);
-      color: var(--ink); padding: 4px 7px; cursor: pointer; font-size: 11px;
+      color: var(--ink); padding: 4px 7px; cursor: font-size: 11px;
     }
     .ml-recent-edit { border-top: 1px solid var(--line); padding: 10px 0; }
     .ml-recent-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
@@ -1383,7 +1383,7 @@
       border: 1px solid var(--line);
     }
 
-    .ml-theme-switch-btn, .ml-backup-btn, .ml-dark-toggle {
+    .ml-theme-switch-btn, .ml-backup-btn, .ml-reset-btn, .ml-dark-toggle {
       font-family: inherit;
       font-size: 11px;
       font-weight: 800;
@@ -1397,6 +1397,16 @@
       align-items: center;
       gap: 5px;
       transition: all 0.18s ease;
+    }
+    .ml-reset-btn {
+      color: var(--expense);
+      border-color: rgba(226, 76, 103, 0.4);
+    }
+    .ml-reset-btn:hover {
+      background: var(--expense) !important;
+      color: #FFF !important;
+      border-color: var(--expense) !important;
+      transform: translateY(-1px);
     }
     .ml-theme-switch-btn:hover, .ml-backup-btn:hover, .ml-dark-toggle:hover {
       border-color: var(--gold);
@@ -1427,6 +1437,70 @@
       color: var(--ink);
       font-weight: 700;
       cursor: pointer;
+    }
+
+    /* 초기화 모달 스타일 */
+    .ml-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+    .ml-modal-box {
+      background: var(--paper);
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      padding: 22px 20px;
+      width: min(420px, 100%);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+      text-align: center;
+      color: var(--ink);
+    }
+    .ml-modal-box h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .ml-modal-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      margin-bottom: 20px;
+      word-break: keep-all;
+    }
+    .ml-modal-btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ml-modal-btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      transition: all 0.16s ease;
+    }
+    .ml-modal-btn.primary {
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+    }
+    .ml-modal-btn.danger {
+      background: var(--expense);
+      color: #FFF;
+      border: none;
+    }
+    .ml-modal-btn.secondary {
+      background: var(--paper-soft);
+      color: var(--ink);
     }
   </style>
 </head>
@@ -1739,6 +1813,9 @@
       const [mvpGrade, setMvpGrade] = useState(() => {
         try { return localStorage.getItem(STORAGE_KEYS.MVP) || "없음"; } catch (e) { return "없음"; }
       });
+
+      // 전체 초기화 모달 상태: null, "confirm", "backup-check"
+      const [resetModalStep, setResetModalStep] = useState(null);
 
       // ==================== [분배금 계산기 독립 상태: 기본 판매금액 0으로 수정] ====================
       const [splitMode, setSplitMode] = useState("ratio");
@@ -2585,7 +2662,8 @@
         return () => window.removeEventListener("keydown", handleKeyDown);
       }, [showCalc, handleStdNum, handleStdDot, handleStdOp, handleStdEquals, handleStdDelete, handleStdClear]);
 
-      const exportBackup = useCallback(async () => {
+      // 백업 파일 생성 함수
+      const exportBackup = useCallback(async (silent = false) => {
         try {
           const backup = { version: 1, exportedAt: new Date().toISOString(), data: {} };
           Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
@@ -2603,9 +2681,11 @@
           a.click();
           a.remove();
           URL.revokeObjectURL(url);
-          triggerToast("백업 파일이 저장되었어요!");
+          if (!silent) triggerToast("백업 파일이 저장되었어요!");
+          return true;
         } catch (e) {
           console.error(e);
+          return false;
         }
       }, [triggerToast]);
 
@@ -2630,6 +2710,38 @@
         };
         input.click();
       }, [triggerToast]);
+
+      // 전체 초기화 실행 함수
+      const executeReset = useCallback(() => {
+        try {
+          // 장부 내역, 휴지통, 보스 선택 현황, 재획 스냅샷 삭제
+          localStorage.removeItem(STORAGE_KEYS.TX);
+          localStorage.removeItem(STORAGE_KEYS.TRASH);
+          localStorage.removeItem(STORAGE_KEYS.BOSS_STATE);
+          localStorage.removeItem(STORAGE_KEYS.GRIND_SNAPSHOT);
+          localStorage.removeItem(STORAGE_KEYS.LAST_BOSS_DATA);
+
+          setTransactions([]);
+          setTrashTransactions([]);
+          setBossSelectionsPerChar({});
+          setGrindSnapshotPerChar({});
+          setGrindCalc({ startMeso: "", startPiece: "", endMeso: "", endPiece: "" });
+          setEditingHistoryId(null);
+          setEditingRecentId(null);
+
+          setResetModalStep(null);
+          triggerToast("모든 장부 내역과 휴지통이 깨끗하게 초기화되었어요!");
+        } catch (e) {
+          console.error(e);
+          triggerToast("초기화 중 오류가 발생했습니다.");
+        }
+      }, [triggerToast]);
+
+      // 백업 후 초기화
+      const handleBackupAndReset = useCallback(async () => {
+        await exportBackup(true);
+        executeReset();
+      }, [exportBackup, executeReset]);
 
       const addTransaction = useCallback(() => {
         const rawInputAmt = Number(form.amount);
@@ -4102,8 +4214,11 @@
               <button type="button" className="ml-dark-toggle" onClick={() => setDarkMode(v => !v)}>
                 {darkMode ? "☀️ 밝은 모드" : "🌙 다크모드"}
               </button>
-              <button type="button" className="ml-backup-btn" onClick={exportBackup}>💾 백업</button>
+              <button type="button" className="ml-backup-btn" onClick={() => exportBackup(false)}>💾 백업</button>
               <button type="button" className="ml-backup-btn" onClick={importBackup}>📂 복원</button>
+              <button type="button" className="ml-reset-btn" onClick={() => setResetModalStep("confirm")} title="전체 데이터 초기화">
+                ⚠️ 초기화
+              </button>
             </div>
           </header>
 
@@ -4248,6 +4363,53 @@
               </div>
             </aside>
           </div>
+
+          {/* 전체 초기화 확인 모달 */}
+          {resetModalStep === "confirm" && (
+            <div className="ml-modal-overlay" onClick={() => setResetModalStep(null)}>
+              <div className="ml-modal-box" onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize: "36px", marginBottom: "8px" }}>⚠️</div>
+                <h3 style={{ color: "var(--expense)" }}>장부 전체 초기화</h3>
+                <div className="ml-modal-desc">
+                  정말 장부를 초기 상태로 되돌리시겠습니까?<br/>
+                  등록된 <strong>모든 수입/지출 내역과 휴지통</strong>, 보스 선택 현황이 완전히 삭제됩니다.
+                </div>
+                <div className="ml-modal-btn-row">
+                  <button type="button" className="ml-modal-btn danger" onClick={() => setResetModalStep("backup-check")}>
+                    예 (초기화 진행)
+                  </button>
+                  <button type="button" className="ml-modal-btn secondary" onClick={() => setResetModalStep(null)}>
+                    아니오 (취소)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 초기화 전 백업 확인 모달 */}
+          {resetModalStep === "backup-check" && (
+            <div className="ml-modal-overlay" onClick={() => setResetModalStep(null)}>
+              <div className="ml-modal-box" onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize: "36px", marginBottom: "8px" }}>💾</div>
+                <h3>초기화 전 데이터 백업</h3>
+                <div className="ml-modal-desc">
+                  장부를 비우기 전에 현재 기록을 파일로 백업하시겠습니까?<br/>
+                  백업 파일(.json)은 언제든 [복원] 버튼을 통해 되살릴 수 있습니다.
+                </div>
+                <div className="ml-modal-btn-row">
+                  <button type="button" className="ml-modal-btn primary" onClick={handleBackupAndReset}>
+                    💾 백업하고 초기화
+                  </button>
+                  <button type="button" className="ml-modal-btn danger" onClick={executeReset}>
+                    백업 없이 바로 초기화
+                  </button>
+                  <button type="button" className="ml-modal-btn secondary" onClick={() => setResetModalStep(null)}>
+                    취소
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {editingHistoryId && (
             <div
