@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>메이플 장부 - 메계부</title>
+  <title>메이플 장부 - 메계부 (검은고양이 네로 에디션)</title>
   
   <link rel="icon" href="https://i.ibb.co/JwZ0B8C4/favicon.jpg" type="image/jpeg">
   
@@ -752,12 +752,12 @@
 
     /* 🐱 고양이 다크모드의 살짝 더 연하고 화사해진 솔리드 블루 눈 */
     .theme-cat.dark-mode .ml-cat-eye {
-      background: #25A5F5 !important; /* 이전보다 한 톤 더 밝고 맑은 미디엄 블루 단색 */
+      background: #25A5F5 !important;
       box-shadow: 0 0 10px rgba(37, 165, 245, 0.45), inset 0 -4px 0 #0284C7 !important;
     }
     .theme-cat.dark-mode .ml-cat-eye::before {
       content: "♥";
-      color: #0A1424 !important; /* 딥 네이비 하트 동공 */
+      color: #0A1424 !important;
       font-size: 10px !important;
       top: 3px;
       left: 3px;
@@ -875,6 +875,34 @@
     .theme-cat.dark-mode .ml-submit {
       background: linear-gradient(180deg, #FF6690 0%, #E63C6D 100%) !important;
       box-shadow: 0 4px 16px rgba(255, 94, 137, 0.4) !important;
+    }
+
+    /* ========================================================
+       다크 모드 전역 인풋 및 텍스트 색상 강제 지정 (글씨 잘 보이도록 수정)
+       ======================================================== */
+    .dark-mode input,
+    .dark-mode select,
+    .dark-mode textarea {
+      color: #FFFFFF !important;
+      background-color: #191B24 !important;
+      border-color: #383B4D !important;
+    }
+    .dark-mode input::placeholder,
+    .dark-mode textarea::placeholder {
+      color: #8C93A8 !important;
+    }
+    .dark-mode input:-webkit-autofill,
+    .dark-mode input:-webkit-autofill:hover, 
+    .dark-mode input:-webkit-autofill:focus, 
+    .dark-mode select:-webkit-autofill,
+    .dark-mode textarea:-webkit-autofill {
+      -webkit-text-fill-color: #FFFFFF !important;
+      -webkit-box-shadow: 0 0 0px 1000px #191B24 inset !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+    .dark-mode select option {
+      background-color: #191B24 !important;
+      color: #FFFFFF !important;
     }
 
     /* ========================================================
@@ -1663,7 +1691,7 @@
       const [darkMode, setDarkMode] = useState(() => {
         try { 
           const val = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
-          return val === null ? true : val === "true"; // 기본으로 검은고양이 네로 테마를 바로 볼 수 있게 true 권장
+          return val === null ? true : val === "true";
         } catch (e) { return true; }
       });
       const [showCalc, setShowCalc] = useState(false);
@@ -1712,9 +1740,9 @@
         try { return localStorage.getItem(STORAGE_KEYS.MVP) || "없음"; } catch (e) { return "없음"; }
       });
 
-      // ==================== [분배금 계산기 독립 상태] ====================
+      // ==================== [분배금 계산기 독립 상태: 기본 판매금액 0으로 수정] ====================
       const [splitMode, setSplitMode] = useState("ratio");
-      const [splitSalePriceStr, setSplitSalePriceStr] = useState("15555500000");
+      const [splitSalePriceStr, setSplitSalePriceStr] = useState("0");
       const [splitPartyCount, setSplitPartyCount] = useState(3);
       const isMvpDiscount = ["실버", "골드", "다이아", "레드", "블랙"].includes(mvpGrade);
       const [splitAuctionFee, setSplitAuctionFee] = useState(isMvpDiscount ? 3 : 5);
@@ -4115,7 +4143,7 @@
                       </div>
                     </div>
 
-                    <div class="ml-mint-ribbon">
+                    <div className="ml-mint-ribbon">
                       <span>장부</span>
                       <span>총 기록 {transactions.length.toLocaleString()}건</span>
                     </div>
